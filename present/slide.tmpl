@@ -1,0 +1,88 @@
+{/*
+
+This is the slide template. It defines how presentations are formatted.
+
+The "slide" template is the base HTML document. The "list", "text", "code",
+"image", and "link" templates are used by the various formatting helpers.
+
+*/}
+{{define "slides"}}
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>{{.Title}}</title>
+    <meta charset='utf-8'>
+    <script src='/static/slides.js'></script>
+  </head>
+
+  <body style='display: none'>
+
+    <section class='slides layout-widescreen'>
+      
+      <article>
+        <h1>{{.Title}}</h1>
+        {{range .Presenters}}
+          <p>
+          	{{.Name}}
+            {{with .Company}}<br>{{.}}{{end}}
+          </p>
+        {{end}}
+      </article>
+      
+  {{range $i, $s := .Slide}}
+  <!-- start of slide {{$s.Number}} -->
+      <article>
+      {{if $s.Elem}}
+        <h3>{{$s.Title}}</h3>
+        {{range $s.Elem}}{{.HTML $.Template}}{{end}}
+      {{else}}
+        <h2>{{$s.Title}}</h2>
+      {{end}}
+      </article>
+  <!-- end of slide {{$i}} -->
+  {{end}}{{/* of Slide block */}}
+
+      <article>
+        <h3>Thank you</h1>
+        {{range .Presenters}}
+          <p>
+          	{{.Name}}
+            {{with .Company}}<br>{{.}}{{end}}
+            {{with .Gplus}}<br><a href="{{.}}">{{.}}</a>{{end}}
+            {{with .Twitter}}<br><a href="http://twitter.com/{{.}}">{{.}}</a>{{end}}
+            {{with .WWW}}<br><a href="{{.}}">{{.}}</a>{{end}}
+          </p>
+        {{end}}
+      </article>
+
+  </body>
+  <script src='/static/playground.js'></script>
+</html>
+{{end}}
+
+{{define "list"}}
+  <ul>
+  {{range .Bullet}}
+    <li>{{codify .}}</li>
+  {{end}}
+  </ul>
+{{end}}
+
+{{define "text"}}
+  {{if .Pre}}
+  <div class="code" contenteditable="true"><pre>{{range .Lines}}{{.}}{{end}}</pre></div>
+  {{else}}
+  <p>
+    {{range $i, $l := .Lines}}{{if $i}}<br>
+    {{end}}{{codify $l}}{{end}}
+  </p>
+  {{end}}
+{{end}}
+
+{{define "code"}}
+  <div class="code{{if .Play}} playground{{end}}" contenteditable="true">{{code .}}</div>
+{{end}}
+
+{{define "image"}}<div class="image">{{image .File .Args}}</div>{{end}}
+      
+{{define "link"}}<p class="link">{{link .URL .Args}}</p>{{end}}
