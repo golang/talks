@@ -23,9 +23,11 @@ After that come slides/sections, each after a blank line:
 	* Title of slide or section (must have asterisk)
 
 	Some Text
+	(Strings enclosed by `backquotes` will be presented as source code.)
 
 	- bullets
 	- more bullets
+	- a bullet with
 
 	Some More text
 
