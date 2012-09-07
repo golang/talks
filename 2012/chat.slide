@@ -1,0 +1,225 @@
+# This is a file.
+
+Go: code that grows with grace
+
+Andrew Gerrand
+Google Sydney
+http://andrewgerrand.com/
+@enneff
+http://golang.org
+
+* Hello, go
+
+You may have heard of Go.
+
+It's my favorite language. I think you'll like it, too.
+
+- Compiled, and compiles fast,
+- Statically typed, with 'duck typing' via interfaces,
+- Small language, with a 'batteries included' standard library,
+- Great concurrency support,
+- Recently hit version 1.
+
+.play chat/support/hello.go
+
+* Hello, net
+
+.play chat/support/hello-net.go
+
+* Interfaces
+
+Hey neato! We can use Fprintln to write to a net connection.
+
+That's because a Fprintln writes to an io.Writer, and net.Conn is an io.Writer.
+
+.code chat/support/hello-net.go /Fprintln/
+.code chat/support/defs.go /Fprintln/
+.code chat/support/defs.go /type.Writer/,/^}/
+.code chat/support/defs.go /type.Conn/,/^}/
+
+* An echo server
+
+.play chat/support/echo-no-concurrency.go
+
+* A closer look at io.Copy
+
+.code chat/support/echo-no-concurrency.go /Copy/
+.code chat/support/defs.go /Copy/,/func/
+.code chat/support/defs.go /type.Conn/,/^}/
+.code chat/support/defs.go /type.Writer/,/^}/
+.code chat/support/defs.go /type.Reader/,/^}/
+
+* Goroutines
+
+Goroutines are lightweight threads that are managed by the Go runtime. To run a function in a new goroutine, put "go" before the function call.
+
+.play chat/support/goroutines.go
+
+* A concurrent echo server
+
+.play chat/support/echo.go
+
+* "Chat roulette"
+
+In this talk we'll look at a simple program, based on the popular "chat roulette" site.
+
+In short:
+
+- a user connects,
+- another user connects,
+- everything one user types is sent to the other.
+
+* Design
+
+The chat program is similar to the echo program. With echo, we copy a connection's incoming data back to the same connection.
+
+For chat, we must copy the incoming data from one user's connection to another's.
+
+Copying the data is easy. As in real life, the hard part is matching one partner with another.
+
+* Design diagram
+
+.image chat/diagrams.png
+
+* Channels
+
+Goroutines communicate via channels. A channel is a typed conduit, like a Unix pipe. Channels may be synchronous (unbuffered) or asynchronous (buffered).
+
+.play chat/support/chan.go
+
+* Select
+
+A select statement is like a switch, but it selects over channel operations (and chooses exactly one of them).
+
+.play chat/support/select.go
+
+* Modifying echo to create chat
+
+In the accept loop, we replace the call to io.Copy with a call to a new function: match.
+
+.code chat/support/echo.go /Accept/,/go/
+.code chat/support/chat-simple.go /Accept/,/go/
+
+* The matcher
+
+The match function simultaneously tries to send and receive a connection on a channel.
+
+- If the send succeeds, the connection has been handed off to another goroutine, so the function exits and the goroutine shuts down.
+- If the receive succeeds, a connection has been received from another goroutine. The current goroutine then has two connections, so it starts a chat session between them.
+
+.code chat/support/chat-simple.go /var.partner/,/^}/
+
+* The conversation
+
+The chat function sends a greeting to each connection and then copies data from one to the other, and vice versa.
+
+Notice that it launches another goroutine so that the copy operations may happen concurrently.
+
+.code chat/support/chat-simple.go /func.chat/,/^}/
+
+* Demo
+
+* Error handling
+
+It's important to clean up when the conversation is over. To do this we send the error value from each io.Copy call to a channel, log any non-nil errors, and close both connections.
+
+.code chat/tcp/chat.go /func.chat/,/^}/
+.code chat/tcp/chat.go /func.cp/,/^}/
+
+* Demo
+
+* Taking it to the web 
+
+"Cute program," you say, "But who wants to chat via a raw TCP connection?"
+
+Good point. Let's modernize this by turning it a web application.
+
+Instead of TCP sockets, we'll use websockets. Websocket support for Go is available via the websocket package in the net sub-repository.
+
+We'll serve the user interface with Go's built-in "net/http" package.
+
+* Using the http and websocket packages
+
+.code chat/http/chat.go /package/,/^}/
+
+* Serving the HTML and JavaScript
+
+.code chat/http/html.go /import/,/<script>/
+.code chat/http/html.go /websocket.=/,/onClose/
+.code chat/http/html.go /<\/html>/,$
+.code chat/http/chat.go /func.rootHandler/,/^}/
+
+* Adding a socket type
+
+We can't just use a websocket.Conn instead of the net.Conn, because a websocket.Conn is held open by its handler function. Here we use a channel to keep the handler running until the socket's Close method is called.
+
+.code chat/http/chat.go /type.socket/,/^}/
+.code chat/http/chat.go /func.+socket.+Close/,/^}/
+.code chat/http/chat.go /func.socketHandler/,/^}/
+
+* Demo
+
+* Struct embedding
+
+Go supports a kind of "mix-in" functionality with a feature known as "struct embedding". The embedding struct inherits the embedded type's methods.
+
+.code chat/support/embed.go /type/,$
+
+* Relieving loneliness
+
+What if you connect, but there's noone there?
+
+Wouldn't it be nice if we could synthesize a chat partner?
+
+Let's do it.
+
+* Generating text with markov chains
+
+.code chat/support/markov.txt
+
+* Generating text with markov chains
+
+Forunately, the Go docs include a markov chain implementation:
+http://golang.org/doc/codewalk/markov/
+
+We'll use a version that has been modified to be safe for concurrent use.
+
+.code chat/markov/markov.go /Chain/,/{/
+.code chat/markov/markov.go /Write/,/{/
+.code chat/markov/markov.go /Generate/,/{/
+
+* Feeding the chain
+
+We will use all text that enters the system to build the markov chains. To do this we split the socket into a Reader and a Writer, and feed all incoming data to the Chain instance.
+
+.code chat/markov/chat.go /type.socket/,/^}/
+.code chat/markov/chat.go /var.chain/,/^}/
+
+* The markov bot
+
+.code chat/markov/chat.go /\/\/.Bot/,/^}/
+.code chat/markov/chat.go /type.bot/,/^}/
+.code chat/markov/chat.go /func.+bot.+Write/,/^}/
+.code chat/markov/chat.go /func.+bot.+speak/,/^}/
+
+* Integrating the markov bot
+
+The bot should jump in if a real partner doesn't join.
+To do this, we add a case to the select that triggers after 10 seconds, starting a chat between the user's socket and a bot.
+
+The chat function remains untouched.
+
+.code chat/markov/chat.go /func.match/,/^}/
+
+* Demo
+
+* The end
+
+All about Go:
+
+.link http://golang.org
+
+This talk:
+
+.link http://github.com/nf/chat
+
