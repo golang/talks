@@ -3,8 +3,25 @@
 // license that can be found in the LICENSE file.
 
 /*
+Present displays slide presentations.
+It runs a web server that presents slide files from the current directory.
 
-Input files have the following format.  The first non-blank non-comment
+It may be run as a stand-alone command or an App Engine app.
+The stand-alone version permits the execution of programs from within a slide
+presentation. The App Engine version does not provide this functionality.
+
+Usage of present:
+  -base="": base path for slide template and static resources
+  -http="127.0.0.1:3999": host:port to listen on
+  -template="": alternate slide template file
+
+You may use the app.yaml file provided in the root of the go.talks repository
+to deploy present to App Engine:
+	appcfg.py update -A your-app-id -V your-app-version /path/to/go.talks
+
+The file slide format
+
+Slide files have the following format.  The first non-blank non-comment
 line is the title, so the header looks like
 
 	Title of presentation
@@ -126,4 +143,4 @@ both must be present.
 	.image images/betsy.jpg 100 200
 
 */
-package documentation
+package main

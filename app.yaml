@@ -1,0 +1,15 @@
+application: golang-org
+version: talks-test
+runtime: go
+api_version: go1
+
+handlers:
+- url: /favicon.ico
+  static_files: present/static/favicon.ico
+  upload: present/static/favicon.ico
+- url: /static
+  static_dir: present/static
+- url: /.*
+  script: _go_app
+
+nobuild_files: ^(\d\d\d\d)/.+\.go$

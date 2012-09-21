@@ -17,6 +17,8 @@ import (
 	"unicode"
 )
 
+var playEnabled = false // switched on when socket.go is included (not on App Engine)
+
 func init() {
 	Register("code", parseCode, code)
 	Register("play", parseCode, code)
@@ -69,7 +71,7 @@ func parseCode(fileName string, lineno int, text string) (Elem, error) {
 		typ = typ[1:]
 	}
 	return Code{
-		Play:       command == "play",
+		Play:       command == "play" && playEnabled,
 		File:       file,
 		Cmd:        text,
 		Addr:       addr,
