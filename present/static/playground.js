@@ -55,7 +55,8 @@
     for (var i = 0; i < node.childNodes.length; i++) {
       var n = node.childNodes[i];
       if (n.nodeType === 1 && n.tagName === "PRE") {
-        s += n.innerText + "\n";
+        var innerText = n.innerText === undefined ? "textContent" : "innerText";
+        s += n[innerText] + "\n";
         continue;
       }
       if (n.nodeType === 1 && n.tagName !== "BUTTON") {
