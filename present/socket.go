@@ -96,6 +96,13 @@ func socketHandler(conn *websocket.Conn) {
 	if err != nil && err != io.EOF {
 		log.Println(err)
 	}
+
+	// Kill any running processes.
+	c.Lock()
+	for _, p := range c.proc {
+		p.kill()
+	}
+	c.Unlock()
 }
 
 // Client represents a connected present client.
