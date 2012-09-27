@@ -19,7 +19,7 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		go match(c)
+		go match(c) // HL
 	}
 }
 

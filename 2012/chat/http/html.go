@@ -1,6 +1,11 @@
 package main
 
 import "html/template"
+import "net/http"
+
+func rootHandler(w http.ResponseWriter, r *http.Request) {
+	rootTemplate.Execute(w, listenAddr)
+}
 
 var rootTemplate = template.Must(template.New("root").Parse(`
 <!DOCTYPE html>

@@ -21,10 +21,6 @@ func main() {
 	}
 }
 
-func rootHandler(w http.ResponseWriter, r *http.Request) {
-	rootTemplate.Execute(w, listenAddr)
-}
-
 type socket struct {
 	io.Reader
 	io.Writer
@@ -39,11 +35,11 @@ func (s socket) Close() error {
 var chain = NewChain(2) // 2-word prefixes
 
 func socketHandler(ws *websocket.Conn) {
-	r, w := io.Pipe()
-	go func() {
-		_, err := io.Copy(io.MultiWriter(w, chain), ws)
-		w.CloseWithError(err)
-	}()
+	r, w := io.Pipe() // HL
+	go func() {       // HL
+		_, err := io.Copy(io.MultiWriter(w, chain), ws) // HL
+		w.CloseWithError(err)                           // HL
+	}() // HL
 	s := socket{r, ws, make(chan bool)}
 	go match(s)
 	<-s.done
@@ -58,8 +54,8 @@ func match(c io.ReadWriteCloser) {
 		// now handled by the other goroutine
 	case p := <-partner:
 		chat(p, c)
-	case <-time.After(10 * time.Second):
-		chat(Bot(), c)
+	case <-time.After(10 * time.Second): // HL
+		chat(Bot(), c) // HL
 	}
 }
 

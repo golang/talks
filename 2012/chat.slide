@@ -1,24 +1,49 @@
-# This is a file.
-
 Go: code that grows with grace
 
 Andrew Gerrand
 Google Sydney
-http://andrewgerrand.com/
+http://andrewgerrand.com
 @enneff
 http://golang.org
 
-* Hello, go
+* Go
 
 You may have heard of Go.
 
 It's my favorite language. I think you'll like it, too.
 
-- Compiled, and compiles fast,
-- Statically typed, with 'duck typing' via interfaces,
-- Small language, with a 'batteries included' standard library,
-- Great concurrency support,
-- Recently hit version 1.
+* Why Go?
+
+Needed a language for building servers* at Google, with an emphasis on:
+
+- simplicity,
+- ease of use,
+- readability,
+- comprehensibility,
+- efficiency,
+- concurrency,
+- scale.
+
+(* Go has since proven to be a great general-purpose language.)
+
+* What is Go?
+
+An open source (BSD licensed) project:
+
+- Language specification,
+- Small runtime (garbage collector, scheduler, etc),
+- Two compilers (`gc` and `gccgo`),
+- 'Batteries included' standard library,
+- Tools (build, fetch, test, document, profile, format),
+- Documentation.
+
+As of September 2012 we have more than 300 contributors.
+
+* Go has gophers
+
+.image chat/gophers.jpg
+
+* Hello, go
 
 .play chat/support/hello.go
 
@@ -28,9 +53,9 @@ It's my favorite language. I think you'll like it, too.
 
 * Interfaces
 
-Hey neato! We can use Fprintln to write to a net connection.
+Hey neato! We just used `Fprintln` to write to a net connection.
 
-That's because a Fprintln writes to an io.Writer, and net.Conn is an io.Writer.
+That's because a `Fprintln` writes to an `io.Writer`, and `net.Conn` is an `io.Writer`.
 
 .code chat/support/hello-net.go /Fprintln/
 .code chat/support/defs.go /Fprintln/
@@ -51,7 +76,7 @@ That's because a Fprintln writes to an io.Writer, and net.Conn is an io.Writer.
 
 * Goroutines
 
-Goroutines are lightweight threads that are managed by the Go runtime. To run a function in a new goroutine, put "go" before the function call.
+Goroutines are lightweight threads that are managed by the Go runtime. To run a function in a new goroutine, just put "`go`" before the function call.
 
 .play chat/support/goroutines.go
 
@@ -95,19 +120,22 @@ A select statement is like a switch, but it selects over channel operations (and
 
 * Modifying echo to create chat
 
-In the accept loop, we replace the call to io.Copy with a call to a new function: match.
+In the accept loop, we replace the call to `io.Copy`:
 
-.code chat/support/echo.go /Accept/,/go/
-.code chat/support/chat-simple.go /Accept/,/go/
+.code chat/support/echo.go /for {/,/\n	}/
+
+with a call to a new function, `match`:
+
+.code chat/tcp-simple/chat.go /for {/,/\n	}/
 
 * The matcher
 
-The match function simultaneously tries to send and receive a connection on a channel.
+The `match` function simultaneously tries to send and receive a connection on a channel.
 
 - If the send succeeds, the connection has been handed off to another goroutine, so the function exits and the goroutine shuts down.
 - If the receive succeeds, a connection has been received from another goroutine. The current goroutine then has two connections, so it starts a chat session between them.
 
-.code chat/support/chat-simple.go /var.partner/,/^}/
+.code chat/tcp-simple/chat.go /var.partner/,/^}/
 
 * The conversation
 
@@ -115,13 +143,13 @@ The chat function sends a greeting to each connection and then copies data from 
 
 Notice that it launches another goroutine so that the copy operations may happen concurrently.
 
-.code chat/support/chat-simple.go /func.chat/,/^}/
+.code chat/tcp-simple/chat.go /func.chat/,/^}/
 
 * Demo
 
 * Error handling
 
-It's important to clean up when the conversation is over. To do this we send the error value from each io.Copy call to a channel, log any non-nil errors, and close both connections.
+It's important to clean up when the conversation is over. To do this we send the error value from each `io.Copy` call to a channel, log any non-nil errors, and close both connections.
 
 .code chat/tcp/chat.go /func.chat/,/^}/
 .code chat/tcp/chat.go /func.cp/,/^}/
@@ -130,13 +158,17 @@ It's important to clean up when the conversation is over. To do this we send the
 
 * Taking it to the web 
 
-"Cute program," you say, "But who wants to chat via a raw TCP connection?"
+"Cute program," you say, "But who wants to chat over a raw TCP connection?"
 
-Good point. Let's modernize this by turning it a web application.
+Good point. Let's modernize it by turning it a web application.
 
-Instead of TCP sockets, we'll use websockets. Websocket support for Go is available via the websocket package in the net sub-repository.
+Instead of TCP sockets, we'll use websockets.
 
-We'll serve the user interface with Go's built-in "net/http" package.
+We'll serve the user interface with Go's standard `net/http` package, and websocket support is provided by the `websocket` package from the `go.net` sub-repository,
+
+* Hello, web
+
+.play chat/support/hello-web.go
 
 * Using the http and websocket packages
 
@@ -144,14 +176,14 @@ We'll serve the user interface with Go's built-in "net/http" package.
 
 * Serving the HTML and JavaScript
 
-.code chat/http/html.go /import/,/<script>/
+.code chat/http/html.go /import/
+.code chat/http/html.go /func/,/<script>/
 .code chat/http/html.go /websocket.=/,/onClose/
 .code chat/http/html.go /<\/html>/,$
-.code chat/http/chat.go /func.rootHandler/,/^}/
 
 * Adding a socket type
 
-We can't just use a websocket.Conn instead of the net.Conn, because a websocket.Conn is held open by its handler function. Here we use a channel to keep the handler running until the socket's Close method is called.
+We can't just use a `websocket.Conn` instead of the `net.Conn`, because a `websocket.Conn` is held open by its handler function. Here we use a channel to keep the handler running until the socket's `Close` method is called.
 
 .code chat/http/chat.go /type.socket/,/^}/
 .code chat/http/chat.go /func.+socket.+Close/,/^}/
@@ -180,7 +212,8 @@ Let's do it.
 * Generating text with markov chains
 
 Forunately, the Go docs include a markov chain implementation:
-http://golang.org/doc/codewalk/markov/
+
+.link http://golang.org/doc/codewalk/markov
 
 We'll use a version that has been modified to be safe for concurrent use.
 
@@ -190,7 +223,9 @@ We'll use a version that has been modified to be safe for concurrent use.
 
 * Feeding the chain
 
-We will use all text that enters the system to build the markov chains. To do this we split the socket into a Reader and a Writer, and feed all incoming data to the Chain instance.
+We will use all text that enters the system to build the markov chains.
+To do this we split the socket's `ReadWriter` into a `Reader` and a `Writer`,
+and feed all incoming data to the `Chain` instance.
 
 .code chat/markov/chat.go /type.socket/,/^}/
 .code chat/markov/chat.go /var.chain/,/^}/
@@ -207,19 +242,26 @@ We will use all text that enters the system to build the markov chains. To do th
 The bot should jump in if a real partner doesn't join.
 To do this, we add a case to the select that triggers after 10 seconds, starting a chat between the user's socket and a bot.
 
-The chat function remains untouched.
-
 .code chat/markov/chat.go /func.match/,/^}/
+
+The `chat` function remains untouched.
 
 * Demo
 
-* The end
+* Discussion
+
+* Further reading
 
 All about Go:
 
 .link http://golang.org
 
-This talk:
+The slides for this talk:
 
-.link http://github.com/nf/chat
+.link http://talks.golang.org/2012/chat.slide
+
+"Go Concurrency Patterns" by Rob Pike:
+
+.link http://tinyurl.com/goconcurrent
+#TODO(adg): check this link
 

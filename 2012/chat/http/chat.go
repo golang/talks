@@ -20,10 +20,6 @@ func main() {
 	}
 }
 
-func rootHandler(w http.ResponseWriter, r *http.Request) {
-	rootTemplate.Execute(w, listenAddr)
-}
-
 type socket struct {
 	io.ReadWriter
 	done chan bool
