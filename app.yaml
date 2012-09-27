@@ -12,4 +12,4 @@ handlers:
 - url: /.*
   script: _go_app
 
-nobuild_files: ^(\d\d\d\d)/.+\.go$
+nobuild_files: ^(?!present/)
