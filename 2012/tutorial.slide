@@ -401,7 +401,7 @@ To print the item we just pass it to Println, which uses the provided `String` m
 
 * Richer formatting (1/2)
 
-Let's go a step further. One way to judge how interesting a link might be is by the dicussion surrounding it. Let's display the number of comments for each `Item` as well.
+Let's go a step further. One way to judge how interesting a link might be is by the discussion surrounding it. Let's display the number of comments for each `Item` as well.
 
   { "title": "The Go homepage",
     "url": "http://golang.org/",
@@ -538,7 +538,7 @@ Here's our reddit package when viewed from `godoc`:
 
 First, hide the `Response` type by renaming it to `response`.
 
-In Go, top-level declarations beginning with an uppercase letter are "exported" (visible outside the package). All other names are private and inaccessbile to code outside the package.
+In Go, top-level declarations beginning with an uppercase letter are "exported" (visible outside the package). All other names are private and inaccessible to code outside the package.
 
 To document the remaining visible names, add a comment directly above their declarations:
 

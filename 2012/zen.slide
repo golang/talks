@@ -307,7 +307,7 @@ Readability is of paramount importance.
 
 - Type inference saves a lot of typing, but not at the cost of readability. Types are still required where they help readability (function declarations, for example).
 
-- Many other language design decisions were made in the name of readability (case-based name visiblity, for example).
+- Many other language design decisions were made in the name of readability (case-based name visibility, for example).
 
 
 * Bonuses

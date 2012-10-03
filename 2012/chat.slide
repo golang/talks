@@ -211,7 +211,7 @@ Let's do it.
 
 * Generating text with markov chains
 
-Forunately, the Go docs include a markov chain implementation:
+Fortunately, the Go docs include a markov chain implementation:
 
 .link http://golang.org/doc/codewalk/markov
 
@@ -263,5 +263,3 @@ The slides for this talk:
 "Go Concurrency Patterns" by Rob Pike:
 
 .link http://tinyurl.com/goconcurrent
-#TODO(adg): check this link
-
