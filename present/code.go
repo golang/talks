@@ -6,6 +6,7 @@ package main
 
 import (
 	"fmt"
+	"html"
 	"html/template"
 	"io/ioutil"
 	"log"
@@ -297,6 +298,7 @@ const codifyChar = "`"
 var codifyRE = regexp.MustCompile(fmt.Sprintf("%s[^%s]+%s", codifyChar, codifyChar, codifyChar))
 
 func codify(s string) template.HTML {
+	s = html.EscapeString(s)
 	repl := func(s string) string {
 		return "<code>" + s[1:len(s)-1] + "</code>"
 	}

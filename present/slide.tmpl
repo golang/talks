@@ -21,6 +21,7 @@ The "slide" template is the base HTML document. The "list", "text", "code",
       
       <article>
         <h1>{{.Title}}</h1>
+        {{with .Subtitle}}<h3>{{.}}</h3>{{end}}
         {{range .Presenters}}
           <p>
           	{{.Name}}
