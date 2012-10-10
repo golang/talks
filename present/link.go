@@ -26,9 +26,6 @@ func (l Link) HTML(t *template.Template) (template.HTML, error) {
 
 func parseLink(fileName string, lineno int, text string) (Elem, error) {
 	args := strings.Fields(text)
-	if len(args) != 2 {
-		return nil, fmt.Errorf("%s:%d: too many arguments for .link", fileName, lineno)
-	}
 	url, err := url.Parse(args[1])
 	if err != nil {
 		return nil, err
@@ -42,10 +39,8 @@ func link(url url.URL, arg []string) (template.HTML, error) {
 	switch len(arg) {
 	case 0:
 		label = strings.Replace(url.String(), url.Scheme+"://", "", 1)
-	case 1:
-		label = arg[0]
 	default:
-		return "", fmt.Errorf("incorrect link invocation: code %q %v", url, arg)
+		label = strings.Join(arg, " ")
 	}
 	return template.HTML(fmt.Sprintf(`<a href=%q>%s</a>`, url.String(), label)), nil
 }
