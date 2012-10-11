@@ -22,7 +22,7 @@ var (
 	parsers       = make(map[string]func(string, int, string) (Elem, error))
 
 	funcs = template.FuncMap{
-		"codify": codify,
+		"style": style,
 	}
 )
 

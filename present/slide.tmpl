@@ -64,7 +64,7 @@ The "slide" template is the base HTML document. The "list", "text", "code",
 {{define "list"}}
   <ul>
   {{range .Bullet}}
-    <li>{{codify .}}</li>
+    <li>{{style .}}</li>
   {{end}}
   </ul>
 {{end}}
@@ -75,7 +75,7 @@ The "slide" template is the base HTML document. The "list", "text", "code",
   {{else}}
   <p>
     {{range $i, $l := .Lines}}{{if $i}}<br>
-    {{end}}{{codify $l}}{{end}}
+    {{end}}{{style $l}}{{end}}
   </p>
   {{end}}
 {{end}}

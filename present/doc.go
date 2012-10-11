@@ -40,7 +40,6 @@ After that come slides/sections, each after a blank line:
 	* Title of slide or section (must have asterisk)
 
 	Some Text
-	(Strings enclosed by `backquotes` will be presented as source code.)
 
 	- bullets
 	- more bullets
@@ -66,8 +65,22 @@ not.
 
 Lines starting with # in column 1 are commentary.
 
-Within the input for plain text or lists, text included in back
-quotes `xxx` will be presented in program font.
+Fonts:
+
+Within the input for plain text or lists, text bracketed by font
+markers will be presented in italic, bold, or program font.
+Marker characters are _ (italic), * (bold) and ` (program font).
+Unmatched markers appear as plain text.
+Within marked text, a single marker character becomes a space
+and a doubled single marker quotes the marker character.
+
+	_italic_
+	*bold*
+	`program`
+	_this_is_all_italic_
+	_Why_use_scoped__ptr_? Use plain ***ptr* instead.
+
+Functions:
 
 A number of template functions are available through invocations
 in the input text. Each such invocation contains a period as the

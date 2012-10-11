@@ -6,7 +6,6 @@ package main
 
 import (
 	"fmt"
-	"html"
 	"html/template"
 	"io/ioutil"
 	"log"
@@ -291,16 +290,4 @@ func highlightLines(text, label string) string {
 
 func hide(text string) string {
 	return fmt.Sprintf(`<pre style="display: none">%s</pre>`, template.HTMLEscapeString(text))
-}
-
-const codifyChar = "`"
-
-var codifyRE = regexp.MustCompile(fmt.Sprintf("%s[^%s]+%s", codifyChar, codifyChar, codifyChar))
-
-func codify(s string) template.HTML {
-	s = html.EscapeString(s)
-	repl := func(s string) string {
-		return "<code>" + s[1:len(s)-1] + "</code>"
-	}
-	return template.HTML(codifyRE.ReplaceAllStringFunc(s, repl))
 }
