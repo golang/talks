@@ -23,19 +23,21 @@ import (
 	"code.google.com/p/go.net/websocket"
 )
 
+const socketPresent = true
+
 const msgLimit = 1000 // max number of messages to send per session
 
 var uniq = make(chan int) // a source of numbers for naming temporary files
 
 func init() {
-	playEnabled = true // instruct code.go to include "Run" buttons
-
 	go func() {
 		for i := 0; ; i++ {
 			uniq <- i
 		}
 	}()
+}
 
+func HandleSocket() {
 	http.Handle("/socket", websocket.Handler(socketHandler))
 }
 

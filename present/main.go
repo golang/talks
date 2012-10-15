@@ -21,7 +21,12 @@ const basePkg = "code.google.com/p/go.talks/present"
 func main() {
 	httpListen := flag.String("http", "127.0.0.1:3999", "host:port to listen on")
 	flag.StringVar(&basePath, "base", "", "base path for slide template and static resources")
+	flag.BoolVar(&playEnabled, "play", true, "enable playground (permit execution of arbitrary user code)")
 	flag.Parse()
+
+	if !socketPresent {
+		playEnabled = false
+	}
 
 	if basePath == "" {
 		p, err := build.Default.Import(basePkg, "", build.FindOnly)
@@ -36,7 +41,8 @@ func main() {
 	http.Handle("/static/", http.FileServer(http.Dir(basePath)))
 
 	if !strings.HasPrefix(*httpListen, "127.0.0.1") &&
-		!strings.HasPrefix(*httpListen, "localhost") {
+		!strings.HasPrefix(*httpListen, "localhost") &&
+		playEnabled {
 		log.Print(localhostWarning)
 	}
 
@@ -58,6 +64,8 @@ WARNING!  WARNING!  WARNING!
 The present server appears to be listening on an address that is not localhost.
 Anyone with access to this address and port will have access to this machine as
 the user running present.
+
+To avoid this message, listen on localhost or run with -play=false.
 
 If you don't understand this message, hit Control-C to terminate this process.
 

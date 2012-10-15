@@ -17,7 +17,7 @@ import (
 	"unicode"
 )
 
-var playEnabled = false // switched on when socket.go is included (not on App Engine)
+var playEnabled = false // to be enabled by a flag in main.go
 
 func init() {
 	Register("code", parseCode, code)
