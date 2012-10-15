@@ -25,6 +25,10 @@ import (
 
 const socketPresent = true
 
+func HandleSocket(path string) {
+	http.Handle(path, websocket.Handler(socketHandler))
+}
+
 const msgLimit = 1000 // max number of messages to send per session
 
 var uniq = make(chan int) // a source of numbers for naming temporary files
@@ -35,10 +39,6 @@ func init() {
 			uniq <- i
 		}
 	}()
-}
-
-func HandleSocket() {
-	http.Handle("/socket", websocket.Handler(socketHandler))
 }
 
 // Message is the wire format for the websocket connection to the browser.

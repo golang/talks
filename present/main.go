@@ -38,6 +38,9 @@ func main() {
 		basePath = p.Dir
 	}
 
+	if playEnabled {
+		HandleSocket("/socket")
+	}
 	http.Handle("/static/", http.FileServer(http.Dir(basePath)))
 
 	if !strings.HasPrefix(*httpListen, "127.0.0.1") &&
