@@ -4,7 +4,7 @@ Go Concurrency Patterns
 
 Rob Pike
 Google
-http://tinyurl.com/plusrob
+http://golang.org/s/plusrob
 @rob_pike
 http://golang.org
 
@@ -48,7 +48,9 @@ If you have only one processor, your program can still be concurrent  but it can
 
 On the other hand, a well-written concurrent program might run efficiently in parallel on a multiprocessor. That property could be important...
 
-See tinyurl.com/goconcnotpar for more on that distinction. Too much to discuss here.
+For more on that distinction, see the link below. Too much to discuss here.
+
+.link http://golang.org/s/concurrency-is-not-parallelism
 
 * A model for software construction
 
@@ -398,19 +400,19 @@ There are endless ways to use these tools, many presented elsewhere.
 
 Chatroulette toy:
 
-.link http://tinyurl.com/gochatroulette
+.link http://golang.org/s/chat-roulette
 
 Load balancer:
 
-.link http://tinyurl.com/goloadbalancer
+.link http://golang.org/s/load-balancer
 
 Concurrent prime sieve:
 
-.link http://tinyurl.com/gosieve
+.link http://golang.org/s/prime-sieve
 
 Concurrent power series (by McIlroy):
 
-.link http://tinyurl.com/gopowerseries
+.link http://golang.org/s/power-series
 
 * Don't overdo it
 
@@ -458,4 +460,4 @@ Articles galore:
 
 Concurrency is not parallelism:
 
-.link http://tinyurl.com/goconcnotpar
+.link http://golang.org/s/concurrency-is-not-parallelism
