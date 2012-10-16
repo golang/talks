@@ -32,6 +32,7 @@
       } else {
         s += ".";
       }
+      s += "\n";
       showMessage(o, s, "system");
     }
   }
