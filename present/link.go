@@ -38,7 +38,11 @@ func link(url url.URL, arg []string) (template.HTML, error) {
 	label := ""
 	switch len(arg) {
 	case 0:
-		label = strings.Replace(url.String(), url.Scheme+"://", "", 1)
+		scheme := url.Scheme + "://"
+		if url.Scheme == "mailto" {
+			scheme = "mailto:"
+		}
+		label = strings.Replace(url.String(), scheme, "", 1)
 	default:
 		label = strings.Join(arg, " ")
 	}

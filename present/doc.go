@@ -29,9 +29,12 @@ line is the title, so the header looks like
 	<blank line>
 	Presenter Name
 	Job title, Company
-	Google+ profile link
-	@twitter_name
+	joe@example.com
 	http://url/
+	@twitter_name
+
+The presenter section may contain a mixture of text, twitter names, and links.
+Only the plain text lines will be displayed on the presentation front page.
 
 Multiple presenters may be specified, separated by a blank line.
 

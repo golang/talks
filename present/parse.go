@@ -11,6 +11,8 @@ import (
 	"fmt"
 	"html/template"
 	"io"
+	"log"
+	"net/url"
 	"path/filepath"
 	"strings"
 	"unicode"
@@ -75,11 +77,20 @@ type Pres struct {
 
 // Presenter represents the person who wrote and/or is giving the presentation.
 type Presenter struct {
-	Name    string `json:"name"`
-	Company string `json:"company"`
-	Gplus   string `json:"gplus"`
-	Twitter string `json:"twitter"`
-	WWW     string `json:"www"`
+	Elem []Elem
+}
+
+// TextElem returns the first text elements of the presenter details.
+// This is used to display the presenters' name, job title, and company
+// without the contact details.
+func (p *Presenter) TextElem() (elems []Elem) {
+	for _, el := range p.Elem {
+		if _, ok := el.(Text); !ok {
+			break
+		}
+		elems = append(elems, el)
+	}
+	return
 }
 
 // Slide represents a single presentation slide.
@@ -201,35 +212,7 @@ func parse(name string, mode parseMode) (*Pres, error) {
 		return pres, nil
 	}
 	// Presenters
-	for {
-		var text string
-		text, ok = lines.nextNonEmpty()
-		if !ok {
-			return nil, errors.New("unexpected EOF")
-		}
-		if strings.HasPrefix(text, "* ") {
-			lines.back()
-			break
-		}
-		p := Presenter{Name: text}
-		p.Company, ok = lines.next()
-		if !ok {
-			return nil, errors.New("no company")
-		}
-		p.Gplus, ok = lines.next()
-		if !ok {
-			return nil, errors.New("no google+ link")
-		}
-		p.Twitter, ok = lines.next()
-		if !ok {
-			return nil, errors.New("no twitter name")
-		}
-		p.WWW, ok = lines.next()
-		if !ok {
-			return nil, errors.New("no www link")
-		}
-		pres.Presenters = append(pres.Presenters, p)
-	}
+	pres.Presenters, err = parsePresenters(lines)
 	// Slides
 	for i := 0; ; i++ {
 		var slide Slide
@@ -316,4 +299,73 @@ func parse(name string, mode parseMode) (*Pres, error) {
 		pres.Slide = append(pres.Slide, slide)
 	}
 	return pres, nil
+}
+
+func parsePresenters(lines *Lines) (pres []Presenter, err error) {
+	// This grammar demarcates presenters with blanks.
+
+	// Skip blank lines.
+	if _, ok := lines.nextNonEmpty(); !ok {
+		return nil, errors.New("unexpected EOF")
+	}
+	lines.back()
+
+	var p *Presenter
+	for {
+		text, ok := lines.next()
+		if !ok {
+			return nil, errors.New("unexpected EOF")
+		}
+
+		// If we find a slide heading, we're done.
+		if strings.HasPrefix(text, "* ") {
+			lines.back()
+			break
+		}
+
+		// If we encounter a blank we're done with this presenter.
+		if p != nil && len(text) == 0 {
+			pres = append(pres, *p)
+			p = nil
+			continue
+		}
+		if p == nil {
+			p = new(Presenter)
+		}
+
+		// Parse the line. Those that
+		// - begin with @ are twitter names,
+		// - contain slashes are links, or
+		// - contain an @ symbol are an email address.
+		// The rest is just text.
+		var el Elem
+		switch {
+		case strings.HasPrefix(text, "@"):
+			el = parseURL("http://twitter.com/" + text[1:])
+			if l, ok := el.(Link); ok {
+				l.Args = []string{text}
+			}
+		case strings.Contains(text, ":"):
+			el = parseURL(text)
+		case strings.Contains(text, "@"):
+			el = parseURL("mailto:" + text)
+		}
+		if el == nil {
+			el = Text{Lines: []string{text}}
+		}
+		p.Elem = append(p.Elem, el)
+	}
+	if p != nil {
+		pres = append(pres, *p)
+	}
+	return pres, nil
+}
+
+func parseURL(text string) Elem {
+	u, err := url.Parse(text)
+	if err != nil {
+		log.Printf("Parse(%q): %v", text, err)
+		return nil
+	}
+	return Link{URL: u}
 }

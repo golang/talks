@@ -405,3 +405,14 @@ div.playground button {
   right: 5px;
   bottom: 5px;
 }
+
+/* Presenter details */
+.presenter {
+	margin-top: 20px;
+}
+.presenter p,
+.presenter .link {
+	margin: 0;
+	font-size: 28px;
+	line-height: 1.2em;
+}
