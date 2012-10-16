@@ -7,7 +7,6 @@
 package main
 
 import (
-	"bufio"
 	"encoding/json"
 	"io"
 	"io/ioutil"
@@ -50,7 +49,7 @@ type Message struct {
 	Body string
 }
 
-// socketHandler handles the websocket connection for given present session.
+// socketHandler handles the websocket connection for a given present session.
 // It constructs a new Client and handles transcoding Messages to and from JSON
 // format, sending and receiving those messages on the Client's in and out
 // channels.
@@ -63,10 +62,11 @@ func socketHandler(conn *websocket.Conn) {
 	}
 	go c.loop()
 
-	dec := json.NewDecoder(conn)
-	enc := json.NewEncoder(conn)
 	errc := make(chan error, 1)
+
+	// Decode messages from client and send to the in channel.
 	go func() {
+		dec := json.NewDecoder(conn)
 		for {
 			m := new(Message)
 			if err := dec.Decode(m); err != nil {
@@ -77,29 +77,36 @@ func socketHandler(conn *websocket.Conn) {
 			in <- m
 		}
 	}()
+
+	// Receive messages from the out channel and encode to the client.
 	go func() {
+		enc := json.NewEncoder(conn)
 		counts := make(map[string]int)
-		for {
-			m := <-out
-			switch c := counts[m.Id]; {
-			case m.Kind == "end" || c < msgLimit:
+		for m := range out {
+			cnt := counts[m.Id]
+			switch {
+			case m.Kind == "end" || cnt < msgLimit:
 				if err := enc.Encode(m); err != nil {
 					errc <- err
 					return
 				}
-			case c == msgLimit:
-				// Kill it.
-				in <- &Message{Id: m.Id, Kind: "end"}
+				if m.Kind == "end" {
+					delete(counts, m.Id)
+				}
+			case cnt == msgLimit:
+				// Process produced too much output. Kill it.
+				c.kill(m.Id)
 			}
 			counts[m.Id]++
 		}
 	}()
-	err := <-errc
-	if err != nil && err != io.EOF {
+
+	// Wait for one of the send or receive goroutines to exit.
+	if err := <-errc; err != nil && err != io.EOF {
 		log.Println(err)
 	}
 
-	// Kill any running processes.
+	// Kill any running processes associated with this Client.
 	c.Lock()
 	for _, p := range c.proc {
 		p.kill()
@@ -110,10 +117,10 @@ func socketHandler(conn *websocket.Conn) {
 // Client represents a connected present client.
 // It manages any processes being compiled and run for the client.
 type Client struct {
-	sync.Mutex
-	proc map[string]*Process
-	in   <-chan *Message
-	out  chan<- *Message
+	sync.Mutex // guards proc
+	proc       map[string]*Process
+	in         <-chan *Message
+	out        chan<- *Message
 }
 
 // loop handles incoming messages from the client.
@@ -122,7 +129,7 @@ func (c *Client) loop() {
 		switch m.Kind {
 		case "run":
 			c.kill(m.Id)
-			c.run(m.Id, m.Body)
+			go c.run(m.Id, m.Body)
 		case "kill":
 			c.kill(m.Id)
 		}
@@ -132,57 +139,52 @@ func (c *Client) loop() {
 // kill shuts down a running process.
 func (c *Client) kill(id string) {
 	c.Lock()
+	defer c.Unlock()
 	if p := c.proc[id]; p != nil {
 		p.kill()
-		delete(c.proc, id)
 	}
-	c.Unlock()
 }
 
 // run compiles and runs the given program, associating it with the given id.
 func (c *Client) run(id, body string) {
-	go func() {
-		p := &Process{
-			id:     id,
-			stdout: newPiper(id, "stdout", c.out),
-			stderr: newPiper(id, "stderr", c.out),
-		}
-		c.Lock()
-		c.proc[id] = p
-		c.Unlock()
-		err := p.run(body)
-		m := &Message{Id: id, Kind: "end"}
-		if err != nil {
-			m.Body = err.Error()
-		}
-		c.Lock()
-		delete(c.proc, id)
-		c.Unlock()
-		c.out <- m
-	}()
+	p := NewProcess(id, c.out)
+	c.Lock()
+	c.proc[id] = p
+	c.Unlock()
+	err := p.run(body)
+	m := &Message{Id: id, Kind: "end"}
+	if err != nil {
+		m.Body = err.Error()
+	}
+	c.Lock()
+	delete(c.proc, id)
+	c.Unlock()
+	c.out <- m
 }
 
 // Process represents a running process.
 type Process struct {
-	sync.Mutex     // guards cmd
 	id             string
 	stdout, stderr io.Writer
-	cmd            *exec.Cmd
+
+	sync.Mutex // guards cmd
+	cmd        *exec.Cmd
+	done       chan struct{} // closed when run complete
 }
 
-var tmpdir string
-
-func init() {
-	// find real temporary directory (for rewriting filename in output)
-	var err error
-	tmpdir, err = filepath.EvalSymlinks(os.TempDir())
-	if err != nil {
-		log.Fatal(err)
+func NewProcess(id string, out chan<- *Message) *Process {
+	return &Process{
+		id:     id,
+		stdout: newPiper(id, "stdout", out),
+		stderr: newPiper(id, "stderr", out),
+		done:   make(chan struct{}),
 	}
 }
 
 // run compiles and runs the given go program.
 func (p *Process) run(body string) error {
+	defer close(p.done)
+
 	// x is the base name for .go and executable files
 	x := filepath.Join(tmpdir, "compile"+strconv.Itoa(<-uniq))
 	src := x + ".go"
@@ -236,42 +238,43 @@ func (p *Process) exec(dir string, args ...string) error {
 	return err
 }
 
-// kill stops the process if it is running.
+// kill stops the process if it is running and waits for it to exit.
 func (p *Process) kill() {
 	p.Lock()
 	if p.cmd != nil {
 		p.cmd.Process.Kill()
-		p.cmd = nil
 	}
 	p.Unlock()
+	<-p.done
 }
 
-// newPiper returns a writer which converts all writes to Message sends on the
-// given channel with the specified id and kind. It splits on newlines.
+// newPiper returns a writer that converts all writes to Message sends on the
+// given channel with the specified id and kind.
 func newPiper(id, kind string, out chan<- *Message) io.Writer {
-	r, w := io.Pipe()
-	p := &piper{id, kind, bufio.NewReaderSize(r, 80), out}
-	go p.read()
-	return w
+	return &piper{id, kind, out}
 }
 
 type piper struct {
 	id, kind string
-	r        *bufio.Reader
 	out      chan<- *Message
 }
 
-func (p *piper) read() {
-	for {
-		m := &Message{Id: p.id, Kind: p.kind}
-		l, prefix, err := p.r.ReadLine()
-		if err != nil {
-			return
-		}
-		m.Body = string(l)
-		if !prefix {
-			m.Body += "\n"
-		}
-		p.out <- m
+func (p *piper) Write(b []byte) (n int, err error) {
+	p.out <- &Message{
+		Id:   p.id,
+		Kind: p.kind,
+		Body: string(b),
+	}
+	return len(b), nil
+}
+
+var tmpdir string
+
+func init() {
+	// find real path to temporary directory
+	var err error
+	tmpdir, err = filepath.EvalSymlinks(os.TempDir())
+	if err != nil {
+		log.Fatal(err)
 	}
 }
