@@ -175,8 +175,8 @@ type Process struct {
 func NewProcess(id string, out chan<- *Message) *Process {
 	return &Process{
 		id:     id,
-		stdout: newPiper(id, "stdout", out),
-		stderr: newPiper(id, "stderr", out),
+		stdout: &messageWriter{id, "stdout", out},
+		stderr: &messageWriter{id, "stdout", out},
 		done:   make(chan struct{}),
 	}
 }
@@ -248,23 +248,15 @@ func (p *Process) kill() {
 	<-p.done
 }
 
-// newPiper returns a writer that converts all writes to Message sends on the
-// given channel with the specified id and kind.
-func newPiper(id, kind string, out chan<- *Message) io.Writer {
-	return &piper{id, kind, out}
-}
-
-type piper struct {
+// messageWriter is an io.Writer that converts all writes to Message sends on
+// the out channel with the specified id and kind.
+type messageWriter struct {
 	id, kind string
 	out      chan<- *Message
 }
 
-func (p *piper) Write(b []byte) (n int, err error) {
-	p.out <- &Message{
-		Id:   p.id,
-		Kind: p.kind,
-		Body: string(b),
-	}
+func (w *messageWriter) Write(b []byte) (n int, err error) {
+	w.out <- &Message{Id: w.id, Kind: w.kind, Body: string(b)}
 	return len(b), nil
 }
 
