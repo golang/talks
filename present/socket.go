@@ -157,7 +157,9 @@ func (c *Client) run(id, body string) {
 		m.Body = err.Error()
 	}
 	c.Lock()
-	delete(c.proc, id)
+	if c.proc[id] == p {
+		delete(c.proc, id)
+	}
 	c.Unlock()
 	c.out <- m
 }
