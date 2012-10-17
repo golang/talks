@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"html/template"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/url"
 	"path/filepath"
@@ -35,8 +36,10 @@ func Register(name string, parser func(fileName string, lineNumber int, inputLin
 	if len(name) == 0 || name[0] == ';' {
 		panic("bad name in Register: " + name)
 	}
-	funcs[name] = function
 	parsers["."+name] = parser
+	if function != nil {
+		funcs[name] = function
+	}
 }
 
 // renderSlides reads the slide file, builds its template representation,
@@ -143,7 +146,7 @@ type Lines struct {
 }
 
 func readLines(name string) (*Lines, error) {
-	contentBytes, err := contents(name)
+	contentBytes, err := ioutil.ReadFile(name)
 	if err != nil {
 		return nil, err
 	}

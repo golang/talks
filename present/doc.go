@@ -59,6 +59,7 @@ After that come slides/sections, each after a blank line:
 	.play y.go
 	.image image.jpg
 	.link http://foo label
+	.html file.html
 
 	Again, more text
 
@@ -145,6 +146,7 @@ link:
 Create a hyperlink. The syntax is 1 or 2 space-separated arguments.
 The first argument is always the HTTP URL.  If there is a second
 argument, it is the text label to display for this link.
+
 	.link http://golang.org golang.org
 
 image:
@@ -157,6 +159,14 @@ If there are more arguments, they are the height and width;
 both must be present.
 
 	.image images/betsy.jpg 100 200
+
+html:
+
+The function html includes the contents of the specified file as
+unescaped HTML. This is useful for including custom HTML elements
+that cannot be created using only the slide format.
+
+	.html file.html
 
 */
 package main
