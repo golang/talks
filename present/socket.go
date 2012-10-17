@@ -48,15 +48,13 @@ type Message struct {
 }
 
 // socketHandler handles the websocket connection for a given present session.
-// It constructs a new Client and handles transcoding Messages to and from JSON
-// format, sending and receiving those messages on the Client's in and out
-// channels.
+// It handles transcoding Messages to and from JSON format, and starting
+// and killing Processes.
 func socketHandler(c *websocket.Conn) {
-	proc := make(map[string]*Process)
 	in, out := make(chan *Message), make(chan *Message)
 	errc := make(chan error, 1)
 
-	// Decode messages from client and take the relevant action.
+	// Decode messages from client and send to the in channel.
 	go func() {
 		dec := json.NewDecoder(c)
 		for {
@@ -80,7 +78,8 @@ func socketHandler(c *websocket.Conn) {
 		}
 	}()
 
-	// Handle input.
+	// Start and kill Processes and handle errors.
+	proc := make(map[string]*Process)
 	for {
 		select {
 		case m := <-in:
@@ -174,7 +173,7 @@ func (p *Process) start(body string) (*exec.Cmd, error) {
 	return cmd, nil
 }
 
-// Wait waits for the running process to complete and returns its error state.
+// wait waits for the running process to complete and returns its error state.
 func (p *Process) wait(cmd *exec.Cmd) {
 	defer close(p.done)
 	p.end(cmd.Wait())
