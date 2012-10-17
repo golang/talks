@@ -8,7 +8,6 @@ package main
 
 import (
 	"encoding/json"
-	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -17,7 +16,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"strconv"
-	"sync"
 
 	"code.google.com/p/go.net/websocket"
 )
@@ -53,140 +51,99 @@ type Message struct {
 // It constructs a new Client and handles transcoding Messages to and from JSON
 // format, sending and receiving those messages on the Client's in and out
 // channels.
-func socketHandler(conn *websocket.Conn) {
+func socketHandler(c *websocket.Conn) {
+	proc := make(map[string]*Process)
 	in, out := make(chan *Message), make(chan *Message)
-	c := &Client{
-		proc: make(map[string]*Process),
-		in:   in,
-		out:  out,
-	}
-	go c.loop()
-
 	errc := make(chan error, 1)
 
-	// Decode messages from client and send to the in channel.
+	// Decode messages from client and take the relevant action.
 	go func() {
-		dec := json.NewDecoder(conn)
+		dec := json.NewDecoder(c)
 		for {
-			m := new(Message)
-			if err := dec.Decode(m); err != nil {
+			var m Message
+			if err := dec.Decode(&m); err != nil {
 				errc <- err
-				close(in)
 				return
 			}
-			in <- m
+			in <- &m
 		}
 	}()
 
 	// Receive messages from the out channel and encode to the client.
 	go func() {
-		enc := json.NewEncoder(conn)
-		counts := make(map[string]int)
+		enc := json.NewEncoder(c)
 		for m := range out {
-			cnt := counts[m.Id]
-			switch {
-			case m.Kind == "end" || cnt < msgLimit:
-				if err := enc.Encode(m); err != nil {
-					errc <- err
-					return
-				}
-				if m.Kind == "end" {
-					delete(counts, m.Id)
-				}
-			case cnt == msgLimit:
-				// Process produced too much output. Kill it.
-				c.kill(m.Id)
+			if err := enc.Encode(m); err != nil {
+				errc <- err
+				return
 			}
-			counts[m.Id]++
 		}
 	}()
 
-	// Wait for one of the send or receive goroutines to exit.
-	if err := <-errc; err != nil && err != io.EOF {
-		log.Println(err)
-	}
-
-	// Kill any running processes associated with this Client.
-	c.Lock()
-	for _, p := range c.proc {
-		p.kill()
-	}
-	c.Unlock()
-}
-
-// Client represents a connected present client.
-// It manages any processes being compiled and run for the client.
-type Client struct {
-	sync.Mutex // guards proc
-	proc       map[string]*Process
-	in         <-chan *Message
-	out        chan<- *Message
-}
-
-// loop handles incoming messages from the client.
-func (c *Client) loop() {
-	for m := range c.in {
-		switch m.Kind {
-		case "run":
-			c.kill(m.Id)
-			go c.run(m.Id, m.Body)
-		case "kill":
-			c.kill(m.Id)
+	// Handle input.
+	for {
+		select {
+		case m := <-in:
+			switch m.Kind {
+			case "run":
+				proc[m.Id].Kill()
+				lOut := limiter(in, out)
+				proc[m.Id] = StartProcess(m.Id, m.Body, lOut)
+			case "kill":
+				proc[m.Id].Kill()
+			}
+		case err := <-errc:
+			// A encode or decode has failed; bail.
+			log.Println(err)
+			// Shut down any running processes.
+			for _, p := range proc {
+				p.Kill()
+			}
+			return
 		}
 	}
-}
-
-// kill shuts down a running process.
-func (c *Client) kill(id string) {
-	c.Lock()
-	defer c.Unlock()
-	if p := c.proc[id]; p != nil {
-		p.kill()
-	}
-}
-
-// run compiles and runs the given program, associating it with the given id.
-func (c *Client) run(id, body string) {
-	p := NewProcess(id, c.out)
-	c.Lock()
-	c.proc[id] = p
-	c.Unlock()
-	err := p.run(body)
-	m := &Message{Id: id, Kind: "end"}
-	if err != nil {
-		m.Body = err.Error()
-	}
-	c.Lock()
-	if c.proc[id] == p {
-		delete(c.proc, id)
-	}
-	c.Unlock()
-	c.out <- m
 }
 
 // Process represents a running process.
 type Process struct {
-	id             string
-	stdout, stderr io.Writer
-
-	sync.Mutex // guards cmd
-	cmd        *exec.Cmd
-	done       chan struct{} // closed when run complete
+	id   string
+	out  chan<- *Message
+	done chan struct{} // closed when wait completes
+	run  *exec.Cmd
 }
 
-func NewProcess(id string, out chan<- *Message) *Process {
-	return &Process{
-		id:     id,
-		stdout: &messageWriter{id, "stdout", out},
-		stderr: &messageWriter{id, "stdout", out},
-		done:   make(chan struct{}),
+// StartProcess builds and runs the given program, sending its output
+// and end event as Messages on the provided channel.
+func StartProcess(id, body string, out chan<- *Message) *Process {
+	p := &Process{
+		id:   id,
+		out:  out,
+		done: make(chan struct{}),
 	}
+	cmd, err := p.start(body)
+	if err != nil {
+		p.end(err)
+		return nil
+	}
+	p.run = cmd
+	go p.wait(cmd)
+	return p
 }
 
-// run compiles and runs the given go program.
-func (p *Process) run(body string) error {
-	defer close(p.done)
+// Kill stops the process if it is running and waits for it to exit.
+func (p *Process) Kill() {
+	if p == nil {
+		return
+	}
+	if p.run != nil {
+		p.run.Process.Kill()
+	}
+	<-p.done
+}
 
+// start builds and starts the given program, sending its output to p.out,
+// and returns the associated *exec.Cmd.
+func (p *Process) start(body string) (*exec.Cmd, error) {
 	// x is the base name for .go and executable files
 	x := filepath.Join(tmpdir, "compile"+strconv.Itoa(<-uniq))
 	src := x + ".go"
@@ -198,56 +155,49 @@ func (p *Process) run(body string) error {
 	// write body to x.go
 	defer os.Remove(src)
 	if err := ioutil.WriteFile(src, []byte(body), 0666); err != nil {
-		return err
+		return nil, err
 	}
 
 	// build x.go, creating x
 	dir, file := filepath.Split(src)
-	err := p.exec(dir, "go", "build", "-o", bin, file)
+	err := p.cmd(dir, "go", "build", "-o", bin, file).Run()
 	defer os.Remove(bin)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// run x
-	return p.exec("", bin)
+	cmd := p.cmd("", bin)
+	if err = cmd.Start(); err != nil {
+		return nil, err
+	}
+	return cmd, nil
 }
 
-// exec runs the specified command in the given directory, writing all standard
-// output and standard error to the Process' stdout and stderr fields. It
-// stores the running command in the cmd field, and returns when the command
-// exits.
-func (p *Process) exec(dir string, args ...string) error {
+// Wait waits for the running process to complete and returns its error state.
+func (p *Process) wait(cmd *exec.Cmd) {
+	defer close(p.done)
+	p.end(cmd.Wait())
+}
+
+// end sends an "end" message to the client, containing the process id and the
+// given error value.
+func (p *Process) end(err error) {
+	m := &Message{Id: p.id, Kind: "end"}
+	if err != nil {
+		m.Body = err.Error()
+	}
+	p.out <- m
+}
+
+// cmd builds an *exec.Cmd that writes its standard output and error to the
+// Process' output channel.
+func (p *Process) cmd(dir string, args ...string) *exec.Cmd {
 	cmd := exec.Command(args[0], args[1:]...)
 	cmd.Dir = dir
-	cmd.Stdout = p.stdout
-	cmd.Stderr = p.stderr
-
-	if err := cmd.Start(); err != nil {
-		return err
-	}
-
-	p.Lock()
-	p.cmd = cmd
-	p.Unlock()
-
-	err := cmd.Wait()
-
-	p.Lock()
-	p.cmd = nil
-	p.Unlock()
-
-	return err
-}
-
-// kill stops the process if it is running and waits for it to exit.
-func (p *Process) kill() {
-	p.Lock()
-	if p.cmd != nil {
-		p.cmd.Process.Kill()
-	}
-	p.Unlock()
-	<-p.done
+	cmd.Stdout = &messageWriter{p.id, "stdout", p.out}
+	cmd.Stderr = &messageWriter{p.id, "stderr", p.out}
+	return cmd
 }
 
 // messageWriter is an io.Writer that converts all writes to Message sends on
@@ -260,6 +210,30 @@ type messageWriter struct {
 func (w *messageWriter) Write(b []byte) (n int, err error) {
 	w.out <- &Message{Id: w.id, Kind: w.kind, Body: string(b)}
 	return len(b), nil
+}
+
+// limiter returns a channel that wraps dest. Messages sent to the channel are
+// sent to dest. After msgLimit Messages have been passed on, a "kill" Message
+// is sent to the kill channel, and only "end" messages are passed.
+func limiter(kill chan<- *Message, dest chan<- *Message) chan<- *Message {
+	ch := make(chan *Message)
+	go func() {
+		n := 0
+		for m := range ch {
+			switch {
+			case n < msgLimit || m.Kind == "end":
+				dest <- m
+				if m.Kind == "end" {
+					return
+				}
+			case n == msgLimit:
+				// Process produced too much output. Kill it.
+				kill <- &Message{Id: m.Id, Kind: "kill"}
+			}
+			n++
+		}
+	}()
+	return ch
 }
 
 var tmpdir string
