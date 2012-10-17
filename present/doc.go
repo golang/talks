@@ -165,6 +165,7 @@ html:
 The function html includes the contents of the specified file as
 unescaped HTML. This is useful for including custom HTML elements
 that cannot be created using only the slide format.
+It is your responsibilty to make sure the included HTML is valid and safe.
 
 	.html file.html
 

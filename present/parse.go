@@ -32,6 +32,8 @@ var (
 // Register binds the named action, which does not being with a period, to the
 // specified parser and template function to be invoked when the name, with a
 // period, appears in the slide input text.
+// The function argument is an optional template function that is available
+// inside templates under that name.
 func Register(name string, parser func(fileName string, lineNumber int, inputLine string) (Elem, error), function interface{}) {
 	if len(name) == 0 || name[0] == ';' {
 		panic("bad name in Register: " + name)
