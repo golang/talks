@@ -50,7 +50,7 @@ Go is a new, general-purpose programming language.
 
 # Go is available in binary form for Windows, Mac OS X, Linux, and FreeBSD running under 32 and 64-bit x86 processor architectures. To install Go on these systems, download the appropriate file from golang.org and either open the package installer (Windows or OS X) or extract the archive to /usr/local/go (Linux and FreeBSD).  
 
-# If you use a different operating system or processor achitecture, you may still be able to use Go by building it from source or using gccgo (an alternate Go compiler based on the GNU C Compiler). See the installation instructions on golang.org for how to do this.
+# If you use a different operating system or processor architecture, you may still be able to use Go by building it from source or using gccgo (an alternate Go compiler based on the GNU C Compiler). See the installation instructions on golang.org for how to do this.
 
 * Test your Go installation
 

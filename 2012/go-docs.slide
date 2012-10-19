@@ -215,7 +215,7 @@ Input for the previous slide:
 
 * .code and .play again
 
-The input for the Mulitplexing slide again:
+The input for the Multiplexing slide again:
 
 .code go-docs.slide /^\* Multiplexing/,/^.play/
 
