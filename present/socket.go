@@ -14,28 +14,20 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"runtime"
 	"strconv"
 
 	"code.google.com/p/go.net/websocket"
 )
 
-const socketPresent = true
+const (
+	socketPresent = true // tell main.go that socket is implemented
+	msgLimit      = 1000 // max number of messages to send per session
+)
 
+// HandleSocket registers the websocket handler with http.DefaultServeMux
+// under the given path.
 func HandleSocket(path string) {
 	http.Handle(path, websocket.Handler(socketHandler))
-}
-
-const msgLimit = 1000 // max number of messages to send per session
-
-var uniq = make(chan int) // a source of numbers for naming temporary files
-
-func init() {
-	go func() {
-		for i := 0; ; i++ {
-			uniq <- i
-		}
-	}()
 }
 
 // Message is the wire format for the websocket connection to the browser.
@@ -109,6 +101,7 @@ type Process struct {
 	out  chan<- *Message
 	done chan struct{} // closed when wait completes
 	run  *exec.Cmd
+	src  string // source file; to be removed when wait returns
 }
 
 // StartProcess builds and runs the given program, sending its output
@@ -119,13 +112,11 @@ func StartProcess(id, body string, out chan<- *Message) *Process {
 		out:  out,
 		done: make(chan struct{}),
 	}
-	cmd, err := p.start(body)
-	if err != nil {
+	if err := p.start(body); err != nil {
 		p.end(err)
 		return nil
 	}
-	p.run = cmd
-	go p.wait(cmd)
+	go p.wait()
 	return p
 }
 
@@ -134,49 +125,38 @@ func (p *Process) Kill() {
 	if p == nil {
 		return
 	}
-	if p.run != nil {
-		p.run.Process.Kill()
-	}
-	<-p.done
+	p.run.Process.Kill()
+	<-p.done // block until process exits
 }
 
-// start builds and starts the given program, sending its output to p.out,
-// and returns the associated *exec.Cmd.
-func (p *Process) start(body string) (*exec.Cmd, error) {
-	// x is the base name for .go and executable files
-	x := filepath.Join(tmpdir, "compile"+strconv.Itoa(<-uniq))
-	src := x + ".go"
-	bin := x
-	if runtime.GOOS == "windows" {
-		bin += ".exe"
-	}
-
+// start runs the given program with "go run", sends its output to p.out,
+// and stores the running *exec.Command in the run field.
+func (p *Process) start(body string) error {
 	// write body to x.go
-	defer os.Remove(src)
+	src := filepath.Join(tmpdir, "compile"+strconv.Itoa(<-uniq)) + ".go"
 	if err := ioutil.WriteFile(src, []byte(body), 0666); err != nil {
-		return nil, err
+		return err
 	}
 
-	// build x.go, creating x
+	// run x.go
 	dir, file := filepath.Split(src)
-	err := p.cmd(dir, "go", "build", "-o", bin, file).Run()
-	defer os.Remove(bin)
-	if err != nil {
-		return nil, err
+	cmd := p.cmd(dir, "go", "run", file)
+	if err := cmd.Start(); err != nil {
+		os.Remove(src)
+		return err
 	}
 
-	// run x
-	cmd := p.cmd("", bin)
-	if err = cmd.Start(); err != nil {
-		return nil, err
-	}
-	return cmd, nil
+	p.run = cmd
+	p.src = src
+	return nil
 }
 
-// wait waits for the running process to complete and returns its error state.
-func (p *Process) wait(cmd *exec.Cmd) {
-	defer close(p.done)
-	p.end(cmd.Wait())
+// wait waits for the running process to complete
+// and sends its error state to the client.
+func (p *Process) wait() {
+	p.end(p.run.Wait())
+	close(p.done) // unblock waiting Kill calls
+	os.Remove(p.src)
 }
 
 // end sends an "end" message to the client, containing the process id and the
@@ -244,4 +224,14 @@ func init() {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+var uniq = make(chan int) // a source of numbers for naming temporary files
+
+func init() {
+	go func() {
+		for i := 0; ; i++ {
+			uniq <- i
+		}
+	}()
 }
