@@ -89,7 +89,7 @@ Most of the tools for presentations focus on style, not ease of creation.
 
 In the `go.talks` repo, have a new tool: `present`.
 
-	go get code.google.com/p/go/present
+	go get code.google.com/p/go.talks/present
 
 - Simple
 - Easy to use
