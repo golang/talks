@@ -14,6 +14,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strconv"
 
 	"code.google.com/p/go.net/websocket"
@@ -101,7 +102,6 @@ type Process struct {
 	out  chan<- *Message
 	done chan struct{} // closed when wait completes
 	run  *exec.Cmd
-	src  string // source file; to be removed when wait returns
 }
 
 // StartProcess builds and runs the given program, sending its output
@@ -129,25 +129,41 @@ func (p *Process) Kill() {
 	<-p.done // block until process exits
 }
 
-// start runs the given program with "go run", sends its output to p.out,
-// and stores the running *exec.Command in the run field.
+// start builds and starts the given program, sending its output to p.out,
+// and stores the running *exec.Cmd in the run field.
 func (p *Process) start(body string) error {
+	// We "go build" and then exec the binary so that the
+	// resultant *exec.Cmd is a handle to the user's program
+	// (rather than the go tool process).
+	// This makes Kill work.
+
+	bin := filepath.Join(tmpdir, "compile"+strconv.Itoa(<-uniq))
+	src := bin + ".go"
+	if runtime.GOOS == "windows" {
+		bin += ".exe"
+	}
+
 	// write body to x.go
-	src := filepath.Join(tmpdir, "compile"+strconv.Itoa(<-uniq)) + ".go"
-	if err := ioutil.WriteFile(src, []byte(body), 0666); err != nil {
+	defer os.Remove(src)
+	err := ioutil.WriteFile(src, []byte(body), 0666)
+	if err != nil {
 		return err
 	}
 
-	// run x.go
+	// build x.go, creating x
+	defer os.Remove(bin)
 	dir, file := filepath.Split(src)
-	cmd := p.cmd(dir, "go", "run", file)
-	if err := cmd.Start(); err != nil {
-		os.Remove(src)
+	cmd := p.cmd(dir, "go", "build", "-o", bin, file)
+	if err := cmd.Run(); err != nil {
 		return err
 	}
 
+	// run x
+	cmd = p.cmd("", bin)
+	if err := cmd.Start(); err != nil {
+		return err
+	}
 	p.run = cmd
-	p.src = src
 	return nil
 }
 
@@ -156,7 +172,6 @@ func (p *Process) start(body string) error {
 func (p *Process) wait() {
 	p.end(p.run.Wait())
 	close(p.done) // unblock waiting Kill calls
-	os.Remove(p.src)
 }
 
 // end sends an "end" message to the client, containing the process id and the
