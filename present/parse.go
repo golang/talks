@@ -349,6 +349,7 @@ func parsePresenters(lines *Lines) (pres []Presenter, err error) {
 			el = parseURL("http://twitter.com/" + text[1:])
 			if l, ok := el.(Link); ok {
 				l.Args = []string{text}
+				el = l
 			}
 		case strings.Contains(text, ":"):
 			el = parseURL(text)
