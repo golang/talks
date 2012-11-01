@@ -7,7 +7,6 @@ package main
 import (
 	"bytes"
 	"errors"
-	"flag"
 	"fmt"
 	"html/template"
 	"io"
@@ -21,8 +20,7 @@ import (
 )
 
 var (
-	slideTemplate = flag.String("template", "", "alternate slide template file")
-	parsers       = make(map[string]func(string, int, string) (Elem, error))
+	parsers = make(map[string]func(string, int, string) (Elem, error))
 
 	funcs = template.FuncMap{
 		"style": style,
@@ -31,7 +29,7 @@ var (
 
 // Register binds the named action, which does not being with a period, to the
 // specified parser and template function to be invoked when the name, with a
-// period, appears in the slide input text.
+// period, appears in the present input text.
 // The function argument is an optional template function that is available
 // inside templates under that name.
 func Register(name string, parser func(fileName string, lineNumber int, inputLine string) (Elem, error), function interface{}) {
@@ -44,20 +42,36 @@ func Register(name string, parser func(fileName string, lineNumber int, inputLin
 	}
 }
 
-// renderSlides reads the slide file, builds its template representation,
+// extensions maps the presentable file extensions to the name of the
+// template to be executed.
+var extensions = map[string]string{
+	".slide":   "templates/slides.tmpl",
+	".article": "templates/article.tmpl",
+}
+
+func isDoc(path string) bool {
+	_, ok := extensions[filepath.Ext(path)]
+	return ok
+}
+
+// renderDoc reads the present file, builds its template representation,
 // and executes the template, sending output to w.
-func renderSlides(w io.Writer, base, slideFile string) error {
-	// Read the input and build the slide structure.
-	pres, err := parse(slideFile, 0)
+func renderDoc(w io.Writer, base, docFile string) error {
+	// Read the input and build the doc structure.
+	pres, err := parse(docFile, 0)
 	if err != nil {
 		return err
 	}
 
-	// Locate the template file.
-	name := filepath.Join(base, "slide.tmpl")
-	if *slideTemplate != "" {
-		name = *slideTemplate
+	// Find which template should be executed.
+	ext := filepath.Ext(docFile)
+	tmplPath, ok := extensions[ext]
+	if !ok {
+		return fmt.Errorf("no template for extension %v", ext)
 	}
+
+	// Locate the template file.
+	name := filepath.Join(base, tmplPath)
 
 	// Read and parse the input.
 	tmpl := template.New(name).Funcs(funcs)
@@ -68,27 +82,27 @@ func renderSlides(w io.Writer, base, slideFile string) error {
 	pres.Template = tmpl
 
 	// Execute the template.
-	return tmpl.ExecuteTemplate(w, "slides", pres)
+	return tmpl.ExecuteTemplate(w, "root", pres)
 }
 
-// Pres represents an entire presentation.
-type Pres struct {
-	Title      string
-	Subtitle   string
-	Presenters []Presenter
-	Slide      []Slide
-	Template   *template.Template
+// Doc represents an entire document.
+type Doc struct {
+	Title    string
+	Subtitle string
+	Authors  []Author
+	Sections []Section
+	Template *template.Template
 }
 
-// Presenter represents the person who wrote and/or is giving the presentation.
-type Presenter struct {
+// Author represents the person who wrote and/or is presenting the document.
+type Author struct {
 	Elem []Elem
 }
 
-// TextElem returns the first text elements of the presenter details.
-// This is used to display the presenters' name, job title, and company
+// TextElem returns the first text elements of the author details.
+// This is used to display the author' name, job title, and company
 // without the contact details.
-func (p *Presenter) TextElem() (elems []Elem) {
+func (p *Author) TextElem() (elems []Elem) {
 	for _, el := range p.Elem {
 		if _, ok := el.(Text); !ok {
 			break
@@ -98,14 +112,45 @@ func (p *Presenter) TextElem() (elems []Elem) {
 	return
 }
 
-// Slide represents a single presentation slide.
-type Slide struct {
-	Number int
+// Section represents a section of a document (such as a presentation slide)
+// comprising a title and a list of elements.
+type Section struct {
+	Number []int
 	Title  string
 	Elem   []Elem
+	Doc    *Doc
 }
 
-// Elem defines the interface for a slide element.
+func (s Section) Sections() (sections []Section) {
+	for _, e := range s.Elem {
+		if s, ok := e.(Section); ok {
+			sections = append(sections, s)
+		}
+	}
+	return
+}
+
+// Level returns the level of the given section.
+// The document title is level 1, main section 2, etc.
+func (s Section) Level() int {
+	return len(s.Number) + 1
+}
+
+// FormattedNumber returns a string containing the concatenation of the
+// numbers identifying a Section.
+func (s Section) FormattedNumber() string {
+	b := &bytes.Buffer{}
+	for _, n := range s.Number {
+		fmt.Fprintf(b, "%v.", n)
+	}
+	return b.String()
+}
+
+func (s Section) HTML(tmpl *template.Template) (template.HTML, error) {
+	return execTemplate(tmpl, "section", s)
+}
+
+// Elem defines the interface for a present element.
 // That is, something that can render itself in HTML.
 type Elem interface {
 	HTML(t *template.Template) (template.HTML, error)
@@ -196,32 +241,48 @@ const (
 	titlesOnly parseMode = 1
 )
 
-// parse parses the presentation in the file specified by name.
-func parse(name string, mode parseMode) (*Pres, error) {
-	pres := new(Pres)
+// parse parses the document in the file specified by name.
+func parse(name string, mode parseMode) (*Doc, error) {
+	doc := new(Doc)
 	lines, err := readLines(name)
 	if err != nil {
 		return nil, err
 	}
 	var ok bool
 	// First non-empty line starts title.
-	pres.Title, ok = lines.nextNonEmpty()
+	doc.Title, ok = lines.nextNonEmpty()
 	if !ok {
 		return nil, errors.New("no title")
 	}
-	pres.Subtitle, ok = lines.next()
+	doc.Subtitle, ok = lines.next()
 	if !ok {
 		return nil, errors.New("no subtitle")
 	}
 	if mode&titlesOnly > 0 {
-		return pres, nil
+		return doc, nil
 	}
-	// Presenters
-	pres.Presenters, err = parsePresenters(lines)
-	// Slides
-	for i := 0; ; i++ {
-		var slide Slide
-		slide.Number = i
+	// Authors
+	if doc.Authors, err = parseAuthors(lines); err != nil {
+		return nil, err
+	}
+	// Sections
+	if doc.Sections, err = parseSections(name, lines, []int{}, doc); err != nil {
+		return nil, err
+	}
+	return doc, nil
+}
+
+// lesserHeading returns true if text is a heading of a lesser or equal level
+// than that denoted by prefix. 
+func lesserHeading(text, prefix string) bool {
+	return strings.HasPrefix(text, "*") && !strings.HasPrefix(text, prefix+"*")
+}
+
+// parseSections parses Sections from lines for the section level indicated by
+// number (a nil number indicates the top level).
+func parseSections(name string, lines *Lines, number []int, doc *Doc) ([]Section, error) {
+	var sections []Section
+	for i := 1; ; i++ {
 		// Next non-empty line is title.
 		text, ok := lines.nextNonEmpty()
 		for ok && text == "" {
@@ -230,12 +291,18 @@ func parse(name string, mode parseMode) (*Pres, error) {
 		if !ok {
 			break
 		}
-		if !strings.HasPrefix(text, "* ") {
-			return nil, fmt.Errorf("%s:%d bad title %q", name, lines.line, text)
+		prefix := strings.Repeat("*", len(number)+1)
+		if !strings.HasPrefix(text, prefix+" ") {
+			lines.back()
+			break
 		}
-		slide.Title = text[2:]
+		section := Section{
+			Number: append(append([]int{}, number...), i),
+			Title:  text[len(prefix)+1:],
+			Doc:    doc,
+		}
 		text, ok = lines.nextNonEmpty()
-		for ok && !strings.HasPrefix(text, "* ") {
+		for ok && !lesserHeading(text, prefix) {
 			var e Elem
 			r, _ := utf8.DecodeRuneInString(text)
 			switch {
@@ -267,16 +334,26 @@ func parse(name string, mode parseMode) (*Pres, error) {
 				}
 				lines.back()
 				e = List{Bullet: b}
+			case strings.HasPrefix(text, prefix+"* "):
+				lines.back()
+				subsecs, err := parseSections(name, lines, section.Number, doc)
+				if err != nil {
+					return nil, err
+				}
+				for _, ss := range subsecs {
+					section.Elem = append(section.Elem, ss)
+				}
 			case strings.HasPrefix(text, "."):
 				args := strings.Fields(text)
 				parser := parsers[args[0]]
 				if parser == nil {
 					return nil, fmt.Errorf("%s:%d: unknown command %q\n", name, lines.line, text)
 				}
-				e, err = parser(name, lines.line, text)
+				t, err := parser(name, lines.line, text)
 				if err != nil {
 					return nil, err
 				}
+				e = t
 			default:
 				var l []string
 				for ok && strings.TrimSpace(text) != "" {
@@ -294,20 +371,20 @@ func parse(name string, mode parseMode) (*Pres, error) {
 				}
 			}
 			if e != nil {
-				slide.Elem = append(slide.Elem, e)
+				section.Elem = append(section.Elem, e)
 			}
 			text, ok = lines.nextNonEmpty()
 		}
-		if strings.HasPrefix(text, "* ") {
+		if strings.HasPrefix(text, "*") {
 			lines.back()
 		}
-		pres.Slide = append(pres.Slide, slide)
+		sections = append(sections, section)
 	}
-	return pres, nil
+	return sections, nil
 }
 
-func parsePresenters(lines *Lines) (pres []Presenter, err error) {
-	// This grammar demarcates presenters with blanks.
+func parseAuthors(lines *Lines) (authors []Author, err error) {
+	// This grammar demarcates authors with blanks.
 
 	// Skip blank lines.
 	if _, ok := lines.nextNonEmpty(); !ok {
@@ -315,27 +392,27 @@ func parsePresenters(lines *Lines) (pres []Presenter, err error) {
 	}
 	lines.back()
 
-	var p *Presenter
+	var a *Author
 	for {
 		text, ok := lines.next()
 		if !ok {
 			return nil, errors.New("unexpected EOF")
 		}
 
-		// If we find a slide heading, we're done.
+		// If we find a section heading, we're done.
 		if strings.HasPrefix(text, "* ") {
 			lines.back()
 			break
 		}
 
-		// If we encounter a blank we're done with this presenter.
-		if p != nil && len(text) == 0 {
-			pres = append(pres, *p)
-			p = nil
+		// If we encounter a blank we're done with this author.
+		if a != nil && len(text) == 0 {
+			authors = append(authors, *a)
+			a = nil
 			continue
 		}
-		if p == nil {
-			p = new(Presenter)
+		if a == nil {
+			a = new(Author)
 		}
 
 		// Parse the line. Those that
@@ -359,12 +436,12 @@ func parsePresenters(lines *Lines) (pres []Presenter, err error) {
 		if el == nil {
 			el = Text{Lines: []string{text}}
 		}
-		p.Elem = append(p.Elem, el)
+		a.Elem = append(a.Elem, el)
 	}
-	if p != nil {
-		pres = append(pres, *p)
+	if a != nil {
+		authors = append(authors, *a)
 	}
-	return pres, nil
+	return authors, nil
 }
 
 func parseURL(text string) Elem {

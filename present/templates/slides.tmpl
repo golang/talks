@@ -2,11 +2,11 @@
 
 This is the slide template. It defines how presentations are formatted.
 
-The "slide" template is the base HTML document. The "list", "text", "code",
+The "root" template is the base HTML document. The "list", "text", "code",
 "image", and "link" templates are used by the various formatting helpers.
 
 */}
-{{define "slides"}}
+{{define "root"}}
 <!DOCTYPE html>
 <html>
   <head>
@@ -22,14 +22,14 @@ The "slide" template is the base HTML document. The "list", "text", "code",
       <article>
         <h1>{{.Title}}</h1>
         {{with .Subtitle}}<h3>{{.}}</h3>{{end}}
-        {{range .Presenters}}
+        {{range .Authors}}
           <div class="presenter">
             {{range .TextElem}}{{.HTML $.Template}}{{end}}
           </div>
         {{end}}
       </article>
       
-  {{range $i, $s := .Slide}}
+  {{range $i, $s := .Sections}}
   <!-- start of slide {{$s.Number}} -->
       <article>
       {{if $s.Elem}}
@@ -43,8 +43,8 @@ The "slide" template is the base HTML document. The "list", "text", "code",
   {{end}}{{/* of Slide block */}}
 
       <article>
-        <h3>Thank you</h3>
-        {{range .Presenters}}
+        <h3>Thank you</h1>
+        {{range .Authors}}
           <div class="presenter">
             {{range .Elem}}{{.HTML $.Template}}{{end}}
           </div>
@@ -54,6 +54,11 @@ The "slide" template is the base HTML document. The "list", "text", "code",
   </body>
   <script src='/static/playground.js'></script>
 </html>
+{{end}}
+
+{{define "section"}}
+  <h{{len .Number}} id="TOC_{{.FormattedNumber}}">{{.FormattedNumber}} {{.Title}}</h{{len .Number}}>
+  {{range .Elem}}{{.HTML $.Doc.Template}}{{end}}
 {{end}}
 
 {{define "list"}}

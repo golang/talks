@@ -28,8 +28,8 @@ func dirHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	const base = "."
 	name := filepath.Join(base, r.URL.Path)
-	if filepath.Ext(name) == ".slide" {
-		err := renderSlides(w, basePath, name)
+	if isDoc(name) {
+		err := renderDoc(w, basePath, name)
 		if err != nil {
 			log.Println(err)
 			http.Error(w, err.Error(), 500)
@@ -78,7 +78,7 @@ func dirList(w io.Writer, name string) (isDir bool, err error) {
 			d.Dirs = append(d.Dirs, e)
 			continue
 		}
-		if filepath.Ext(e.Name) == ".slide" {
+		if isDoc(e.Name) {
 			if p, err := parse(e.Path, titlesOnly); err != nil {
 				log.Println(err)
 			} else {
@@ -102,11 +102,10 @@ func dirList(w io.Writer, name string) (isDir bool, err error) {
 func showFile(n string) bool {
 	switch filepath.Ext(n) {
 	case ".pdf":
-	case ".slide":
 	case ".html":
 	case ".go":
 	default:
-		return false
+		return isDoc(n)
 	}
 	return true
 }

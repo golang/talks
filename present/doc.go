@@ -3,11 +3,11 @@
 // license that can be found in the LICENSE file.
 
 /*
-Present displays slide presentations.
-It runs a web server that presents slide files from the current directory.
+Present displays slide presentations and articles. It runs a web server that
+presents slide and article files from the current directory.
 
 It may be run as a stand-alone command or an App Engine app.
-The stand-alone version permits the execution of programs from within a slide
+The stand-alone version permits the execution of programs from within a
 presentation. The App Engine version does not provide this functionality.
 
 Usage of present:
@@ -19,22 +19,23 @@ You may use the app.yaml file provided in the root of the go.talks repository
 to deploy present to App Engine:
 	appcfg.py update -A your-app-id -V your-app-version /path/to/go.talks
 
-The file slide format
+The source file format
 
-Slide files have the following format.  The first non-blank non-comment
+Source files have the following format.  The first non-blank non-comment
 line is the title, so the header looks like
 
-	Title of presentation
-	Subtitle of presentation
+	Title of document
+	Subtitle of document
 	<blank line>
-	Presenter Name
+	Author Name
 	Job title, Company
 	joe@example.com
 	http://url/
 	@twitter_name
 
-The presenter section may contain a mixture of text, twitter names, and links.
-Only the plain text lines will be displayed on the presentation front page.
+The author section may contain a mixture of text, twitter names, and links.
+For slide presentations, only the plain text lines will be displayed on the
+first slide.
 
 Multiple presenters may be specified, separated by a blank line.
 
@@ -44,9 +45,13 @@ After that come slides/sections, each after a blank line:
 
 	Some Text
 
+	** Subsection
+
 	- bullets
 	- more bullets
 	- a bullet with
+
+	*** Sub-subsection
 
 	Some More text
 

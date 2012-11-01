@@ -399,9 +399,16 @@ div.output .stderr {
 div.output .system {
   color: rgb(255, 209, 77)
 }
-div.output .buttons,
-div.playground button {
+.buttons {
+  position: relative;
+  float: right;
+  top: -60px;
+  right: 10px;
+}
+div.output .buttons {
   position: absolute;
+  float: none;
+  top: auto;
   right: 5px;
   bottom: 5px;
 }

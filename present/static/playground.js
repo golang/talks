@@ -76,6 +76,7 @@
     function onRun() {
       outpre.innerHTML = "";
       output.style.display = "block";
+      run.style.display = "none";
       sendMessage({Id: id, Kind: "run", Body: text(code)});
     }
 
@@ -86,10 +87,10 @@
     function onClose() {
       onKill();
       output.style.display = "none";
+      run.style.display = "inline-block";
     }
 
     var run = document.createElement('button');
-    run.contenteditable = false;
     run.innerHTML = 'Run';
     run.addEventListener("click", onRun, false);
     var run2 = document.createElement('button');
@@ -102,6 +103,12 @@
     close.innerHTML = 'Close';
     close.addEventListener("click", onClose, false);
 
+    var button = document.createElement('div');
+    button.classList.add('buttons');
+    button.appendChild(run);
+    // Hack to simulate insertAfter
+    code.parentNode.insertBefore(button, code.nextSibling)
+
     var buttons = document.createElement('div');
     buttons.classList.add('buttons');
     buttons.appendChild(run2);
@@ -112,9 +119,7 @@
     output.appendChild(buttons);
     output.appendChild(outpre);
     output.style.display = "none";
-
-    code.appendChild(run);
-    code.parentNode.appendChild(output);
+    code.parentNode.insertBefore(output, button.nextSibling)
 
     outputs[id] = outpre;
   }
