@@ -45,8 +45,8 @@ func Register(name string, parser func(fileName string, lineNumber int, inputLin
 // extensions maps the presentable file extensions to the name of the
 // template to be executed.
 var extensions = map[string]string{
-	".slide":   "templates/slides.tmpl",
-	".article": "templates/article.tmpl",
+	".slide":   "slides.tmpl",
+	".article": "article.tmpl",
 }
 
 func isDoc(path string) bool {
@@ -65,17 +65,18 @@ func renderDoc(w io.Writer, base, docFile string) error {
 
 	// Find which template should be executed.
 	ext := filepath.Ext(docFile)
-	tmplPath, ok := extensions[ext]
+	contentTmpl, ok := extensions[ext]
 	if !ok {
 		return fmt.Errorf("no template for extension %v", ext)
 	}
 
 	// Locate the template file.
-	name := filepath.Join(base, tmplPath)
+	actionTmpl := filepath.Join(base, "templates/action.tmpl")
+	contentTmpl = filepath.Join(base, "templates", contentTmpl)
 
 	// Read and parse the input.
-	tmpl := template.New(name).Funcs(funcs)
-	if _, err := tmpl.ParseFiles(name); err != nil {
+	tmpl := template.New("").Funcs(funcs)
+	if _, err := tmpl.ParseFiles(actionTmpl, contentTmpl); err != nil {
 		return err
 	}
 
@@ -273,7 +274,7 @@ func parse(name string, mode parseMode) (*Doc, error) {
 }
 
 // lesserHeading returns true if text is a heading of a lesser or equal level
-// than that denoted by prefix. 
+// than that denoted by prefix.
 func lesserHeading(text, prefix string) bool {
 	return strings.HasPrefix(text, "*") && !strings.HasPrefix(text, prefix+"*")
 }
