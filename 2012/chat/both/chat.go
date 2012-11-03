@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net"
 	"net/http"
 	"time"
 
@@ -13,11 +14,26 @@ import (
 const listenAddr = "localhost:4000"
 
 func main() {
+	go netListen() // HL
 	http.HandleFunc("/", rootHandler)
 	http.Handle("/socket", websocket.Handler(socketHandler))
 	err := http.ListenAndServe(listenAddr, nil)
 	if err != nil {
 		log.Fatal(err)
+	}
+}
+
+func netListen() {
+	l, err := net.Listen("tcp", "localhost:4001")
+	if err != nil {
+		log.Fatal(err)
+	}
+	for {
+		c, err := l.Accept()
+		if err != nil {
+			log.Fatal(err)
+		}
+		go match(c)
 	}
 }
 
@@ -35,11 +51,11 @@ func (s socket) Close() error {
 var chain = NewChain(2) // 2-word prefixes
 
 func socketHandler(ws *websocket.Conn) {
-	r, w := io.Pipe() // HL
-	go func() {       // HL
-		_, err := io.Copy(io.MultiWriter(w, chain), ws) // HL
-		w.CloseWithError(err)                           // HL
-	}() // HL
+	r, w := io.Pipe()
+	go func() {
+		_, err := io.Copy(io.MultiWriter(w, chain), ws)
+		w.CloseWithError(err)
+	}()
 	s := socket{r, ws, make(chan bool)}
 	go match(s)
 	<-s.done
@@ -54,8 +70,8 @@ func match(c io.ReadWriteCloser) {
 		// now handled by the other goroutine
 	case p := <-partner:
 		chat(p, c)
-	case <-time.After(5 * time.Second): // HL
-		chat(Bot(), c) // HL
+	case <-time.After(5 * time.Second):
+		chat(Bot(), c)
 	}
 }
 

@@ -2,17 +2,19 @@ package main
 
 import "fmt"
 
-type A struct {
-	B
+type A struct{}
+
+func (A) Hello() {
+	fmt.Println("Hello!")
 }
 
-type B struct{}
-
-func (b B) String() string {
-	return "B comes after A"
+type B struct {
+	A
 }
+
+// func (b B) Hello() { b.A.Hello() } // (implicitly!)
 
 func main() {
-	var a A
-	fmt.Println(a) // Println calls String to format a
+	var b B
+	b.Hello()
 }

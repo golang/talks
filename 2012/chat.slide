@@ -12,20 +12,6 @@ You may have heard of Go.
 
 It's my favorite language. I think you'll like it, too.
 
-* Why Go?
-
-Needed a language for building servers* at Google, with an emphasis on:
-
-- simplicity,
-- ease of use,
-- readability,
-- comprehensibility,
-- efficiency,
-- concurrency,
-- scale.
-
-(* Go has since proven to be a great general-purpose language.)
-
 * What is Go?
 
 An open source (BSD licensed) project:
@@ -39,9 +25,34 @@ An open source (BSD licensed) project:
 
 As of September 2012 we have more than 300 contributors.
 
-* Go has gophers
+* Go is about composition
+
+Go is Object Oriented, but not in the usual way.
+
+- no classes (methods may be declared on any type)
+- no subtype inheritance
+- interfaces are satisfied implicitly (structural typing)
+
+The result: simple pieces connected by small interfaces.
+
+* Go is about concurrency
+
+Go provides CSP-like concurrency primitives.
+
+- lightweight threads (goroutines)
+- typed thread-safe communication and synchronization (channels)
+
+The result: comprehensible concurrent code.
+
+* Go is about gophers
 
 .image chat/gophers.jpg
+
+* Core values
+
+Go is about composition, concurrency, and gophers.
+
+Keep that in mind.
 
 * Hello, go
 
@@ -170,6 +181,11 @@ We'll serve the user interface with Go's standard `net/http` package, and websoc
 
 .play chat/support/hello-web.go
 
+* Hello, WebSocket
+
+.code chat/support/websocket.js
+.play chat/support/websocket.go
+
 * Using the http and websocket packages
 
 .code chat/http/chat.go /package/,/^}/
@@ -185,17 +201,21 @@ We'll serve the user interface with Go's standard `net/http` package, and websoc
 
 We can't just use a `websocket.Conn` instead of the `net.Conn`, because a `websocket.Conn` is held open by its handler function. Here we use a channel to keep the handler running until the socket's `Close` method is called.
 
-.code chat/http/chat.go /type.socket/,/^}/
-.code chat/http/chat.go /func.+socket.+Close/,/^}/
-.code chat/http/chat.go /func.socketHandler/,/^}/
-
-* Demo
+.code chat/http-noembed/chat.go /type.socket/,/END/
 
 * Struct embedding
 
-Go supports a kind of "mix-in" functionality with a feature known as "struct embedding". The embedding struct inherits the embedded type's methods.
+Go supports a kind of "mix-in" functionality with a feature known as "struct embedding". The embedding struct delegates calls to the embedded type's methods.
 
-.code chat/support/embed.go /type/,$
+.play chat/support/embed.go /type/,$
+
+* Embedding the websocket connection
+
+By embedding the `*websocket.Conn` as an `io.ReadWriter`, we can drop the explicit `socket` `Read` and `Write` methods. 
+
+.code chat/http/chat.go /type.socket/,/END/
+
+* Demo
 
 * Relieving loneliness
 
@@ -245,6 +265,15 @@ To do this, we add a case to the select that triggers after 10 seconds, starting
 .code chat/markov/chat.go /func.match/,/^}/
 
 The `chat` function remains untouched.
+
+* Demo
+
+* One more thing
+
+* TCP and HTTP at the same time
+
+.code chat/both/chat.go /func main/,/^}/
+.code chat/both/chat.go /func netListen/,/^}/
 
 * Demo
 

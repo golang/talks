@@ -21,7 +21,7 @@ func main() {
 }
 
 type socket struct {
-	io.ReadWriter
+	io.ReadWriter // HL
 	done chan bool
 }
 
@@ -31,10 +31,12 @@ func (s socket) Close() error {
 }
 
 func socketHandler(ws *websocket.Conn) {
-	s := socket{ws, make(chan bool)}
+	s := socket{ws, make(chan bool)} // HL
 	go match(s)
 	<-s.done
 }
+
+// END OMIT
 
 var partner = make(chan io.ReadWriteCloser)
 
