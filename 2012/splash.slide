@@ -743,7 +743,7 @@ Often cited as one of Go's best features.
 * Gofmt and other tools
 
 Surprise: The existence of `gofmt` enabled _semantic_ tools:
-Can rewrite the tree; `gofix` will clean  up output.
+Can rewrite the tree; `gofmt` will clean up output.
 
 Examples:
 
