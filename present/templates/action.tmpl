@@ -28,7 +28,7 @@ It determines how the formatting actions are rendered.
 {{end}}
 
 {{define "code"}}
-  <div class="code{{if .Play}} playground{{end}}" contenteditable="true">{{code .}}</div>
+  <div class="code{{if .Play}} playground{{end}}" contenteditable="true" spellcheck="false">{{code .}}</div>
 {{end}}
 
 {{define "image"}}<div class="image">{{image .File .Args}}</div>{{end}}

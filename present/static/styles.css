@@ -374,6 +374,7 @@ div.output {
   bottom: 40px;
   background: #202020;
   padding: 5px 10px;
+  z-index: 2;
 
   border-radius: 10px;
   -o-border-radius: 10px;
