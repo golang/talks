@@ -15,6 +15,7 @@ func init() {
 }
 
 type Image struct {
+	EnableInlining
 	File string
 	Args []interface{}
 }
@@ -29,7 +30,7 @@ func parseImage(fileName string, lineno int, text string) (Elem, error) {
 	if err != nil {
 		return nil, err
 	}
-	return Image{args[1], a}, nil
+	return Image{File: args[1], Args: a}, nil
 }
 
 // image is the entry point for the '.image' present command.
@@ -39,7 +40,7 @@ func image(file string, arg []interface{}) (template.HTML, error) {
 	case 0:
 		// no size parameters
 	case 2:
-		args = fmt.Sprintf("height=%s width=%s", arg[0], arg[1])
+		args = fmt.Sprintf("height='%v' width='%v'", arg[0], arg[1])
 	default:
 		return "", fmt.Errorf("incorrect image invocation: code %q %v", file, arg)
 	}
