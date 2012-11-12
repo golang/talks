@@ -42,20 +42,33 @@ Word:
 		if len(word) < 2 {
 			continue Word
 		}
+		const punctuation = `.,;:()!?—–'"`
+		const marker = "_*`"
+		// Initial punctuation is OK but must be peeled off.
+		first := strings.IndexAny(word, marker)
+		if first == -1 {
+			continue Word
+		}
+		// Is the marker prefixed only by punctuation?
+		for _, r := range word[:first] {
+			if !strings.ContainsRune(punctuation, r) {
+				continue Word
+			}
+		}
+		open, word := word[:first], word[first:]
 		char := word[0] // ASCII is OK.
-		open := ""
 		close := ""
 		switch char {
 		default:
 			continue Word
 		case '_':
-			open = "<i>"
+			open += "<i>"
 			close = "</i>"
 		case '*':
-			open = "<b>"
+			open += "<b>"
 			close = "</b>"
 		case '`':
-			open = "<code>"
+			open += "<code>"
 			close = "</code>"
 		}
 		// Terminal punctuation is OK but must be peeled off.
@@ -65,7 +78,7 @@ Word:
 		}
 		head, tail := word[:last+1], word[last+1:]
 		for _, r := range tail {
-			if !strings.ContainsRune(`.,;:()!?—–'"`, r) {
+			if !strings.ContainsRune(punctuation, r) {
 				continue Word
 			}
 		}

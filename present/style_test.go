@@ -44,6 +44,10 @@ func TestFont(t *testing.T) {
 		{"_a___b_", "<i>a_ b</i>"},
 		{"*a**b*?", "<b>a*b</b>?"},
 		{"_a_<>_b_.", "<i>a <> b</i>."},
+		{"(_a_)", "(<i>a</i>)"},
+		{"((_a_), _b_, _c_).", "((<i>a</i>), <i>b</i>, <i>c</i>)."},
+		{"(_a)", "(_a)"},
+		{"(_a)", "(_a)"},
 		{"_Why_use_scoped__ptr_? Use plain ***ptr* instead.", "<i>Why use scoped_ptr</i>? Use plain <b>*ptr</b> instead."},
 	}
 	for _, test := range tests {
@@ -70,6 +74,9 @@ func TestStyle(t *testing.T) {
 		{"_a___b_", "<i>a_ b</i>"},
 		{"*a**b*?", "<b>a*b</b>?"},
 		{"_a_<>_b_.", "<i>a &lt;&gt; b</i>."},
+		{"(_a_<>_b_)", "(<i>a &lt;&gt; b</i>)"},
+		{"((_a_), _b_, _c_).", "((<i>a</i>), <i>b</i>, <i>c</i>)."},
+		{"(_a)", "(_a)"},
 	}
 	for _, test := range tests {
 		out := string(style(test.in))
