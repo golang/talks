@@ -70,7 +70,7 @@ Packages contain type, function, variable, and constant declarations.
 
 Packages can be very small (package `errors` has just one declaration) or very large (package `net/http` has >100 declarations). Most are somewhere in between.
 
-Case determines visiblity: `Foo` is exported, `foo` is not
+Case determines visibility: `Foo` is exported, `foo` is not
 
 * io
 
@@ -121,9 +121,9 @@ The `flag` package provides a simple API for parsing command-line flags.
 
 * The go tool
 
-The `go` tool is the defacto standard for building and installing Go code.
+The `go` tool is the de facto standard for building and installing Go code.
 
-Compile and run a single file program:
+Compile and run a single-file program:
 
 	$ go run hello.go
 
@@ -131,18 +131,18 @@ Build and install the package in the current directory (and its dependencies):
 
 	$ go install
 
-Build and install the fmt package (and deps):
+Build and install the `fmt` package (and its dependencies):
 
 	$ go install fmt
 
-It also acts as an interface for most of the Go tools.
+This tool also acts as an interface for most of the Go tools.
 
 * Import paths
 
 The `go` tool is a "zero configuration" tool. No Makefiles or scripts. Just Go code.
 Your build schema and code are always in sync; they are one and the same.
 
-Package import paths mirror the code's location on the file system:
+Package import paths mirror the code's location in the file system:
 
   src/
     github.com/nf/
@@ -185,7 +185,7 @@ This simple design leads to other cool tools:
 
 Godoc extracts documentation from Go code and presents it in a variety of forms.
 
-No prescribed format, just regular comments that precede the declaration they document.
+Comments need no special format, they just need to precede what they document.
 
 	// Split slices s into all substrings separated by sep and returns a slice of
 	// the substrings between those separators.
@@ -233,7 +233,7 @@ To run the tests for all my projects:
 
 * Tests: benchmarks
 
-The testing package also supports benchmarks.
+The `testing` package also supports benchmarks.
 	
 A sample benchmark function:
 
@@ -247,7 +247,7 @@ The benchmark package will vary `b.N` until the benchmark function lasts long en
 
 * Tests: doc examples
 
-The testing package also supports testable examples.
+The `testing` package also supports testable examples.
 
 .code simple/string_test.go /func ExampleIndex/,/^}/
 
@@ -258,23 +258,23 @@ Examples and built and run as part of the normal test suite:
 	--- PASS: ExampleIndex (0.00 seconds)
 	PASS
 
-The example is displayed in godoc alongside the thing it demonstrates:
+The example is displayed in `godoc` alongside the thing it demonstrates:
 
 .link http://golang.org/pkg/strings/#Index
 
 * And there's more
 
-- vet: checks code for common programmer mistakes
-- prof: CPU and memory profiling
-- fix: automatically migrate code as APIs change
+- `vet`: checks code for common programmer mistakes
+- `pprof`: CPU and memory profiling
+- `fix`: automatically migrate code as APIs change
 - GDB support
 - Editor support: Vim, Emacs, Eclipse, Sublime Text
 
 * An example
 
-* webfront
+* Webfront
 
-webfront is an HTTP server and reverse proxy.
+`Webfront` is an HTTP server and reverse proxy.
 
 It reads a JSON-formatted rule file like this:
 
@@ -340,13 +340,13 @@ The main function parses command-line flags, constructs a `Server`, and launches
 
 * Testing (1/3)
 
-The `Server` integration test uses the `httptest` package to construct a dummy HTTP server, synthesizes a set of rules, and constructs a `Server` instance that use those rules.
+The `Server` integration test uses the `httptest` package to construct a dummy HTTP server, synthesizes a set of rules, and constructs a `Server` instance that uses those rules.
 
 .code simple/webfront/server_test.go /^func testHandler/,/STOP/
 
 * Testing (2/3)
 
-Each test cases in the table specifies a request URL and the expected response code and body.
+Each test case in the table specifies a request URL and the expected response code and body.
 
 .code simple/webfront/server_test.go /TESTS START/,/STOP/
 
