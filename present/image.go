@@ -15,7 +15,6 @@ func init() {
 }
 
 type Image struct {
-	EnableInlining
 	File string
 	Args []interface{}
 }
