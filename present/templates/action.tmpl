@@ -21,7 +21,7 @@ It determines how the formatting actions are rendered.
   <div class="code"><pre>{{range .Lines}}{{.}}{{end}}</pre></div>
   {{else}}
   <p>
-    {{range $i, $l := .Lines}}{{if $i}}<br>
+    {{range $i, $l := .Lines}}{{if $i}}{{template "newline"}}
     {{end}}{{style $l}}{{end}}
   </p>
   {{end}}
