@@ -14,6 +14,8 @@ import (
 	"net/http"
 	"os"
 	"strings"
+
+	"code.google.com/p/go.talks/pkg/present"
 )
 
 const basePkg = "code.google.com/p/go.talks/present"
@@ -21,11 +23,11 @@ const basePkg = "code.google.com/p/go.talks/present"
 func main() {
 	httpListen := flag.String("http", "127.0.0.1:3999", "host:port to listen on")
 	flag.StringVar(&basePath, "base", "", "base path for slide template and static resources")
-	flag.BoolVar(&playEnabled, "play", true, "enable playground (permit execution of arbitrary user code)")
+	flag.BoolVar(&present.PlayEnabled, "play", true, "enable playground (permit execution of arbitrary user code)")
 	flag.Parse()
 
 	if !socketPresent {
-		playEnabled = false
+		present.PlayEnabled = false
 	}
 
 	if basePath == "" {
@@ -38,14 +40,14 @@ func main() {
 		basePath = p.Dir
 	}
 
-	if playEnabled {
+	if present.PlayEnabled {
 		HandleSocket("/socket")
 	}
 	http.Handle("/static/", http.FileServer(http.Dir(basePath)))
 
 	if !strings.HasPrefix(*httpListen, "127.0.0.1") &&
 		!strings.HasPrefix(*httpListen, "localhost") &&
-		playEnabled {
+		present.PlayEnabled {
 		log.Print(localhostWarning)
 	}
 

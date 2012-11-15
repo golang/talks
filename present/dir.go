@@ -5,6 +5,7 @@
 package main
 
 import (
+	"fmt"
 	"html/template"
 	"io"
 	"log"
@@ -12,6 +13,8 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+
+	"code.google.com/p/go.talks/pkg/present"
 )
 
 func init() {
@@ -44,6 +47,59 @@ func dirHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	http.FileServer(http.Dir(base)).ServeHTTP(w, r)
+}
+
+// extensions maps the presentable file extensions to the name of the
+// template to be executed.
+var extensions = map[string]string{
+	".slide":   "slides.tmpl",
+	".article": "article.tmpl",
+}
+
+func isDoc(path string) bool {
+	_, ok := extensions[filepath.Ext(path)]
+	return ok
+}
+
+// renderDoc reads the present file, builds its template representation,
+// and executes the template, sending output to w.
+func renderDoc(w io.Writer, base, docFile string) error {
+	// Read the input and build the doc structure.
+	pres, err := parse(docFile, 0)
+	if err != nil {
+		return err
+	}
+
+	// Find which template should be executed.
+	ext := filepath.Ext(docFile)
+	contentTmpl, ok := extensions[ext]
+	if !ok {
+		return fmt.Errorf("no template for extension %v", ext)
+	}
+
+	// Locate the template file.
+	actionTmpl := filepath.Join(base, "templates/action.tmpl")
+	contentTmpl = filepath.Join(base, "templates", contentTmpl)
+
+	// Read and parse the input.
+	tmpl := present.Template()
+	if _, err := tmpl.ParseFiles(actionTmpl, contentTmpl); err != nil {
+		return err
+	}
+
+	pres.Template = tmpl
+
+	// Execute the template.
+	return tmpl.ExecuteTemplate(w, "root", pres)
+}
+
+func parse(name string, mode present.ParseMode) (*present.Doc, error) {
+	f, err := os.Open(name)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	return present.Parse(f, name, 0)
 }
 
 // dirList scans the given path and writes a directory listing to w.
@@ -79,7 +135,7 @@ func dirList(w io.Writer, name string) (isDir bool, err error) {
 			continue
 		}
 		if isDoc(e.Name) {
-			if p, err := parse(e.Path, titlesOnly); err != nil {
+			if p, err := parse(e.Path, present.TitlesOnly); err != nil {
 				log.Println(err)
 			} else {
 				e.Title = p.Title

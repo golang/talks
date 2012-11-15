@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package main
+package present
 
 import (
 	"fmt"
@@ -17,7 +17,13 @@ import (
 	"unicode"
 )
 
-var playEnabled = false // to be enabled by a flag in main.go
+// Is the playground available?
+var PlayEnabled = false
+
+// TOOD(adg): replace the PlayEnabled flag with something less spaghetti-like.
+// Instead this will probably be determined by a template execution Context
+// value that contains various global metadata required when rendering
+// templates.
 
 func init() {
 	Register("code", parseCode, code)
@@ -71,7 +77,7 @@ func parseCode(fileName string, lineno int, text string) (Elem, error) {
 		typ = typ[1:]
 	}
 	return Code{
-		Play:       command == "play" && playEnabled,
+		Play:       command == "play" && PlayEnabled,
 		File:       file,
 		Cmd:        text,
 		Addr:       addr,

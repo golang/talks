@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package main
+package present
 
 import (
 	"bytes"
@@ -13,7 +13,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/url"
-	"path/filepath"
 	"strings"
 	"unicode"
 	"unicode/utf8"
@@ -21,11 +20,14 @@ import (
 
 var (
 	parsers = make(map[string]func(string, int, string) (Elem, error))
-
-	funcs = template.FuncMap{
-		"style": style,
-	}
+	funcs   = template.FuncMap{}
 )
+
+// Template returns an initialized template with the action functions in its
+// FuncMap.
+func Template() *template.Template {
+	return template.New("").Funcs(funcs)
+}
 
 // Register binds the named action, which does not being with a period, to the
 // specified parser and template function to be invoked when the name, with a
@@ -40,50 +42,6 @@ func Register(name string, parser func(fileName string, lineNumber int, inputLin
 	if function != nil {
 		funcs[name] = function
 	}
-}
-
-// extensions maps the presentable file extensions to the name of the
-// template to be executed.
-var extensions = map[string]string{
-	".slide":   "slides.tmpl",
-	".article": "article.tmpl",
-}
-
-func isDoc(path string) bool {
-	_, ok := extensions[filepath.Ext(path)]
-	return ok
-}
-
-// renderDoc reads the present file, builds its template representation,
-// and executes the template, sending output to w.
-func renderDoc(w io.Writer, base, docFile string) error {
-	// Read the input and build the doc structure.
-	pres, err := parse(docFile, 0)
-	if err != nil {
-		return err
-	}
-
-	// Find which template should be executed.
-	ext := filepath.Ext(docFile)
-	contentTmpl, ok := extensions[ext]
-	if !ok {
-		return fmt.Errorf("no template for extension %v", ext)
-	}
-
-	// Locate the template file.
-	actionTmpl := filepath.Join(base, "templates/action.tmpl")
-	contentTmpl = filepath.Join(base, "templates", contentTmpl)
-
-	// Read and parse the input.
-	tmpl := template.New("").Funcs(funcs)
-	if _, err := tmpl.ParseFiles(actionTmpl, contentTmpl); err != nil {
-		return err
-	}
-
-	pres.Template = tmpl
-
-	// Execute the template.
-	return tmpl.ExecuteTemplate(w, "root", pres)
 }
 
 // Doc represents an entire document.
@@ -193,8 +151,8 @@ type Lines struct {
 	text []string
 }
 
-func readLines(name string) (*Lines, error) {
-	contentBytes, err := ioutil.ReadFile(name)
+func readLines(r io.Reader) (*Lines, error) {
+	contentBytes, err := ioutil.ReadAll(r)
 	if err != nil {
 		return nil, err
 	}
@@ -234,18 +192,18 @@ func (l *Lines) nextNonEmpty() (text string, ok bool) {
 	return
 }
 
-// parseMode represents flags for the parse function.
-type parseMode int
+// ParseMode represents flags for the Parse function.
+type ParseMode int
 
 const (
 	// If set, parse only the title and subtitle.
-	titlesOnly parseMode = 1
+	TitlesOnly ParseMode = 1
 )
 
-// parse parses the document in the file specified by name.
-func parse(name string, mode parseMode) (*Doc, error) {
+// Parse parses the document in the file specified by name.
+func Parse(r io.Reader, name string, mode ParseMode) (*Doc, error) {
 	doc := new(Doc)
-	lines, err := readLines(name)
+	lines, err := readLines(r)
 	if err != nil {
 		return nil, err
 	}
@@ -259,7 +217,7 @@ func parse(name string, mode parseMode) (*Doc, error) {
 	if !ok {
 		return nil, errors.New("no subtitle")
 	}
-	if mode&titlesOnly > 0 {
+	if mode&TitlesOnly > 0 {
 		return doc, nil
 	}
 	// Authors

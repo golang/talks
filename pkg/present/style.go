@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package main
+package present
 
 import (
 	"bytes"
@@ -25,6 +25,10 @@ import (
 	becomes
 		<i>this is italic</i>!
 */
+
+func init() {
+	funcs["style"] = style
+}
 
 func style(s string) template.HTML {
 	return template.HTML(font(html.EscapeString(s)))
