@@ -385,7 +385,7 @@ A large Google C++ build can read the same header file tens of thousands of time
 
 Two compilers: gc, gccgo
 
-Support for multiple platforms: x86 (32/64bit), ARM (32/64), Linux, BSD, OS X, ...
+Support for multiple platforms: x86 (32/64bit), ARM (32bit), Linux, BSD, OS X, ...
 
 Automatic formatting of source code: `gofmt`
 
@@ -451,7 +451,7 @@ We only need
 - a mechanism to interact with them (_Methods_),
 - and support for polymorphism (_Interfaces_).
 
-Claim: Data abstraction, enscapsulation, and modularity are mechanisms
+Claim: Data abstraction, encapsulation, and modularity are mechanisms
 in their own right, not OOP specific, and a modern language (OO or not)
 should have support for them independently.
 
