@@ -8,6 +8,8 @@ package main
 
 const socketPresent = false // no websockets or compilation on app engine (yet)
 
+var basePath = "./present/"
+
 func HandleSocket(path string) {
 	panic("websockets not supported on app engine")
 }

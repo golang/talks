@@ -21,8 +21,6 @@ func init() {
 	http.HandleFunc("/", dirHandler)
 }
 
-var basePath = "./present/"
-
 // dirHandler serves a directory listing for the requested path, rooted at basePath.
 func dirHandler(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path == "/favicon.ico" {
@@ -126,6 +124,10 @@ func dirList(w io.Writer, name string) (isDir bool, err error) {
 	}
 	d := &dirListData{Path: name}
 	for _, fi := range fis {
+		// skip the pkg directory
+		if name == "." && fi.Name() == "pkg" {
+			continue
+		}
 		e := dirEntry{
 			Name: fi.Name(),
 			Path: filepath.Join(name, fi.Name()),

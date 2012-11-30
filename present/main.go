@@ -20,6 +20,8 @@ import (
 
 const basePkg = "code.google.com/p/go.talks/present"
 
+var basePath string
+
 func main() {
 	httpListen := flag.String("http", "127.0.0.1:3999", "host:port to listen on")
 	flag.StringVar(&basePath, "base", "", "base path for slide template and static resources")
