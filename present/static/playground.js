@@ -9,11 +9,14 @@
 
   function showMessage(o, m, className) {
     var span = document.createElement("span");
+    var needScroll = (o.scrollTop + o.offsetHeight) == o.scrollHeight;
     m = m.replace(/&/g, "&amp;");
     m = m.replace(/</g, "&lt;");
     span.innerHTML = m;
     span.className = className;
     o.appendChild(span);
+    if (needScroll)
+        o.scrollTop = o.scrollHeight - o.offsetHeight;
   }
 
   function onMessage(e) {
