@@ -10,12 +10,17 @@ line is the title, so the header looks like
 
 	Title of document
 	Subtitle of document
+	15:04 2 Jan 2006
 	<blank line>
 	Author Name
 	Job title, Company
 	joe@example.com
 	http://url/
 	@twitter_name
+
+The date line is optional, and may be written without a time as just:
+	2 Jan 2006
+in which case it will be interpreted as 10am UTC for that date.
 
 The author section may contain a mixture of text, twitter names, and links.
 For slide presentations, only the plain text lines will be displayed on the

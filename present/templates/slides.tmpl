@@ -16,6 +16,7 @@
       <article>
         <h1>{{.Title}}</h1>
         {{with .Subtitle}}<h3>{{.}}</h3>{{end}}
+        {{with .Time}}<h3>{{.Format "2 January 2006"}}</h3>{{end}}
         {{range .Authors}}
           <div class="presenter">
             {{range .TextElem}}{{.HTML $.Template}}{{end}}

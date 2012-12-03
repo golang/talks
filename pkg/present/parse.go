@@ -14,6 +14,7 @@ import (
 	"log"
 	"net/url"
 	"strings"
+	"time"
 	"unicode"
 	"unicode/utf8"
 )
@@ -48,6 +49,7 @@ func Register(name string, parser func(fileName string, lineNumber int, inputLin
 type Doc struct {
 	Title    string
 	Subtitle string
+	Time     time.Time
 	Authors  []Author
 	Sections []Section
 	Template *template.Template
@@ -216,6 +218,13 @@ func Parse(r io.Reader, name string, mode ParseMode) (*Doc, error) {
 	doc.Subtitle, ok = lines.next()
 	if !ok {
 		return nil, errors.New("no subtitle")
+	}
+	text, ok := lines.next()
+	if !ok {
+		return nil, errors.New("unexpected EOF")
+	}
+	if t, ok := parseTime(text); ok {
+		doc.Time = t
 	}
 	if mode&TitlesOnly > 0 {
 		return doc, nil
@@ -410,4 +419,18 @@ func parseURL(text string) Elem {
 		return nil
 	}
 	return Link{URL: u}
+}
+
+func parseTime(text string) (t time.Time, ok bool) {
+	t, err := time.Parse("15:04 2 Jan 2006", text)
+	if err == nil {
+		return t, true
+	}
+	t, err = time.Parse("2 Jan 2006", text)
+	if err == nil {
+		// at 11am UTC it is the same date everywhere
+		t = t.Add(time.Hour * 11)
+		return t, true
+	}
+	return time.Time{}, false
 }
