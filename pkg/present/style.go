@@ -36,7 +36,7 @@ func style(s string) template.HTML {
 
 // font returns s with font indicators turned into HTML font tags.
 func font(s string) string {
-	if strings.IndexAny(s, "`_*") == -1 {
+	if strings.IndexAny(s, "[`_*") == -1 {
 		return s
 	}
 	words := split(s)
@@ -44,6 +44,10 @@ func font(s string) string {
 Word:
 	for w, word := range words {
 		if len(word) < 2 {
+			continue Word
+		}
+		if link, _ := parseInlineLink(word); link != "" {
+			words[w] = link
 			continue Word
 		}
 		const punctuation = `.,;:()!?—–'"`
@@ -121,9 +125,15 @@ func split(s string) []string {
 	mark := 0
 	for i, r := range s {
 		isSpace := unicode.IsSpace(r)
-		if isSpace != prevWasSpace && i > mark {
-			words = append(words, s[mark:i])
-			mark = i
+		if i > mark {
+			if isSpace != prevWasSpace {
+				words = append(words, s[mark:i])
+				mark = i
+			}
+			if _, length := parseInlineLink(s[i:]); length > 0 {
+				words = append(words, s[i:i+length])
+				mark = i + length
+			}
 		}
 		prevWasSpace = isSpace
 	}

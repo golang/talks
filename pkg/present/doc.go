@@ -78,6 +78,11 @@ and a doubled single marker quotes the marker character.
 	_this_is_all_italic_
 	_Why_use_scoped__ptr_? Use plain ***ptr* instead.
 
+Inline links:
+
+Links can be included in any text with the form [[url][label]], or
+[[url]] to use the URL itself as the label.
+
 Functions:
 
 A number of template functions are available through invocations

@@ -19,6 +19,14 @@ func TestSplit(t *testing.T) {
 		{"abc", []string{"abc"}},
 		{"abc def", []string{"abc", " ", "def"}},
 		{"abc def ", []string{"abc", " ", "def", " "}},
+		{"hey [[http://golang.org][Gophers]] around",
+			[]string{"hey", " ", "[[http://golang.org][Gophers]]", " ", "around"}},
+		{"A [[http://golang.org/doc][two words]] link",
+			[]string{"A", " ", "[[http://golang.org/doc][two words]]", " ", "link"}},
+		{"Visit [[http://golang.org/doc]] now",
+			[]string{"Visit", " ", "[[http://golang.org/doc]]", " ", "now"}},
+		{"not [[http://golang.org/doc][a [[link]] ]] around",
+			[]string{"not", " ", "[[http://golang.org/doc][a [[link]]", " ", "]]", " ", "around"}},
 	}
 	for _, test := range tests {
 		out := split(test.in)
@@ -49,6 +57,12 @@ func TestFont(t *testing.T) {
 		{"(_a)", "(_a)"},
 		{"(_a)", "(_a)"},
 		{"_Why_use_scoped__ptr_? Use plain ***ptr* instead.", "<i>Why use scoped_ptr</i>? Use plain <b>*ptr</b> instead."},
+		{"_hey_ [[http://golang.org][*Gophers*]] *around*",
+			`<i>hey</i> <a href="http://golang.org" target="_blank"><b>Gophers</b></a> <b>around</b>`},
+		{"_hey_ [[http://golang.org][so _many_ *Gophers*]] *around*",
+			`<i>hey</i> <a href="http://golang.org" target="_blank">so <i>many</i> <b>Gophers</b></a> <b>around</b>`},
+		{"Visit [[http://golang.org]] now",
+			`Visit <a href="http://golang.org" target="_blank">http://golang.org</a> now`},
 	}
 	for _, test := range tests {
 		out := font(test.in)
