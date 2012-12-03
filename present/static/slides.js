@@ -532,6 +532,15 @@ function addGeneralStyle() {
   document.querySelector('head').appendChild(el);
 };
 
+function addPrintStyle() {
+  var el = document.createElement('link');
+  el.rel = 'stylesheet';
+  el.type = 'text/css';
+  el.media = "print";
+  el.href = PERMANENT_URL_PREFIX + 'print.css';
+  document.body.appendChild(el);
+};
+
 function handleDomLoaded() {
   slideEls = document.querySelectorAll('section.slides > article');
 
@@ -539,6 +548,7 @@ function handleDomLoaded() {
 
   addFontStyle();
   addGeneralStyle();
+  addPrintStyle();
   addEventListeners();
 
   updateSlides();
