@@ -19,9 +19,9 @@
     </div>
     <div id="page" class="wide">
       <div class="container">
-        {{with $toc := .Sections}}
+        {{with .Sections}}
           <div id="toc">
-            {{range .}}{{template "TOC" .}}{{end}}
+            {{template "TOC" .}}
           </div>
         {{end}}
 
@@ -44,12 +44,10 @@
 
 {{define "TOC"}}
   <ul>
+  {{range .}}
     <li><a href="#TOC_{{.FormattedNumber}}">{{.Title}}</a></li>
-    {{with .Sections}}
-      <ul>
-      {{range .}}{{template "TOC" .}}{{end}}
-      </ul>
-    {{end}}
+    {{with .Sections}}{{template "TOC" .}}{{end}}
+  {{end}}
   </ul>
 {{end}}
 
