@@ -24,10 +24,18 @@ var (
 	funcs   = template.FuncMap{}
 )
 
-// Template returns an initialized template with the action functions in its
-// FuncMap.
+// Template returns an empty template with the action functions in its FuncMap.
 func Template() *template.Template {
 	return template.New("").Funcs(funcs)
+}
+
+// Render renders the doc to the given writer using the provided template.
+func (d *Doc) Render(w io.Writer, t *template.Template) error {
+	data := struct {
+		*Doc
+		Template *template.Template
+	}{d, t}
+	return t.ExecuteTemplate(w, "root", data)
 }
 
 type ParseFunc func(fileName string, lineNumber int, inputLine string) (Elem, error)
@@ -49,7 +57,6 @@ type Doc struct {
 	Time     time.Time
 	Authors  []Author
 	Sections []Section
-	Template *template.Template
 }
 
 // Author represents the person who wrote and/or is presenting the document.
@@ -76,7 +83,6 @@ type Section struct {
 	Number []int
 	Title  string
 	Elem   []Elem
-	Doc    *Doc
 }
 
 func (s Section) Sections() (sections []Section) {
@@ -115,7 +121,14 @@ type Elem interface {
 // renderElem implements the elem template function, used to render
 // sub-templates.
 func renderElem(t *template.Template, e Elem) (template.HTML, error) {
-	return execTemplate(t, e.TemplateName(), e)
+	var data interface{} = e
+	if s, ok := e.(Section); ok {
+		data = struct {
+			Section
+			Template *template.Template
+		}{s, t}
+	}
+	return execTemplate(t, e.TemplateName(), data)
 }
 
 func init() {
@@ -268,7 +281,6 @@ func parseSections(name string, lines *Lines, number []int, doc *Doc) ([]Section
 		section := Section{
 			Number: append(append([]int{}, number...), i),
 			Title:  text[len(prefix)+1:],
-			Doc:    doc,
 		}
 		text, ok = lines.nextNonEmpty()
 		for ok && !lesserHeading(text, prefix) {

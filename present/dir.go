@@ -63,7 +63,7 @@ func isDoc(path string) bool {
 // and executes the template, sending output to w.
 func renderDoc(w io.Writer, base, docFile string) error {
 	// Read the input and build the doc structure.
-	pres, err := parse(docFile, 0)
+	doc, err := parse(docFile, 0)
 	if err != nil {
 		return err
 	}
@@ -85,10 +85,8 @@ func renderDoc(w io.Writer, base, docFile string) error {
 		return err
 	}
 
-	pres.Template = tmpl
-
 	// Execute the template.
-	return tmpl.ExecuteTemplate(w, "root", pres)
+	return doc.Render(w, tmpl)
 }
 
 func parse(name string, mode present.ParseMode) (*present.Doc, error) {

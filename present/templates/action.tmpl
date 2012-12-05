@@ -5,7 +5,7 @@ It determines how the formatting actions are rendered.
 
 {{define "section"}}
   <h{{len .Number}} id="TOC_{{.FormattedNumber}}">{{.FormattedNumber}} {{.Title}}</h{{len .Number}}>
-  {{range .Elem}}{{elem $.Doc.Template .}}{{end}}
+  {{range .Elem}}{{elem $.Template .}}{{end}}
 {{end}}
 
 {{define "list"}}
