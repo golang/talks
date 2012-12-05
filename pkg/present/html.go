@@ -9,7 +9,7 @@ import (
 )
 
 func init() {
-	Register("html", parseHTML, nil)
+	Register("html", parseHTML)
 }
 
 func parseHTML(fileName string, lineno int, text string) (Elem, error) {
@@ -22,11 +22,11 @@ func parseHTML(fileName string, lineno int, text string) (Elem, error) {
 	if err != nil {
 		return nil, err
 	}
-	return HTML(b), nil
+	return HTML{template.HTML(b)}, nil
 }
 
-type HTML string
-
-func (s HTML) HTML(*template.Template) (template.HTML, error) {
-	return template.HTML(s), nil
+type HTML struct {
+	template.HTML
 }
+
+func (s HTML) TemplateName() string { return "html" }

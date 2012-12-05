@@ -6,23 +6,20 @@ package present
 
 import (
 	"fmt"
-	"html/template"
 	"net/url"
 	"strings"
 )
 
 func init() {
-	Register("link", parseLink, link)
+	Register("link", parseLink)
 }
 
 type Link struct {
-	URL  *url.URL
-	Args []string
+	URL   *url.URL
+	Label string
 }
 
-func (l Link) HTML(t *template.Template) (template.HTML, error) {
-	return execTemplate(t, "link", l)
-}
+func (l Link) TemplateName() string { return "link" }
 
 func parseLink(fileName string, lineno int, text string) (Elem, error) {
 	args := strings.Fields(text)
@@ -30,23 +27,17 @@ func parseLink(fileName string, lineno int, text string) (Elem, error) {
 	if err != nil {
 		return nil, err
 	}
-	return Link{url, args[2:]}, nil
-}
-
-// link is the entry point for the '.link' present command.
-func link(url url.URL, arg []string) (template.HTML, error) {
 	label := ""
-	switch len(arg) {
-	case 0:
+	if len(args) > 2 {
+		label = strings.Join(args[2:], " ")
+	} else {
 		scheme := url.Scheme + "://"
 		if url.Scheme == "mailto" {
 			scheme = "mailto:"
 		}
 		label = strings.Replace(url.String(), scheme, "", 1)
-	default:
-		label = strings.Join(arg, " ")
 	}
-	return template.HTML(renderLink(url.String(), label)), nil
+	return Link{url, label}, nil
 }
 
 func renderLink(url, text string) string {

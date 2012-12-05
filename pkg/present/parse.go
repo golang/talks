@@ -30,19 +30,16 @@ func Template() *template.Template {
 	return template.New("").Funcs(funcs)
 }
 
+type ParseFunc func(fileName string, lineNumber int, inputLine string) (Elem, error)
+
 // Register binds the named action, which does not being with a period, to the
-// specified parser and template function to be invoked when the name, with a
-// period, appears in the present input text.
-// The function argument is an optional template function that is available
-// inside templates under that name.
-func Register(name string, parser func(fileName string, lineNumber int, inputLine string) (Elem, error), function interface{}) {
+// specified parser to be invoked when the name, with a period, appears in the
+// present input text.
+func Register(name string, parser ParseFunc) {
 	if len(name) == 0 || name[0] == ';' {
 		panic("bad name in Register: " + name)
 	}
 	parsers["."+name] = parser
-	if function != nil {
-		funcs[name] = function
-	}
 }
 
 // Doc represents an entire document.
@@ -107,14 +104,22 @@ func (s Section) FormattedNumber() string {
 	return b.String()
 }
 
-func (s Section) HTML(tmpl *template.Template) (template.HTML, error) {
-	return execTemplate(tmpl, "section", s)
+func (s Section) TemplateName() string { return "section" }
+
+// Elem defines the interface for a present element. That is, something that
+// can provide the name of the template used to render the element.
+type Elem interface {
+	TemplateName() string
 }
 
-// Elem defines the interface for a present element.
-// That is, something that can render itself in HTML.
-type Elem interface {
-	HTML(t *template.Template) (template.HTML, error)
+// renderElem implements the elem template function, used to render
+// sub-templates.
+func renderElem(t *template.Template, e Elem) (template.HTML, error) {
+	return execTemplate(t, e.TemplateName(), e)
+}
+
+func init() {
+	funcs["elem"] = renderElem
 }
 
 // execTemplate is a helper to execute a template and return the output as a
@@ -134,18 +139,14 @@ type Text struct {
 	Pre   bool
 }
 
-func (t Text) HTML(tmpl *template.Template) (template.HTML, error) {
-	return execTemplate(tmpl, "text", t)
-}
+func (t Text) TemplateName() string { return "text" }
 
 // List represents a bulleted list.
 type List struct {
 	Bullet []string
 }
 
-func (l List) HTML(t *template.Template) (template.HTML, error) {
-	return execTemplate(t, "list", l)
-}
+func (l List) TemplateName() string { return "list" }
 
 // Lines is a helper for parsing line-based input.
 type Lines struct {
@@ -393,7 +394,7 @@ func parseAuthors(lines *Lines) (authors []Author, err error) {
 		case strings.HasPrefix(text, "@"):
 			el = parseURL("http://twitter.com/" + text[1:])
 			if l, ok := el.(Link); ok {
-				l.Args = []string{text}
+				l.Label = text
 				el = l
 			}
 		case strings.Contains(text, ":"):

@@ -9,7 +9,6 @@ import (
 	"html/template"
 	"io/ioutil"
 	"log"
-	"path"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -26,24 +25,16 @@ var PlayEnabled = false
 // templates.
 
 func init() {
-	Register("code", parseCode, code)
-	Register("play", parseCode, code)
+	Register("code", parseCode)
+	Register("play", parseCode)
 }
 
 type Code struct {
-	Play       bool   // runnable code
-	File       string // file name to read input from
-	Cmd        string // text of input line
-	Addr       string // really an address
-	Highlight  string // HLxxx marker on end of line.
-	Type       string // type extension of file (.go etc.).
-	SourceFile string
-	SourceLine int
+	Text template.HTML
+	Play bool // runnable code
 }
 
-func (c Code) HTML(t *template.Template) (template.HTML, error) {
-	return execTemplate(t, "code", c)
-}
+func (c Code) TemplateName() string { return "code" }
 
 // The input line is a .code or .play entry with a file name and an optional HLfoo marker on the end.
 // Anything between the file and HL (if any) is an address expression, which we treat as a string here.
@@ -51,54 +42,43 @@ func (c Code) HTML(t *template.Template) (template.HTML, error) {
 var highlightRE = regexp.MustCompile(`\s+HL([a-zA-Z0-9_]+)?$`)
 var codeRE = regexp.MustCompile(`\.(code|play)\s+([^\s]+)(\s+)?(.*)?$`)
 
-func parseCode(fileName string, lineno int, text string) (Elem, error) {
-	text = strings.TrimSpace(text)
+func parseCode(sourceFile string, sourceLine int, cmd string) (Elem, error) {
+	cmd = strings.TrimSpace(cmd)
+
 	// Pull off the HL, if any, from the end of the input line.
 	highlight := ""
-	if hl := highlightRE.FindStringSubmatchIndex(text); len(hl) == 4 {
-		highlight = text[hl[2]:hl[3]]
-		text = text[:hl[2]-2]
+	if hl := highlightRE.FindStringSubmatchIndex(cmd); len(hl) == 4 {
+		highlight = cmd[hl[2]:hl[3]]
+		cmd = cmd[:hl[2]-2]
 	}
+
 	// Parse the remaining command line.
-	args := codeRE.FindStringSubmatch(text)
 	// Arguments:
 	// args[0]: whole match
 	// args[1]:  .code/.play
 	// args[2]: file name
 	// args[3]: space, if any, before optional address
 	// args[4]: optional address
+	args := codeRE.FindStringSubmatch(cmd)
 	if len(args) != 5 {
-		return nil, fmt.Errorf("%s:%d: syntax error for .code/.play invocation", fileName, lineno)
+		return nil, fmt.Errorf("%s:%d: syntax error for .code/.play invocation", sourceFile, sourceLine)
 	}
 	command, file, addr := args[1], args[2], strings.TrimSpace(args[4])
+	play := command == "play" && PlayEnabled
 
-	typ := path.Ext(fileName)
-	for len(typ) > 0 && typ[0] == '.' {
-		typ = typ[1:]
-	}
-	return Code{
-		Play:       command == "play" && PlayEnabled,
-		File:       file,
-		Cmd:        text,
-		Addr:       addr,
-		Highlight:  highlight,
-		Type:       typ,
-		SourceFile: fileName,
-		SourceLine: lineno}, nil
-}
-
-// code is the entry point for the '.code' present command.
-func code(c Code) (template.HTML, error) {
-	filename := filepath.Join(filepath.Dir(c.SourceFile), c.File)
+	// Read in code file and (optionally) match address.
+	filename := filepath.Join(filepath.Dir(sourceFile), file)
 	textBytes, err := ioutil.ReadFile(filename)
 	if err != nil {
-		return "", fmt.Errorf("%s:%d: %v", c.SourceFile, c.SourceLine, err)
+		return nil, fmt.Errorf("%s:%d: %v", sourceFile, sourceLine, err)
 	}
-	lo, hi, err := addrToByteRange(c.Addr, 0, textBytes)
+	lo, hi, err := addrToByteRange(addr, 0, textBytes)
 	if err != nil {
-		return "", fmt.Errorf("%s:%d: %v", c.SourceFile, c.SourceLine, err)
+		return nil, fmt.Errorf("%s:%d: %v", sourceFile, sourceLine, err)
 	}
-	// Acme patterns stop mid-line, so run to end of line in both directions.
+
+	// Acme pattern matches stop mid-line,
+	// so run to end of line in both directions.
 	for lo > 0 && textBytes[lo-1] != '\n' {
 		lo--
 	}
@@ -108,25 +88,35 @@ func code(c Code) (template.HTML, error) {
 			break
 		}
 	}
-	text := skipOMIT(textBytes[lo:hi])
+	text := string(textBytes[lo:hi])
+
+	// Clear ommitted lines.
+	text = skipOMIT(text)
+
 	// Replace tabs by spaces, which work better in HTML.
 	text = strings.Replace(text, "\t", "    ", -1)
+
 	// Escape the program text for HTML.
 	text = template.HTMLEscapeString(text)
+
 	// Highlight and span-wrap lines.
-	text = "<pre>" + highlightLines(text, c.Highlight) + "</pre>"
+	text = "<pre>" + highlightLines(text, highlight) + "</pre>"
+
 	// Include before and after in a hidden span for playground code.
-	if c.Play {
-		text = hide(skipOMIT(textBytes[:lo])) + text + hide(skipOMIT(textBytes[hi:]))
+	if play {
+		text = hide(skipOMIT(string(textBytes[:lo]))) +
+			text + hide(skipOMIT(string(textBytes[hi:])))
 	}
+
 	// Include the command as a comment.
-	text = fmt.Sprintf("<!--{{%s}}\n-->%s", c.Cmd, text)
-	return template.HTML(text), nil
+	text = fmt.Sprintf("<!--{{%s}}\n-->%s", cmd, text)
+
+	return Code{Text: template.HTML(text), Play: play}, nil
 }
 
 // skipOMIT turns text into a string, dropping lines ending with OMIT.
-func skipOMIT(text []byte) string {
-	lines := strings.SplitAfter(string(text), "\n")
+func skipOMIT(text string) string {
+	lines := strings.SplitAfter(text, "\n")
 	for k := range lines {
 		if strings.HasSuffix(lines[k], "OMIT\n") {
 			lines[k] = ""

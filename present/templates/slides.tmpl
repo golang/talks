@@ -19,7 +19,7 @@
         {{if not .Time.IsZero}}<h3>{{.Time.Format "2 January 2006"}}</h3>{{end}}
         {{range .Authors}}
           <div class="presenter">
-            {{range .TextElem}}{{.HTML $.Template}}{{end}}
+            {{range .TextElem}}{{elem $.Template .}}{{end}}
           </div>
         {{end}}
       </article>
@@ -29,7 +29,7 @@
       <article>
       {{if $s.Elem}}
         <h3>{{$s.Title}}</h3>
-        {{range $s.Elem}}{{.HTML $.Template}}{{end}}
+        {{range $s.Elem}}{{elem $.Template .}}{{end}}
       {{else}}
         <h2>{{$s.Title}}</h2>
       {{end}}
@@ -41,7 +41,7 @@
         <h3>Thank you</h1>
         {{range .Authors}}
           <div class="presenter">
-            {{range .Elem}}{{.HTML $.Template}}{{end}}
+            {{range .Elem}}{{elem $.Template .}}{{end}}
           </div>
         {{end}}
       </article>

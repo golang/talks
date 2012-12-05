@@ -11,37 +11,31 @@ import (
 )
 
 func init() {
-	Register("image", parseImage, image)
+	Register("image", parseImage)
 }
 
 type Image struct {
-	File string
-	Args []interface{}
+	URL        string
+	Attributes template.HTML
 }
 
-func (i Image) HTML(t *template.Template) (template.HTML, error) {
-	return execTemplate(t, "image", i)
-}
+func (i Image) TemplateName() string { return "image" }
 
 func parseImage(fileName string, lineno int, text string) (Elem, error) {
 	args := strings.Fields(text)
+	img := Image{URL: args[1]}
 	a, err := parseArgs(fileName, lineno, args[2:])
 	if err != nil {
 		return nil, err
 	}
-	return Image{File: args[1], Args: a}, nil
-}
-
-// image is the entry point for the '.image' present command.
-func image(file string, arg []interface{}) (template.HTML, error) {
-	args := ""
-	switch len(arg) {
+	switch len(a) {
 	case 0:
 		// no size parameters
 	case 2:
-		args = fmt.Sprintf("height='%v' width='%v'", arg[0], arg[1])
+		attr := fmt.Sprintf(`height="%v" width="%v"`, a[0], a[1])
+		img.Attributes = template.HTML(attr)
 	default:
-		return "", fmt.Errorf("incorrect image invocation: code %q %v", file, arg)
+		return nil, fmt.Errorf("incorrect image invocation: %q", text)
 	}
-	return template.HTML(fmt.Sprintf(`<img src=%q %s>`, file, args)), nil
+	return img, nil
 }

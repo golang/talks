@@ -5,7 +5,7 @@ It determines how the formatting actions are rendered.
 
 {{define "section"}}
   <h{{len .Number}} id="TOC_{{.FormattedNumber}}">{{.FormattedNumber}} {{.Title}}</h{{len .Number}}>
-  {{range .Elem}}{{.HTML $.Doc.Template}}{{end}}
+  {{range .Elem}}{{elem $.Doc.Template .}}{{end}}
 {{end}}
 
 {{define "list"}}
@@ -28,9 +28,11 @@ It determines how the formatting actions are rendered.
 {{end}}
 
 {{define "code"}}
-  <div class="code{{if .Play}} playground{{end}}" contenteditable="true" spellcheck="false">{{code .}}</div>
+  <div class="code{{if .Play}} playground{{end}}" contenteditable="true" spellcheck="false">{{.Text}}</div>
 {{end}}
 
-{{define "image"}}<div class="image">{{image .File .Args}}</div>{{end}}
+{{define "image"}}<div class="image"><img src="{{.URL}}" {{.Attributes}}></div>{{end}}
       
-{{define "link"}}<p class="link">{{link .URL .Args}}</p>{{end}}
+{{define "link"}}<p class="link"><a href="{{.URL}}" target="_blank">{{style .Label}}</a></p>{{end}}
+
+{{define "html"}}{{.HTML}}{{end}}

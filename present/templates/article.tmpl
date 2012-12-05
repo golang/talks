@@ -26,13 +26,13 @@
         {{end}}
 
         {{range .Sections}}
-          {{.HTML $.Template}}
+          {{elem $.Template .}}
         {{end}}{{/* of Section block */}}
 
         <h2>Authors</h2>
         {{range .Authors}}
-            <div class="author">
-            {{range .Elem}}{{.HTML $.Template}}{{end}}
+          <div class="author">
+            {{range .Elem}}{{elem $.Template .}}{{end}}
           </div>
         {{end}}
       </div>
