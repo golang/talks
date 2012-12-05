@@ -142,7 +142,12 @@ func dirList(w io.Writer, name string) (isDir bool, err error) {
 			} else {
 				e.Title = p.Title
 			}
-			d.Slides = append(d.Slides, e)
+			switch filepath.Ext(e.Path) {
+			case ".article":
+				d.Articles = append(d.Articles, e)
+			case ".slide":
+				d.Slides = append(d.Slides, e)
+			}
 		} else if showFile(e.Name) {
 			d.Other = append(d.Other, e)
 		}
@@ -152,6 +157,7 @@ func dirList(w io.Writer, name string) (isDir bool, err error) {
 	}
 	sort.Sort(d.Dirs)
 	sort.Sort(d.Slides)
+	sort.Sort(d.Articles)
 	sort.Sort(d.Other)
 	return true, dirListTemplate.Execute(w, d)
 }
@@ -177,8 +183,8 @@ func showDir(n string) bool {
 }
 
 type dirListData struct {
-	Path                string
-	Dirs, Slides, Other dirEntrySlice
+	Path                          string
+	Dirs, Slides, Articles, Other dirEntrySlice
 }
 
 type dirEntry struct {
@@ -224,6 +230,15 @@ const dirListHTML = `<!DOCTYPE html>
   <h1>Go talks</h1>
 
   {{with .Path}}<h2>{{.}}</h2>{{end}}
+
+  {{with .Articles}}
+  <h4>Articles:</h4>
+  <dl>
+  {{range .}}
+  <dd><a href="/{{.Path}}">{{.Name}}</a>: {{.Title}}</dd>
+  {{end}}
+  </dl>
+  {{end}}
 
   {{with .Slides}}
   <h4>Slide decks:</h4>
