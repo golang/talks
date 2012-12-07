@@ -223,24 +223,11 @@ func Parse(r io.Reader, name string, mode ParseMode) (*Doc, error) {
 	if err != nil {
 		return nil, err
 	}
-	var ok bool
-	// First non-empty line starts title.
-	doc.Title, ok = lines.nextNonEmpty()
-	if !ok {
-		return nil, errors.New("no title")
+	err = parseHeader(doc, lines)
+	if err != nil {
+		return nil, err
 	}
-	doc.Subtitle, ok = lines.next()
-	if !ok {
-		return nil, errors.New("no subtitle")
-	}
-	text, ok := lines.next()
-	if !ok {
-		return nil, errors.New("unexpected EOF")
-	}
-	if t, ok := parseTime(text); ok {
-		doc.Time = t
-	}
-	if mode&TitlesOnly > 0 {
+	if mode&TitlesOnly != 0 {
 		return doc, nil
 	}
 	// Authors
@@ -362,6 +349,34 @@ func parseSections(name string, lines *Lines, number []int, doc *Doc) ([]Section
 		sections = append(sections, section)
 	}
 	return sections, nil
+}
+
+func parseHeader(doc *Doc, lines *Lines) error {
+	var ok bool
+	// First non-empty line starts header.
+	doc.Title, ok = lines.nextNonEmpty()
+	if !ok {
+		return errors.New("unexpected EOF; expected title")
+	}
+	for {
+		text, ok := lines.next()
+		if !ok {
+			return errors.New("unexpected EOF")
+		}
+		if text == "" {
+			break
+		}
+		if t, ok := parseTime(text); ok {
+			doc.Time = t
+			break
+		}
+		if doc.Subtitle == "" {
+			doc.Subtitle = text
+			continue
+		}
+		return fmt.Errorf("unexpected header line: %q", text)
+	}
+	return nil
 }
 
 func parseAuthors(lines *Lines) (authors []Author, err error) {

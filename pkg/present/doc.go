@@ -18,9 +18,10 @@ line is the title, so the header looks like
 	http://url/
 	@twitter_name
 
-The date line is optional, and may be written without a time as just:
+The subtitle and date lines are optional.
+The date line may be written without a time:
 	2 Jan 2006
-in which case it will be interpreted as 10am UTC for that date.
+In this case, the time will be interpreted as 10am UTC on that date.
 
 The author section may contain a mixture of text, twitter names, and links.
 For slide presentations, only the plain text lines will be displayed on the
