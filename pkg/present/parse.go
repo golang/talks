@@ -40,7 +40,7 @@ func (d *Doc) Render(w io.Writer, t *template.Template) error {
 
 type ParseFunc func(fileName string, lineNumber int, inputLine string) (Elem, error)
 
-// Register binds the named action, which does not being with a period, to the
+// Register binds the named action, which does not begin with a period, to the
 // specified parser to be invoked when the name, with a period, appears in the
 // present input text.
 func Register(name string, parser ParseFunc) {
