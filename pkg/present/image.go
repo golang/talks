@@ -6,7 +6,6 @@ package present
 
 import (
 	"fmt"
-	"html/template"
 	"strings"
 )
 
@@ -15,8 +14,9 @@ func init() {
 }
 
 type Image struct {
-	URL        string
-	Attributes template.HTML
+	URL    string
+	Width  int
+	Height int
 }
 
 func (i Image) TemplateName() string { return "image" }
@@ -32,8 +32,12 @@ func parseImage(fileName string, lineno int, text string) (Elem, error) {
 	case 0:
 		// no size parameters
 	case 2:
-		attr := fmt.Sprintf(`height="%v" width="%v"`, a[0], a[1])
-		img.Attributes = template.HTML(attr)
+		if v, ok := a[0].(int); ok {
+			img.Height = v
+		}
+		if v, ok := a[1].(int); ok {
+			img.Width = v
+		}
 	default:
 		return nil, fmt.Errorf("incorrect image invocation: %q", text)
 	}
