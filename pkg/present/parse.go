@@ -177,11 +177,12 @@ func readLines(r io.Reader) (*Lines, error) {
 
 func (l *Lines) next() (text string, ok bool) {
 	for {
-		if l.line >= len(l.text) {
+		current := l.line
+		l.line++
+		if current >= len(l.text) {
 			return "", false
 		}
-		text = l.text[l.line]
-		l.line++
+		text = l.text[current]
 		// Lines starting with # are comments.
 		if len(text) == 0 || text[0] != '#' {
 			ok = true
