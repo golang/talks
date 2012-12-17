@@ -20,14 +20,12 @@ import (
 	"code.google.com/p/go.net/websocket"
 )
 
-const (
-	socketPresent = true // tell main.go that socket is implemented
-	msgLimit      = 1000 // max number of messages to send per session
-)
+const msgLimit = 1000 // max number of messages to send per session
 
-// HandleSocket registers the websocket handler with http.DefaultServeMux
-// under the given path.
+// HandleSocket registers the websocket handler with http.DefaultServeMux under
+// the given path.
 func HandleSocket(path string) {
+	playScript("/static/socket.js")
 	http.Handle(path, websocket.Handler(socketHandler))
 }
 

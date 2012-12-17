@@ -391,13 +391,13 @@ div.output pre {
   height: 100%;
   overflow: auto;
 }
-div.output .stdout {
+div.output .stdout, div.output pre {
   color: #e6e6e6;
 }
-div.output .stderr {
+div.output .stderr, div.output .error {
   color: rgb(244, 74, 63);
 }
-div.output .system {
+div.output .system, div.output .exit {
   color: rgb(255, 209, 77)
 }
 .buttons {

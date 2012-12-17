@@ -28,10 +28,6 @@ func main() {
 	flag.BoolVar(&present.PlayEnabled, "play", true, "enable playground (permit execution of arbitrary user code)")
 	flag.Parse()
 
-	if !socketPresent {
-		present.PlayEnabled = false
-	}
-
 	if basePath == "" {
 		p, err := build.Default.Import(basePkg, "", build.FindOnly)
 		if err != nil {
