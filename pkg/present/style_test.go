@@ -27,6 +27,10 @@ func TestSplit(t *testing.T) {
 			[]string{"Visit", " ", "[[http://golang.org/doc]]", " ", "now"}},
 		{"not [[http://golang.org/doc][a [[link]] ]] around",
 			[]string{"not", " ", "[[http://golang.org/doc][a [[link]]", " ", "]]", " ", "around"}},
+		{"[[http://golang.org][foo bar]]",
+			[]string{"[[http://golang.org][foo bar]]"}},
+		{"ends with [[http://golang.org][link]]",
+			[]string{"ends", " ", "with", " ", "[[http://golang.org][link]]"}},
 	}
 	for _, test := range tests {
 		out := split(test.in)

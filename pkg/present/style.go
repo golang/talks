@@ -124,17 +124,21 @@ func split(s string) []string {
 	prevWasSpace := false
 	mark := 0
 	for i, r := range s {
+		newMark := mark
 		isSpace := unicode.IsSpace(r)
-		if i > mark {
-			if isSpace != prevWasSpace {
-				words = append(words, s[mark:i])
-				mark = i
-			}
+		if i > mark && isSpace != prevWasSpace {
+			words = append(words, s[mark:i])
+			newMark = i
+		}
+		// If we're at the beginning of the the string, or we've just
+		// skipped over a word, see if a link begins at s[i].
+		if mark == 0 || newMark > mark {
 			if _, length := parseInlineLink(s[i:]); length > 0 {
 				words = append(words, s[i:i+length])
-				mark = i + length
+				newMark = i + length
 			}
 		}
+		mark = newMark
 		prevWasSpace = isSpace
 	}
 	if mark < len(s) {
