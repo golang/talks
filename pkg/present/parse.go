@@ -13,6 +13,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/url"
+	"regexp"
 	"strings"
 	"time"
 	"unicode"
@@ -242,10 +243,13 @@ func Parse(r io.Reader, name string, mode ParseMode) (*Doc, error) {
 	return doc, nil
 }
 
+// isHeading matches any section heading.
+var isHeading = regexp.MustCompile(`^\*+ `)
+
 // lesserHeading returns true if text is a heading of a lesser or equal level
 // than that denoted by prefix.
 func lesserHeading(text, prefix string) bool {
-	return strings.HasPrefix(text, "*") && !strings.HasPrefix(text, prefix+"*")
+	return isHeading.MatchString(text) && !strings.HasPrefix(text, prefix+"*")
 }
 
 // parseSections parses Sections from lines for the section level indicated by
@@ -344,7 +348,7 @@ func parseSections(name string, lines *Lines, number []int, doc *Doc) ([]Section
 			}
 			text, ok = lines.nextNonEmpty()
 		}
-		if strings.HasPrefix(text, "*") {
+		if isHeading.MatchString(text) {
 			lines.back()
 		}
 		sections = append(sections, section)
