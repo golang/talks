@@ -36,6 +36,10 @@ It determines how the formatting actions are rendered.
   <img src="{{.URL}}"{{with .Height}} height="{{.}}"{{end}}{{with .Width}} width="{{.}}"{{end}}>
 </div>
 {{end}}
+
+{{define "iframe"}}
+<iframe src="{{.URL}}"{{with .Height}} height="{{.}}"{{end}}{{with .Width}} width="{{.}}"{{end}}></iframe>
+{{end}}
       
 {{define "link"}}<p class="link"><a href="{{.URL}}" target="_blank">{{style .Label}}</a></p>{{end}}
 

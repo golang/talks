@@ -53,6 +53,7 @@ After that come slides/sections, each after a blank line:
 	.code x.go /^func main/,/^}/
 	.play y.go
 	.image image.jpg
+	.iframe http://foo
 	.link http://foo label
 	.html file.html
 
@@ -159,6 +160,11 @@ If there are more arguments, they are the height and width;
 both must be present.
 
 	.image images/betsy.jpg 100 200
+
+iframe:
+
+The function "iframe" injects iframes (pages inside pages).
+Its syntax is the same as that of image.
 
 html:
 
