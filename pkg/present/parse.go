@@ -34,8 +34,9 @@ func Template() *template.Template {
 func (d *Doc) Render(w io.Writer, t *template.Template) error {
 	data := struct {
 		*Doc
-		Template *template.Template
-	}{d, t}
+		Template    *template.Template
+		PlayEnabled bool
+	}{d, t, PlayEnabled}
 	return t.ExecuteTemplate(w, "root", data)
 }
 
