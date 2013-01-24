@@ -8,6 +8,12 @@ http://golang.org/s/plusrob
 @rob_pike
 http://golang.org
 
+* Video
+
+This talk was presented at Google I/O in June 2012.
+
+.link http://www.youtube.com/watch?v=f6kdp27TYZs Watch the talk on YouTube
+
 * Introduction
 
 * Concurrency features in Go

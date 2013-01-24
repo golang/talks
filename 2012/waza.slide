@@ -8,6 +8,12 @@ Waza Jan 11, 2012
 Rob Pike
 r@golang.org
 
+* Video
+
+This talk was presented at Heroku's Waza conference in January 2012.
+
+.link http://vimeo.com/49718712 Watch the talk on Vimeo
+
 * The modern world is parallel
 
 Multicore.
