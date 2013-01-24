@@ -59,6 +59,7 @@ type Doc struct {
 	Time     time.Time
 	Authors  []Author
 	Sections []Section
+	Tags     []string
 }
 
 // Author represents the person who wrote and/or is presenting the document.
@@ -372,15 +373,20 @@ func parseHeader(doc *Doc, lines *Lines) error {
 		if text == "" {
 			break
 		}
-		if t, ok := parseTime(text); ok {
+		const tagPrefix = "Tags:"
+		if strings.HasPrefix(text, tagPrefix) {
+			tags := strings.Split(text[len(tagPrefix):], ",")
+			for i := range tags {
+				tags[i] = strings.TrimSpace(tags[i])
+			}
+			doc.Tags = append(doc.Tags, tags...)
+		} else if t, ok := parseTime(text); ok {
 			doc.Time = t
-			break
-		}
-		if doc.Subtitle == "" {
+		} else if doc.Subtitle == "" {
 			doc.Subtitle = text
-			continue
+		} else {
+			return fmt.Errorf("unexpected header line: %q", text)
 		}
-		return fmt.Errorf("unexpected header line: %q", text)
 	}
 	return nil
 }

@@ -11,6 +11,7 @@ line is the title, so the header looks like
 	Title of document
 	Subtitle of document
 	15:04 2 Jan 2006
+	Tags: foo, bar, baz
 	<blank line>
 	Author Name
 	Job title, Company
@@ -18,10 +19,14 @@ line is the title, so the header looks like
 	http://url/
 	@twitter_name
 
-The subtitle and date lines are optional.
+The subtitle, date, and tags lines are optional.
+
 The date line may be written without a time:
 	2 Jan 2006
 In this case, the time will be interpreted as 10am UTC on that date.
+
+The tags line is a comma-separated list of tags that may be used to categorize
+the document.
 
 The author section may contain a mixture of text, twitter names, and links.
 For slide presentations, only the plain text lines will be displayed on the
