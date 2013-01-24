@@ -261,6 +261,10 @@ func highlightLines(text, label string) string {
 			continue
 		}
 		line := m[1]
+		if m[2] != "" && m[2] != label {
+			lines[i] = line
+			continue
+		}
 		space := ""
 		if j := strings.IndexFunc(line, func(r rune) bool {
 			return !unicode.IsSpace(r)
@@ -268,9 +272,7 @@ func highlightLines(text, label string) string {
 			space = line[:j]
 			line = line[j:]
 		}
-		if m[2] == "" || m[2] == label {
-			lines[i] = space + "<b>" + line + "</b>"
-		}
+		lines[i] = space + "<b>" + line + "</b>"
 	}
 	return strings.Join(lines, "\n")
 }
