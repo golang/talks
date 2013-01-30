@@ -299,6 +299,7 @@ func parseSections(name string, lines *Lines, number []int, doc *Doc) ([]Section
 				}
 				lines.back()
 				pre := strings.Join(s, "\n")
+				pre = strings.Replace(pre, "\t", "    ", -1) // browsers treat tabs badly
 				pre = strings.TrimRightFunc(pre, unicode.IsSpace)
 				e = Text{Lines: []string{pre}, Pre: true}
 			case strings.HasPrefix(text, "- "):
