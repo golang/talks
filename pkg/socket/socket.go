@@ -152,6 +152,7 @@ func (p *process) start(body string) error {
 	defer os.Remove(bin)
 	dir, file := filepath.Split(src)
 	cmd := p.cmd(dir, "go", "build", "-o", bin, file)
+	cmd.Stdout = cmd.Stderr // send compiler output to stderr
 	if err := cmd.Run(); err != nil {
 		return err
 	}
