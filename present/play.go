@@ -6,25 +6,27 @@ package main
 
 import (
 	"bytes"
-	"fmt"
+	"io/ioutil"
 	"net/http"
-	"net/url"
+	"path/filepath"
+	"time"
 )
 
-// playScript registers an HTTP handler at /play.js
-// that returns some JavaScript that add script tags
-// for each of the provided paths to the document.
+// playScript registers an HTTP handler at /play.js that contains all the
+// scripts specified by path, relative to basePath.
 func playScript(path ...string) {
+	modTime := time.Now()
 	var buf bytes.Buffer
-	path = append(path, "/static/play.js")
-	for _, p := range path {
-		p = url.QueryEscape(p)
-		// TODO(adg): make this less awful.
-		fmt.Fprintf(&buf, `document.write(unescape("%%3Cscript src='%s' type='text/javascript'%%3E%%3C/script%%3E"));`, p)
+	for _, p := range append(path, "/static/play.js") {
+		b, err := ioutil.ReadFile(filepath.Join(basePath, p))
+		if err != nil {
+			panic(err)
+		}
+		buf.Write(b)
 	}
 	b := buf.Bytes()
 	http.HandleFunc("/play.js", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "application/javascript")
-		w.Write(b)
+		http.ServeContent(w, r, "", modTime, bytes.NewReader(b))
 	})
 }
