@@ -13,6 +13,7 @@ package socket
 
 import (
 	"encoding/json"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -83,8 +84,10 @@ func socketHandler(c *websocket.Conn) {
 				proc[m.Id].Kill()
 			}
 		case err := <-errc:
-			// A encode or decode has failed; bail.
-			log.Println(err)
+			if err != io.EOF {
+				// A encode or decode has failed; bail.
+				log.Println(err)
+			}
 			// Shut down any running processes.
 			for _, p := range proc {
 				p.Kill()
