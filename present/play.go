@@ -14,11 +14,11 @@ import (
 
 // playScript registers an HTTP handler at /play.js that contains all the
 // scripts specified by path, relative to basePath.
-func playScript(path ...string) {
+func playScript(root string, path ...string) {
 	modTime := time.Now()
 	var buf bytes.Buffer
-	for _, p := range append(path, "/static/play.js") {
-		b, err := ioutil.ReadFile(filepath.Join(basePath, p))
+	for _, p := range append(path, "play.js") {
+		b, err := ioutil.ReadFile(filepath.Join(root, "js", p))
 		if err != nil {
 			panic(err)
 		}

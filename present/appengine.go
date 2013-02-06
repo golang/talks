@@ -23,7 +23,7 @@ const runURL = "http://golang.org/compile"
 var basePath = "./present/"
 
 func init() {
-	playScript("/static/jquery.js", "/static/playground.js")
+	playScript(basePath, "jquery.js", "playground.js")
 	present.PlayEnabled = true
 	http.HandleFunc("/compile", compile)
 }

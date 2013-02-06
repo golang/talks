@@ -15,6 +15,6 @@ import (
 // HandleSocket registers the websocket handler with http.DefaultServeMux under
 // the given path.
 func HandleSocket(path string) {
-	playScript("/static/socket.js")
+	playScript(basePath, "socket.js")
 	http.Handle(path, socket.Handler)
 }
