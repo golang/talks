@@ -21,7 +21,7 @@ type Image struct {
 
 func (i Image) TemplateName() string { return "image" }
 
-func parseImage(fileName string, lineno int, text string) (Elem, error) {
+func parseImage(ctx *Context, fileName string, lineno int, text string) (Elem, error) {
 	args := strings.Fields(text)
 	img := Image{URL: args[1]}
 	a, err := parseArgs(fileName, lineno, args[2:])

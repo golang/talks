@@ -21,7 +21,7 @@ type Iframe struct {
 
 func (i Iframe) TemplateName() string { return "iframe" }
 
-func parseIframe(fileName string, lineno int, text string) (Elem, error) {
+func parseIframe(ctx *Context, fileName string, lineno int, text string) (Elem, error) {
 	args := strings.Fields(text)
 	i := Iframe{URL: args[1]}
 	a, err := parseArgs(fileName, lineno, args[2:])

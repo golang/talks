@@ -3,7 +3,6 @@ package present
 import (
 	"errors"
 	"html/template"
-	"io/ioutil"
 	"path/filepath"
 	"strings"
 )
@@ -12,13 +11,13 @@ func init() {
 	Register("html", parseHTML)
 }
 
-func parseHTML(fileName string, lineno int, text string) (Elem, error) {
+func parseHTML(ctx *Context, fileName string, lineno int, text string) (Elem, error) {
 	p := strings.Fields(text)
 	if len(p) != 2 {
 		return nil, errors.New("invalid .html args")
 	}
 	name := filepath.Join(filepath.Dir(fileName), p[1])
-	b, err := ioutil.ReadFile(name)
+	b, err := ctx.ReadFile(name)
 	if err != nil {
 		return nil, err
 	}

@@ -21,7 +21,7 @@ type Link struct {
 
 func (l Link) TemplateName() string { return "link" }
 
-func parseLink(fileName string, lineno int, text string) (Elem, error) {
+func parseLink(ctx *Context, fileName string, lineno int, text string) (Elem, error) {
 	args := strings.Fields(text)
 	url, err := url.Parse(args[1])
 	if err != nil {
