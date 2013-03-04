@@ -57,14 +57,18 @@
 
     var run = document.createElement('button');
     run.innerHTML = 'Run';
+    run.className = 'run';
     run.addEventListener("click", onRun, false);
     var run2 = document.createElement('button');
+    run2.className = 'run';
     run2.innerHTML = 'Run';
     run2.addEventListener("click", onRun, false);
     var kill = document.createElement('button');
+    kill.className = 'kill';
     kill.innerHTML = 'Kill';
     kill.addEventListener("click", onKill, false);
     var close = document.createElement('button');
+    close.className = 'close';
     close.innerHTML = 'Close';
     close.addEventListener("click", onClose, false);
 
