@@ -64,9 +64,9 @@ and lots of Java and Python for the other pieces.
 Thousands of engineers work on the code,
 at the "head" of a single tree comprising all the software,
 so from day to day there are significant changes to all levels of the tree.
-A large custom-designed distributed build system makes development at this scale feasible, but it's still big.
-
-.link http://google-engtools.blogspot.com/2011/06/build-in-cloud-accessing-source-code.html
+A large
+[[http://google-engtools.blogspot.com/2011/06/build-in-cloud-accessing-source-code.html][custom-designed distributed build system]]
+makes development at this scale feasible, but it's still big.
 
 And of course, all this software runs on zillions of machines, which are treated as a modest number of independent, networked compute clusters.
 
@@ -108,7 +108,7 @@ A larger view of software engineering is required, and
 in the design of Go we tried to focus on solutions to _these_ problems.
 
 As a simple, self-contained example, consider the representation of program structure.
-Some observers objected to Go's C-like block structure with braces, preferring the use of spaces for indentation, such as used in Python or Haskell.
+Some observers objected to Go's C-like block structure with braces, preferring the use of spaces for indentation, in the style of Python or Haskell.
 However, we have had extensive experience tracking down build and test failures caused by cross-language builds where a Python snippet embedded in another language,
 for instance through a SWIG invocation,
 is subtly and _invisibly_ broken by a change in the indentation of the surrounding code.
@@ -133,12 +133,12 @@ For instance, the Unix header file `<sys/stat.h>` looks schematically like this:
 
 The intent is that the C preprocessor reads in the file but disregards the contents on
 the second and subsequent
-reading of the file because the specific symbol `_SYS_STAT_H_` is defined the first time
-the file is read.
+readings of the file.
+The symbol `_SYS_STAT_H_`, defined the first time the file is read, "guards" the invocations that follow.
 
 This design has some nice properties, most important that each header file can safely `#include`
 all its dependencies, even if other header files will also include them.
-If that rule is followed, it even permits orderly code that, for instance, sorts the `#include`
+If that rule is followed, it permits orderly code that, for instance, sorts the `#include`
 clauses alphabetically.
 
 But it scales very badly.
@@ -173,8 +173,8 @@ The most important result of the Plan 9 approach was much faster compilation: th
 I/O the compilation requires can be dramatically less than when compiling a program
 using libraries with `#ifndef` guards.
 
-Outside of Plan 9, though, the "guarded" approach is accepted practice for C and C++
-İn fact, C++ exacerbates the problem by using the same approach at finer granularity.
+Outside of Plan 9, though, the "guarded" approach is accepted practice for C and C++.
+In fact, C++ exacerbates the problem by using the same approach at finer granularity.
 By convention, C++ programs are usually structured with one header file per class, or perhaps
 small set of related classes, a grouping much smaller than, say, `<stdio.h>`.
 The dependency tree is therefore much more intricate, reflecting not library dependencies but the full type hierarchy.
@@ -218,8 +218,8 @@ to stay ahead of the growth of the software it is constructing.
 * Enter Go
 
 When builds are slow, there is time to think.
-The origin myth for Go claims that it was during one of those 45 minute builds
-that Go was conceived, that it was thought worth trying to design a new language
+The origin myth for Go states that it was during one of those 45 minute builds
+that Go was conceived. It was believed to be worth trying to design a new language
 suitable for writing large Google programs such as web servers,
 with software engineering considerations that would improve the quality
 of life of Google programmers.
@@ -230,9 +230,9 @@ The primary considerations for any language to succeed in this context are:
 
 - It must work at scale, for large programs with large numbers of dependencies, with large teams of programmers working on them.
 
-- It must be familiar, roughly C-like. Most of the programmers coming to Google are early in their careers and are most familiar with procedural languages, particularly from the C family. The ability to get new hires productive quickly in a new language means that the language cannot be too radical.
+- It must be familiar, roughly C-like. Programmers working at Google are early in their careers and are most familiar with procedural languages, particularly from the C family. The need to get programmers productive quickly in a new language means that the language cannot be too radical.
 
-- It must be modern. C, C++, and to some extent even Java are quite old, designed before the advent of multicore machines, networking, and web application development. There are features of the modern world that are better met by newer approaches, such as built-in concurrency.
+- It must be modern. C, C++, and to some extent Java are quite old, designed before the advent of multicore machines, networking, and web application development. There are features of the modern world that are better met by newer approaches, such as built-in concurrency.
 
 With that background, then, let us look at the design of Go from a software engineering perspective.
 
@@ -357,9 +357,13 @@ Through the design of the standard library, great effort was spent on controllin
 dependencies. It can be better to copy a little code than to pull in a big
 library for one function. (A test in the system build complains if new core
 dependencies arise.) Dependency hygiene trumps code reuse.
-As an example of this in practice,
+One example of this in practice is that
 the (low-level) `net` package has its own integer-to-decimal conversion routine
 to avoid depending on the bigger and dependency-heavy formatted I/O package.
+Another is that the string conversion package `strconv` has a private implementation
+of the definition of 'printable' characters rather than pull in the large Unicode
+character class tables; that `strconv` honors the Unicode standard is verified by the
+package's tests.
 
 * Packages
 
@@ -390,19 +394,18 @@ This design provides clarity.
 One may always tell whether a name is local to package from its syntax: `Name` vs. `pkg.Name`.
 (More on this later.)
 
-It's important to recognize that package _paths_ are unique,
-but there is no such requirement for package _names_.
-The path must uniquely identify the package to be imported, while the
-name is just a convention for how clients of the package can refer to its
-contents.
-
 For our example, the package path is `"encoding/json"` while the package name is `json`.
 Outside the standard repository, the convention is to place the 
 project or company name at the root of the name space:
 
 	import "google/base/go/log"
 
-The package name might not be unique and can be overridden
+It's important to recognize that package _paths_ are unique,
+but there is no such requirement for package _names_.
+The path must uniquely identify the package to be imported, while the
+name is just a convention for how clients of the package can refer to its
+contents.
+The package name need not be unique and can be overridden
 in each importing source file by providing a local identifier in the
 import clause. These two imports both reference packages that
 call themselves `package` `log`, but to import them in a single source
@@ -426,7 +429,7 @@ repositories by having it identify the URL of the site serving the repository.
 
 Here is how to use the `doozer` package from `github`. The `go` `get` command
 uses the `go` build tool to fetch the repository from the site and install it.
-Once installed, it can be imported and used as any regular package.
+Once installed, it can be imported and used like any regular package.
 
 	$ go get github.com/4ad/doozer // Shell command to fetch package
 
@@ -453,7 +456,7 @@ Go was therefore designed with clarity and tooling in mind, and has
 a clean syntax.
 Compared to other languages in the C family, its
 grammar is modest in size, with only 25 keywords (C99 has
-37; C++03 has 63; the numbers continue to grow).
+37; C++11 has 84; the numbers continue to grow).
 More important,
 the grammar is regular and therefore easy to parse (mostly; there
 are a couple of quirks we might have fixed but didn't discover early
@@ -487,10 +490,8 @@ the second is shorter and idiomatic:
 	var buf *bytes.Buffer = bytes.NewBuffer(x) // explicit
 	buf := bytes.NewBuffer(x)                  // derived
 
-This blog post has more detail about the syntax of declarations in Go and
-why it is so different from C:
-
-.link http://golang.org/s/decl-syntax
+There is a blog post at [[http://golang.org/s/decl-syntax][golang.org/s/decl-syntax]] with more detail about the syntax of declarations in Go and
+why it is so different from C.
 
 Function syntax is straightforward for simple functions.
 This example declares the function  `Abs`, which accepts a single
@@ -626,7 +627,7 @@ familiar to programmers accustomed to languages in the C family.
 When launching a new language
 it is important that the target audience be able to learn it quickly; rooting Go
 in the C family helps make sure that young programmers, most of whom
-know Java and maybe C, should find Go easy to learn.
+know Java, JavaScript, and maybe C, should find Go easy to learn.
 
 That said, Go makes many small changes to C semantics, mostly in the
 service of robustness. These include:
@@ -653,14 +654,14 @@ The following sections provide brief discussions of two of these topics in Go,
 concurrency and garbage collection,
 mostly from a software engineering perspective.
 For a full discussion of the language semantics and uses see the many
-resources on the golang.org web site.
+resources on the [[golang.org]] web site.
 
 * Concurrency
 
 Concurrency is important to the modern computing environment with its
 multicore machines running web servers with multiple clients,
 what might be called the typical Google program.
-This kind of software is not especially well served by C++ or even Java,
+This kind of software is not especially well served by C++ or Java,
 which lack sufficient concurrency support at the language level.
 
 Go embodies a variant of CSP with first-class channels.
@@ -721,7 +722,7 @@ has a profound effect on the way a language works in practice.
 In C and C++, too much programming effort is spent on memory allocation
 and freeing.
 The resulting designs tend to expose details of memory management
-that could well be hidden; or conversely memory considerations
+that could well be hidden; conversely memory considerations
 limit how they can be used. By contrast, garbage collection makes interfaces
 easier to specify.
 
@@ -756,8 +757,8 @@ type definition of a data structure containing a buffer (array) of bytes:
 In Java, the `buf` field would require a second allocation and accesses
 to it a second level of indirection. In Go, however, the buffer is allocated
 in a single block of memory along with the containing struct and no
-indirection is required. For systems programming, this can have a
-measurable performance difference as well as reducing the number
+indirection is required. For systems programming, this design can have a
+better performance as well as reducing the number
 of items known to the collector. At scale it can make a significant
 difference.
 
@@ -789,7 +790,7 @@ So far, our experience comparing similar Go and Java programs shows
 that use of interior pointers can have a significant effect on total arena size,
 latency, and collection times.
 
-In summary, Go is garbage collected but gives the _programmer_
+In summary, Go is garbage collected but gives the programmer
 some tools to control collection overhead.
 
 The garbage collector remains an active area of development.
@@ -812,9 +813,7 @@ software, it is our opinion that the model has been overused and that it
 is worth taking a step back.
 
 Instead, Go has _interfaces_, an idea that as been discussed at length elsewhere (see
-
-.link http://research.swtch.com/interfaces
-
+[[http://research.swtch.com/interfaces][research.swtch.com/interfaces]]
 for example), but here is a brief summary.
 
 In Go an interface is _just_ a set of methods. For instance, here is the definition
@@ -863,7 +862,7 @@ achieved in other systems, even today.
 Examples abound. Here's one: A system could import (in Plan 9 terminology) a TCP
 stack to a computer that didn't have TCP or even Ethernet, and over that network
 connect to a machine with a different CPU architecture, import its `/proc` tree,
-and run a local debugger to do checkpoint debugging of the remote process.
+and run a local debugger to do breakpoint debugging of the remote process.
 This sort of operation was workaday on Plan 9, nothing special at all.
 The ability to do such things fell out of the design; it required no special
 arrangement (and was all done in plain C).
@@ -967,7 +966,7 @@ Combined with the ability for functions to return multiple
 values, it's easy to return the computed result along with an
 error value, if any.
 For instance, the equivalent
-to C's `getchar` does not return an out-of-bound value at EOF,
+to C's `getchar` does not return an out-of-band value at EOF,
 nor does it throw an exception; it just returns an `error` value
 alongside the character, with a `nil` `error` value signifying success.
 Here is the signature of the `ReadByte` method of the buffered
@@ -1015,8 +1014,8 @@ Every language operates in an environment with other languages
 and myriad tools to compile, edit, debug, profile, test, and run programs.
 
 Go's syntax, package system, naming conventions, and other features
-were designed to make tools easy to write, and the library comes
-with a lexer, parser, and type checker for the language.
+were designed to make tools easy to write, and the library
+includes a lexer, parser, and type checker for the language.
 
 Tools to manipulate Go programs are so easy to write that
 many such tools have been created,
@@ -1040,7 +1039,7 @@ style that is now familiar to everyone. Uniform presentation
 makes code easier to read and therefore faster to work on.
 Time not spent on formatting is time saved.
 `Gofmt` also affects scalability: since all code looks the same,
-teams find it easier to work together or to import others' code.
+teams find it easier to work together or with others' code.
 
 `Gofmt` enabled another class of tools that we did not foresee as clearly.
 The program works by parsing the source code and reformatting it
@@ -1111,7 +1110,8 @@ Go's use is growing inside Google.
 
 Several big user-facing services use it, including `youtube.com` and `dl.google.com`
 (the download server that delivers Chrome, Android and other downloads),
-as well as our own `golang.org`. And of course many small ones do, mostly
+as well as our own [[http://golang.org][golang.org]].
+And of course many small ones do, mostly
 built using Google App Engine's native support for Go.
 
 Many other companies use Go as well; the list is very long, but a few of the
