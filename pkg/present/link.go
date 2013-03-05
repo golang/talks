@@ -61,7 +61,7 @@ func parseInlineLink(s string) (link string, length int) {
 	}
 	urlEnd := strings.Index(s, "]")
 	url := s[2:urlEnd]
-	const badURLChars = `<>"{}|\^~[] ` + "`" // per RFC1738 section 2.2
+	const badURLChars = `<>"{}|\^[] ` + "`" // per RFC2396 section 2.4.3
 	if strings.ContainsAny(url, badURLChars) {
 		return
 	}
