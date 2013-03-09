@@ -1,3 +1,4 @@
+// +build ignore OMIT
 package main
 
 import "fmt"

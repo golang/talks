@@ -1,3 +1,5 @@
+// +build ignore,OMIT
+
 package main
 
 import ( "fmt"; "net/http"; "time" )
