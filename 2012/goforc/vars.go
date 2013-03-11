@@ -1,4 +1,4 @@
-package p
+package main
 
 // START1 OMIT
 var i int

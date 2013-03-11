@@ -542,15 +542,15 @@ In Go, top-level declarations beginning with an uppercase letter are "exported" 
 
 To document the remaining visible names, add a comment directly above their declarations:
 
-.code tutorial/reddit.go /Item.describes/,/type/
+.code tutorial/reddit/reddit.go /Item.describes/,/type/
 
-.code tutorial/reddit.go /Get.fetches/,/func/
+.code tutorial/reddit/reddit.go /Get.fetches/,/func/
 
 # It is the convention to begin godoc comments with the noun they describe. This allows the text to be displayed in a variety of contexts, not necessarily alongside the declaration itself.
 
 Most importantly, document the package itself by adding a comment to the package clause:
 
-.code tutorial/reddit.go /Package.reddit/,/package.reddit/
+.code tutorial/reddit/reddit.go /Package.reddit/,/package.reddit/
 
 Don't worry about documenting the `String` method, as all Go programmers should be familiar with it and its purpose.
 

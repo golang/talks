@@ -1,4 +1,4 @@
-func main
+package main
 
 func main() {
 	var value int
@@ -10,7 +10,7 @@ func main() {
 	// or
 	c := make(chan int) // HL
 	// STOP1 OMIT
-	
+
 	// START2 OMIT
 	// Sending on a channel.
 	c <- 1 // HL
