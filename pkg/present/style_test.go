@@ -5,6 +5,7 @@
 package present
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 )
@@ -97,9 +98,15 @@ func TestStyle(t *testing.T) {
 		{"(_a)", "(_a)"},
 	}
 	for _, test := range tests {
-		out := string(style(test.in))
+		out := string(Style(test.in))
 		if out != test.out {
 			t.Errorf("style(%q):\ngot\t%q\nwant\t%q", test.in, out, test.out)
 		}
 	}
+}
+
+func ExampleStyle() {
+	const s = "*Gophers* are _clearly_ > *cats*!"
+	fmt.Println(Style(s))
+	// Output: <b>Gophers</b> are <i>clearly</i> &gt; <b>cats</b>!
 }

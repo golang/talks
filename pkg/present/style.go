@@ -27,10 +27,12 @@ import (
 */
 
 func init() {
-	funcs["style"] = style
+	funcs["style"] = Style
 }
 
-func style(s string) template.HTML {
+// Style returns s with HTML entities escaped and font indicators turned into
+// HTML font tags.
+func Style(s string) template.HTML {
 	return template.HTML(font(html.EscapeString(s)))
 }
 
