@@ -40,7 +40,7 @@
         stopFunc();
       }
     }
-    
+
     function onRun() {
       onKill();
       outpre.innerHTML = "";
@@ -97,7 +97,7 @@
   }
   if (play.length > 0) {
     if (window.connectPlayground) {
-      runFunc = window.connectPlayground("ws://localhost:3999/socket");
+      runFunc = window.connectPlayground("ws://" + window.location.host + "/socket");
     } else {
       // If this message is logged,
       // we have neglected to include socket.js or playground.js.
