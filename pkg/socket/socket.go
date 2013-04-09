@@ -30,6 +30,10 @@ import (
 // Handler implements a WebSocket handler for a client connection.
 var Handler = websocket.Handler(socketHandler)
 
+// Environ, if non-nil, is used to provide an environment to go command and
+// user binary invocations.
+var Environ func() []string
+
 const msgLimit = 1000 // max number of messages to send per session
 
 // Message is the wire format for the websocket connection to the browser.
@@ -193,6 +197,9 @@ func (p *process) end(err error) {
 func (p *process) cmd(dir string, args ...string) *exec.Cmd {
 	cmd := exec.Command(args[0], args[1:]...)
 	cmd.Dir = dir
+	if Environ != nil {
+		cmd.Env = Environ()
+	}
 	cmd.Stdout = &messageWriter{p.id, "stdout", p.out}
 	cmd.Stderr = &messageWriter{p.id, "stderr", p.out}
 	return cmd
