@@ -446,14 +446,14 @@ func parseAuthors(lines *Lines) (authors []Author, err error) {
 		switch {
 		case strings.HasPrefix(text, "@"):
 			el = parseURL("http://twitter.com/" + text[1:])
-			if l, ok := el.(Link); ok {
-				l.Label = text
-				el = l
-			}
 		case strings.Contains(text, ":"):
 			el = parseURL(text)
 		case strings.Contains(text, "@"):
 			el = parseURL("mailto:" + text)
+		}
+		if l, ok := el.(Link); ok {
+			l.Label = text
+			el = l
 		}
 		if el == nil {
 			el = Text{Lines: []string{text}}
