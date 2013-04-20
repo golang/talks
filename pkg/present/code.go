@@ -75,15 +75,14 @@ func parseCode(ctx *Context, sourceFile string, sourceLine int, cmd string) (Ele
 		return nil, fmt.Errorf("%s:%d: %v", sourceFile, sourceLine, err)
 	}
 
-	// Acme pattern matches stop mid-line,
-	// so run to end of line in both directions.
+	// Acme pattern matches can stop mid-line,
+	// so run to end of line in both directions if not at line start/end.
 	for lo > 0 && textBytes[lo-1] != '\n' {
 		lo--
 	}
-	for hi < len(textBytes) {
-		hi++
-		if textBytes[hi-1] == '\n' {
-			break
+	if hi > 0 {
+		for hi < len(textBytes) && textBytes[hi-1] != '\n' {
+			hi++
 		}
 	}
 	text := string(textBytes[lo:hi])
