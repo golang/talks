@@ -14,6 +14,7 @@
 package socket
 
 import (
+	"bytes"
 	"encoding/json"
 	"io"
 	"io/ioutil"
@@ -23,6 +24,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strconv"
+	"unicode/utf8"
 
 	"code.google.com/p/go.net/websocket"
 )
@@ -213,8 +215,22 @@ type messageWriter struct {
 }
 
 func (w *messageWriter) Write(b []byte) (n int, err error) {
-	w.out <- &Message{Id: w.id, Kind: w.kind, Body: string(b)}
+	w.out <- &Message{Id: w.id, Kind: w.kind, Body: safeString(b)}
 	return len(b), nil
+}
+
+// safeString returns b as a valid UTF-8 string.
+func safeString(b []byte) string {
+	if utf8.Valid(b) {
+		return string(b)
+	}
+	var buf bytes.Buffer
+	for len(b) > 0 {
+		r, size := utf8.DecodeRune(b)
+		b = b[size:]
+		buf.WriteRune(r)
+	}
+	return buf.String()
 }
 
 // limiter returns a channel that wraps dest. Messages sent to the channel are
