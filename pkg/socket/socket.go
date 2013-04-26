@@ -32,9 +32,9 @@ import (
 // Handler implements a WebSocket handler for a client connection.
 var Handler = websocket.Handler(socketHandler)
 
-// Environ, if non-nil, is used to provide an environment to go command and
-// user binary invocations.
-var Environ func() []string
+// Environ provides an environment when a binary, such as the go tool, is
+// invoked.
+var Environ func() []string = os.Environ
 
 const msgLimit = 1000 // max number of messages to send per session
 
@@ -42,9 +42,15 @@ const msgLimit = 1000 // max number of messages to send per session
 // It is used for both sending output messages and receiving commands, as
 // distinguished by the Kind field.
 type Message struct {
-	Id   string // client-provided unique id for the process
-	Kind string // in: "run", "kill" out: "stdout", "stderr", "end"
-	Body string
+	Id      string // client-provided unique id for the process
+	Kind    string // in: "run", "kill" out: "stdout", "stderr", "end"
+	Body    string
+	Options *Options `json:",omitempty"`
+}
+
+// Options specify additional message options.
+type Options struct {
+	Race bool // use -race flag when building code (for "run" only)
 }
 
 // socketHandler handles the websocket connection for a given present session.
@@ -87,7 +93,7 @@ func socketHandler(c *websocket.Conn) {
 			case "run":
 				proc[m.Id].Kill()
 				lOut := limiter(in, out)
-				proc[m.Id] = startProcess(m.Id, m.Body, lOut)
+				proc[m.Id] = startProcess(m.Id, m.Body, lOut, m.Options)
 			case "kill":
 				proc[m.Id].Kill()
 			}
@@ -115,13 +121,13 @@ type process struct {
 
 // startProcess builds and runs the given program, sending its output
 // and end event as Messages on the provided channel.
-func startProcess(id, body string, out chan<- *Message) *process {
+func startProcess(id, body string, out chan<- *Message, opt *Options) *process {
 	p := &process{
 		id:   id,
 		out:  out,
 		done: make(chan struct{}),
 	}
-	if err := p.start(body); err != nil {
+	if err := p.start(body, opt); err != nil {
 		p.end(err)
 		return nil
 	}
@@ -140,7 +146,7 @@ func (p *process) Kill() {
 
 // start builds and starts the given program, sending its output to p.out,
 // and stores the running *exec.Cmd in the run field.
-func (p *process) start(body string) error {
+func (p *process) start(body string, opt *Options) error {
 	// We "go build" and then exec the binary so that the
 	// resultant *exec.Cmd is a handle to the user's program
 	// (rather than the go tool process).
@@ -162,7 +168,16 @@ func (p *process) start(body string) error {
 	// build x.go, creating x
 	defer os.Remove(bin)
 	dir, file := filepath.Split(src)
-	cmd := p.cmd(dir, "go", "build", "-o", bin, file)
+	args := []string{"go", "build"}
+	if opt != nil && opt.Race {
+		p.out <- &Message{
+			Id: p.id, Kind: "stderr",
+			Body: "Running with race detector.\n",
+		}
+		args = append(args, "-race")
+	}
+	args = append(args, "-o", bin, file)
+	cmd := p.cmd(dir, args...)
 	cmd.Stdout = cmd.Stderr // send compiler output to stderr
 	if err := cmd.Run(); err != nil {
 		return err
@@ -170,6 +185,9 @@ func (p *process) start(body string) error {
 
 	// run x
 	cmd = p.cmd("", bin)
+	if opt != nil && opt.Race {
+		cmd.Env = append(cmd.Env, "GOMAXPROCS=2")
+	}
 	if err := cmd.Start(); err != nil {
 		return err
 	}
@@ -199,9 +217,7 @@ func (p *process) end(err error) {
 func (p *process) cmd(dir string, args ...string) *exec.Cmd {
 	cmd := exec.Command(args[0], args[1:]...)
 	cmd.Dir = dir
-	if Environ != nil {
-		cmd.Env = Environ()
-	}
+	cmd.Env = Environ()
 	cmd.Stdout = &messageWriter{p.id, "stdout", p.out}
 	cmd.Stderr = &messageWriter{p.id, "stderr", p.out}
 	return cmd

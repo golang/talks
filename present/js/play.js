@@ -41,12 +41,13 @@
       }
     }
 
-    function onRun() {
+    function onRun(e) {
       onKill();
       outpre.innerHTML = "";
       output.style.display = "block";
       run.style.display = "none";
-      stopFunc = runFunc(text(code), outpre);
+      var options = {Race: e.shiftKey};
+      stopFunc = runFunc(text(code), outpre, options);
     }
 
     function onClose() {

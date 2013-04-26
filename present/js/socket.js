@@ -55,10 +55,12 @@
         o.scrollTop = o.scrollHeight - o.offsetHeight;
   }
 
-  function run(body, output) {
+  function run(body, output, options) {
     var id = output.id;
     outputs[id] = output;
-    sendMessage({Id: id, Kind: "run", Body: body});
+    options = options || {};
+    options.Race = !!options.Race; // force boolean
+    sendMessage({Id: id, Kind: "run", Body: body, Options: options});
     return function() {
       sendMessage({Id: id, Kind: "kill"});
     };
