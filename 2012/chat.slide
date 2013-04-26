@@ -93,7 +93,7 @@ That's because a `Fprintln` writes to an `io.Writer`, and `net.Conn` is an `io.W
 
 * Goroutines
 
-Goroutines are lightweight threads that are managed by the Go runtime. To run a function in a new goroutine, just put "`go`" before the function call.
+Goroutines are lightweight threads that are managed by the Go runtime. To run a function in a new goroutine, just put `"go"` before the function call.
 
 .play chat/support/goroutines.go
 
@@ -125,7 +125,7 @@ Copying the data is easy. As in real life, the hard part is matching one partner
 
 * Channels
 
-Goroutines communicate via channels. A channel is a typed conduit, like a Unix pipe. Channels may be synchronous (unbuffered) or asynchronous (buffered).
+Goroutines communicate via channels. A channel is a typed conduit that may be synchronous (unbuffered) or asynchronous (buffered).
 
 .play chat/support/chan.go
 
@@ -266,7 +266,7 @@ and feed all incoming data to the `Chain` instance.
 * Integrating the markov bot
 
 The bot should jump in if a real partner doesn't join.
-To do this, we add a case to the select that triggers after 10 seconds, starting a chat between the user's socket and a bot.
+To do this, we add a case to the select that triggers after 5 seconds, starting a chat between the user's socket and a bot.
 
 .code chat/markov/chat.go /func.match/,/^}/
 
