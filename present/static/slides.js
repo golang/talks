@@ -195,10 +195,6 @@ function updateSlides() {
   enableSlideFrames(curSlide - 1);
   enableSlideFrames(curSlide + 2);
   
-  if (isChromeVoxActive()) {
-    speakAndSyncToNode(slideEls[curSlide]);
-  }  
-
   updateHash();
 };
 
@@ -370,72 +366,6 @@ function setupInteraction() {
   document.body.addEventListener('touchstart', handleTouchStart, false);
 }
 
-/* ChromeVox support */
-
-function isChromeVoxActive() {
-  if (typeof(cvox) == 'undefined') {
-    return false;
-  } else {
-    return true;
-  }
-};
-
-function speakAndSyncToNode(node) {
-  if (!isChromeVoxActive()) {
-    return;
-  }
-  
-  cvox.ChromeVox.navigationManager.switchToStrategy(
-      cvox.ChromeVoxNavigationManager.STRATEGIES.LINEARDOM, 0, true);  
-  cvox.ChromeVox.navigationManager.syncToNode(node);
-  cvox.ChromeVoxUserCommands.finishNavCommand('');
-  var target = node;
-  while (target.firstChild) {
-    target = target.firstChild;
-  }
-  cvox.ChromeVox.navigationManager.syncToNode(target);
-};
-
-function speakNextItem() {
-  if (!isChromeVoxActive()) {
-    return;
-  }
-  
-  cvox.ChromeVox.navigationManager.switchToStrategy(
-      cvox.ChromeVoxNavigationManager.STRATEGIES.LINEARDOM, 0, true);
-  cvox.ChromeVox.navigationManager.next(true);
-  if (!cvox.DomUtil.isDescendantOfNode(
-      cvox.ChromeVox.navigationManager.getCurrentNode(), slideEls[curSlide])){
-    var target = slideEls[curSlide];
-    while (target.firstChild) {
-      target = target.firstChild;
-    }
-    cvox.ChromeVox.navigationManager.syncToNode(target);
-    cvox.ChromeVox.navigationManager.next(true);
-  }
-  cvox.ChromeVoxUserCommands.finishNavCommand('');
-};
-
-function speakPrevItem() {
-  if (!isChromeVoxActive()) {
-    return;
-  }
-  
-  cvox.ChromeVox.navigationManager.switchToStrategy(
-      cvox.ChromeVoxNavigationManager.STRATEGIES.LINEARDOM, 0, true);
-  cvox.ChromeVox.navigationManager.previous(true);
-  if (!cvox.DomUtil.isDescendantOfNode(
-      cvox.ChromeVox.navigationManager.getCurrentNode(), slideEls[curSlide])){
-    var target = slideEls[curSlide];
-    while (target.lastChild){
-      target = target.lastChild;
-    }
-    cvox.ChromeVox.navigationManager.syncToNode(target);
-    cvox.ChromeVox.navigationManager.previous(true);
-  }
-  cvox.ChromeVoxUserCommands.finishNavCommand('');
-};
-
 /* Hash functions */
 
 function getCurSlideFromHash() {
@@ -478,21 +408,13 @@ function handleBodyKeyDown(event) {
 
     case 40: // down arrow
       if (inCode) break;
-      if (isChromeVoxActive()) {
-        speakNextItem();
-      } else {
-        nextSlide();
-      }
+      nextSlide();
       event.preventDefault();
       break;
 
     case 38: // up arrow
       if (inCode) break;
-      if (isChromeVoxActive()) {
-        speakPrevItem();
-      } else {
-        prevSlide();
-      }
+      prevSlide();
       event.preventDefault();
       break;
   }
