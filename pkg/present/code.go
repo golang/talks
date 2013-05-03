@@ -93,6 +93,9 @@ func parseCode(ctx *Context, sourceFile string, sourceLine int, cmd string) (Ele
 	// Replace tabs by spaces, which work better in HTML.
 	text = strings.Replace(text, "\t", "    ", -1)
 
+	// Clear trailing newlines.
+	text = strings.TrimRight(text, "\n")
+
 	// Escape the program text for HTML.
 	text = template.HTMLEscapeString(text)
 
