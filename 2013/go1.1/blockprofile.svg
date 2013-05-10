@@ -1,0 +1,615 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 16.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 width="864px" height="864px" viewBox="0 0 864 864" enable-background="new 0 0 864 864" xml:space="preserve">
+<script  type="text/ecmascript">
+	<![CDATA[
+// SVGPan
+// http://www.cyberz.org/blog/2009/12/08/svgpan-a-javascript-svg-panzoomdrag-library/
+// Local modification: if(true || ...) below to force panning, never moving.
+// Local modification: add clamping to fix bug in handleMouseWheel.
+
+/**
+ *  SVGPan library 1.2
+ * ====================
+ *
+ * Given an unique existing element with id "viewport", including the
+ * the library into any SVG adds the following capabilities:
+ *
+ *  - Mouse panning
+ *  - Mouse zooming (using the wheel)
+ *  - Object dargging
+ *
+ * Known issues:
+ *
+ *  - Zooming (while panning) on Safari has still some issues
+ *
+ * Releases:
+ *
+ * 1.2, Sat Mar 20 08:42:50 GMT 2010, Zeng Xiaohui
+ *	Fixed a bug with browser mouse handler interaction
+ *
+ * 1.1, Wed Feb  3 17:39:33 GMT 2010, Zeng Xiaohui
+ *	Updated the zoom code to support the mouse wheel on Safari/Chrome
+ *
+ * 1.0, Andrea Leofreddi
+ *	First release
+ *
+ * This code is licensed under the following BSD license:
+ *
+ * Copyright 2009-2010 Andrea Leofreddi <a.leofreddi@itcharm.com>. All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification, are
+ * permitted provided that the following conditions are met:
+ *
+ *    1. Redistributions of source code must retain the above copyright notice, this list of
+ *       conditions and the following disclaimer.
+ *
+ *    2. Redistributions in binary form must reproduce the above copyright notice, this list
+ *       of conditions and the following disclaimer in the documentation and/or other materials
+ *       provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY Andrea Leofreddi ``AS IS'' AND ANY EXPRESS OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
+ * FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL Andrea Leofreddi OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ * ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+ * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * The views and conclusions contained in the software and documentation are those of the
+ * authors and should not be interpreted as representing official policies, either expressed
+ * or implied, of Andrea Leofreddi.
+ */
+
+var root = document.documentElement;
+
+var state = 'none', stateTarget, stateOrigin, stateTf;
+
+setupHandlers(root);
+
+/**
+ * Register handlers
+ */
+function setupHandlers(root){
+	setAttributes(root, {
+		"onmouseup" : "add(evt)",
+		"onmousedown" : "handleMouseDown(evt)",
+		"onmousemove" : "handleMouseMove(evt)",
+		"onmouseup" : "handleMouseUp(evt)",
+		//"onmouseout" : "handleMouseUp(evt)", // Decomment this to stop the pan functionality when dragging out of the SVG element
+	});
+
+	if(navigator.userAgent.toLowerCase().indexOf('webkit') >= 0)
+		window.addEventListener('mousewheel', handleMouseWheel, false); // Chrome/Safari
+	else
+		window.addEventListener('DOMMouseScroll', handleMouseWheel, false); // Others
+
+	var g = svgDoc.getElementById("svg");
+	g.width = "100%";
+	g.height = "100%";
+}
+
+/**
+ * Instance an SVGPoint object with given event coordinates.
+ */
+function getEventPoint(evt) {
+	var p = root.createSVGPoint();
+
+	p.x = evt.clientX;
+	p.y = evt.clientY;
+
+	return p;
+}
+
+/**
+ * Sets the current transform matrix of an element.
+ */
+function setCTM(element, matrix) {
+	var s = "matrix(" + matrix.a + "," + matrix.b + "," + matrix.c + "," + matrix.d + "," + matrix.e + "," + matrix.f + ")";
+
+	element.setAttribute("transform", s);
+}
+
+/**
+ * Dumps a matrix to a string (useful for debug).
+ */
+function dumpMatrix(matrix) {
+	var s = "[ " + matrix.a + ", " + matrix.c + ", " + matrix.e + "\n  " + matrix.b + ", " + matrix.d + ", " + matrix.f + "\n  0, 0, 1 ]";
+
+	return s;
+}
+
+/**
+ * Sets attributes of an element.
+ */
+function setAttributes(element, attributes){
+	for (i in attributes)
+		element.setAttributeNS(null, i, attributes[i]);
+}
+
+/**
+ * Handle mouse move event.
+ */
+function handleMouseWheel(evt) {
+	if(evt.preventDefault)
+		evt.preventDefault();
+
+	evt.returnValue = false;
+
+	var svgDoc = evt.target.ownerDocument;
+
+	var delta;
+
+	if(evt.wheelDelta)
+		delta = evt.wheelDelta / 3600; // Chrome/Safari
+	else
+		delta = evt.detail / -90; // Mozilla
+
+	var z = 1 + delta; // Zoom factor: 0.9/1.1
+
+	// Clamp to reasonable values.
+	// The 0.1 check is important because
+	// a very large scroll can turn into a
+	// negative z, which rotates the image 180 degrees.
+	if(z < 0.1)
+		z = 0.1;
+	if(z > 10.0)
+		z = 10.0;
+
+	var g = svgDoc.getElementById("viewport");
+
+	var p = getEventPoint(evt);
+
+	p = p.matrixTransform(g.getCTM().inverse());
+
+	// Compute new scale matrix in current mouse position
+	var k = root.createSVGMatrix().translate(p.x, p.y).scale(z).translate(-p.x, -p.y);
+
+        setCTM(g, g.getCTM().multiply(k));
+
+	stateTf = stateTf.multiply(k.inverse());
+}
+
+/**
+ * Handle mouse move event.
+ */
+function handleMouseMove(evt) {
+	if(evt.preventDefault)
+		evt.preventDefault();
+
+	evt.returnValue = false;
+
+	var svgDoc = evt.target.ownerDocument;
+
+	var g = svgDoc.getElementById("viewport");
+
+	if(state == 'pan') {
+		// Pan mode
+		var p = getEventPoint(evt).matrixTransform(stateTf);
+
+		setCTM(g, stateTf.inverse().translate(p.x - stateOrigin.x, p.y - stateOrigin.y));
+	} else if(state == 'move') {
+		// Move mode
+		var p = getEventPoint(evt).matrixTransform(g.getCTM().inverse());
+
+		setCTM(stateTarget, root.createSVGMatrix().translate(p.x - stateOrigin.x, p.y - stateOrigin.y).multiply(g.getCTM().inverse()).multiply(stateTarget.getCTM()));
+
+		stateOrigin = p;
+	}
+}
+
+/**
+ * Handle click event.
+ */
+function handleMouseDown(evt) {
+	if(evt.preventDefault)
+		evt.preventDefault();
+
+	evt.returnValue = false;
+
+	var svgDoc = evt.target.ownerDocument;
+
+	var g = svgDoc.getElementById("viewport");
+
+	if(true || evt.target.tagName == "svg") {
+		// Pan mode
+		state = 'pan';
+
+		stateTf = g.getCTM().inverse();
+
+		stateOrigin = getEventPoint(evt).matrixTransform(stateTf);
+	} else {
+		// Move mode
+		state = 'move';
+
+		stateTarget = evt.target;
+
+		stateTf = g.getCTM().inverse();
+
+		stateOrigin = getEventPoint(evt).matrixTransform(stateTf);
+	}
+}
+
+/**
+ * Handle mouse button release event.
+ */
+function handleMouseUp(evt) {
+	if(evt.preventDefault)
+		evt.preventDefault();
+
+	evt.returnValue = false;
+
+	var svgDoc = evt.target.ownerDocument;
+
+	if(state == 'pan' || state == 'move') {
+		// Quit pan mode
+		state = '';
+	}
+}
+
+
+		]]>
+</script>
+<g id="viewport_1_" transform="translate(0,0)">
+	<g id="viewport" transform="scale(1 1) rotate(0) translate(4 880)">
+		<title>rpc.test; 558.446 seconds</title>
+		<polygon fill="#FFFFFF" stroke="#FFFFFF" points="-4,5 -4,-880 1124,-880 1124,5 		"/>
+		<g id="node1">
+			<title>Legend</title>
+			<text transform="matrix(1 0 0 1 93.166 -848)" font-family="'Times-Roman'" font-size="24">rpc.test</text>
+			<text transform="matrix(1 0 0 1 93.166 -819.2002)" font-family="'Times-Roman'" font-size="24">Total seconds: 558.446</text>
+			<text transform="matrix(1 0 0 1 93.166 -790.4004)" font-family="'Times-Roman'" font-size="24">Focusing on: 558.446</text>
+			<text transform="matrix(1 0 0 1 93.166 -761.5996)" font-family="'Times-Roman'" font-size="24">Dropped nodes with &lt;= 2.792 abs(seconds)</text>
+			<text transform="matrix(1 0 0 1 93.166 -732.7998)" font-family="'Times-Roman'" font-size="24">Dropped edges with &lt;= 0.558 seconds</text>
+		</g>
+		<g id="node2">
+			<title>N1</title>
+			<polygon fill="none" stroke="#000000" points="618.994,-818.301 537.006,-818.301 537.006,-781.699 618.994,-781.699 			"/>
+			<text transform="matrix(1 0 0 1 562.8926 -806.4004)" font-family="'Times-Roman'" font-size="8">gosched0</text>
+			<text transform="matrix(1 0 0 1 569.3359 -796.7998)" font-family="'Times-Roman'" font-size="8">0.000 (0.0%)</text>
+			<text transform="matrix(1 0 0 1 544.6719 -787.2002)" font-family="'Times-Roman'" font-size="8">of 558.446 (100.0%)</text>
+		</g>
+		<g id="node6">
+			<title>N5</title>
+			<polygon fill="none" stroke="#000000" points="223.994,-669.301 146.006,-669.301 146.006,-632.699 223.994,-632.699 			"/>
+			<text transform="matrix(1 0 0 1 158.7871 -657.4004)" font-family="'Times-Roman'" font-size="8">net/rpc.func·006</text>
+			<text transform="matrix(1 0 0 1 174.3359 -647.7998)" font-family="'Times-Roman'" font-size="8">0.000 (0.0%)</text>
+			<text transform="matrix(1 0 0 1 153.6719 -638.2002)" font-family="'Times-Roman'" font-size="8">of 163.420 (29.3%)</text>
+		</g>
+		<g id="edge3">
+			<title>N1-&gt;N5</title>
+			<path fill="none" stroke="#000000" stroke-width="1.7558" d="M571.154-781.584c-7.875,17.575-22.563,44-44.154,57.584
+				c-45.462,28.601-66.795,7.656-119.5,18c-60.197,11.814-128.676,29.009-173.575,40.803"/>
+			<polygon stroke="#000000" points="234.718,-661.786 224.156,-662.618 232.932,-668.554 			"/>
+			<text transform="matrix(1 0 0 1 408 -691.4004)" font-family="'Times-Roman'" font-size="14">163.420</text>
+		</g>
+		<g id="node4">
+			<title>N3</title>
+			<polygon fill="none" stroke="#000000" points="420.305,-669.301 335.695,-669.301 335.695,-632.699 420.305,-632.699 			"/>
+			<text transform="matrix(1 0 0 1 343.1309 -657.4004)" font-family="'Times-Roman'" font-size="8">net/rpc.(*service).call</text>
+			<text transform="matrix(1 0 0 1 370.877 -647.7998)" font-family="'Times-Roman'" font-size="8">0.000 (0.0%)</text>
+			<text transform="matrix(1 0 0 1 350.2129 -638.2002)" font-family="'Times-Roman'" font-size="8">of 166.609 (29.8%)</text>
+		</g>
+		<g id="edge7">
+			<title>N1-&gt;N3</title>
+			<path fill="none" stroke="#000000" stroke-width="1.7901" d="M569.582-781.587C560.849-765.012,545.837-740.252,527-724
+				c-1.096,0.945-59.872,29.239-103.265,50.071"/>
+			<polygon stroke="#000000" points="424.99,-670.649 414.461,-669.478 421.962,-676.96 			"/>
+			<text transform="matrix(1 0 0 1 491 -691.4004)" font-family="'Times-Roman'" font-size="14">166.609</text>
+		</g>
+		<g id="node16">
+			<title>N15</title>
+			<polygon fill="none" stroke="#000000" points="762.994,-669.301 693.006,-669.301 693.006,-632.699 762.994,-632.699 			"/>
+			<text transform="matrix(1 0 0 1 706.5605 -657.4004)" font-family="'Times-Roman'" font-size="8">runtime.main</text>
+			<text transform="matrix(1 0 0 1 713.3359 -647.7998)" font-family="'Times-Roman'" font-size="8">0.000 (0.0%)</text>
+			<text transform="matrix(1 0 0 1 700.6719 -638.2002)" font-family="'Times-Roman'" font-size="8">of 12.226 (2.2%)</text>
+		</g>
+		<g id="edge9">
+			<title>N1-&gt;N15</title>
+			<path fill="none" stroke="#000000" d="M595.796-781.56c26.613,26.081,76.886,75.349,107.186,105.041"/>
+			<polygon stroke="#000000" points="705.535,-678.916 710.227,-669.417 700.635,-673.917 			"/>
+			<text transform="matrix(1 0 0 1 687 -691.4004)" font-family="'Times-Roman'" font-size="14">12.226</text>
+		</g>
+		<g id="node8">
+			<title>N7</title>
+			<polygon fill="none" stroke="#000000" points="563.994,-669.301 486.006,-669.301 486.006,-632.699 563.994,-632.699 			"/>
+			<text transform="matrix(1 0 0 1 498.7871 -657.4004)" font-family="'Times-Roman'" font-size="8">net/rpc.func·005</text>
+			<text transform="matrix(1 0 0 1 514.3359 -647.7998)" font-family="'Times-Roman'" font-size="8">0.000 (0.0%)</text>
+			<text transform="matrix(1 0 0 1 493.6719 -638.2002)" font-family="'Times-Roman'" font-size="8">of 156.295 (28.0%)</text>
+		</g>
+		<g id="edge17">
+			<title>N1-&gt;N7</title>
+			<path fill="none" stroke="#000000" stroke-width="1.6793" d="M571.712-781.56c-9.124,25.308-26.12,72.447-36.901,102.349"/>
+			<polygon stroke="#000000" points="537.964,-677.638 531.28,-669.417 531.379,-680.012 			"/>
+			<text transform="matrix(1 0 0 1 544 -691.4004)" font-family="'Times-Roman'" font-size="14">156.295</text>
+		</g>
+		<g id="node14">
+			<title>N13</title>
+			<polygon fill="none" stroke="#000000" points="666.994,-669.301 597.006,-669.301 597.006,-632.699 666.994,-632.699 			"/>
+			<text transform="matrix(1 0 0 1 605.7871 -657.4004)" font-family="'Times-Roman'" font-size="8">net/rpc.func·004</text>
+			<text transform="matrix(1 0 0 1 617.3359 -647.7998)" font-family="'Times-Roman'" font-size="8">0.000 (0.0%)</text>
+			<text transform="matrix(1 0 0 1 604.6719 -638.2002)" font-family="'Times-Roman'" font-size="8">of 47.690 (8.5%)</text>
+		</g>
+		<g id="edge21">
+			<title>N1-&gt;N13</title>
+			<path fill="none" stroke="#000000" d="M584.407-781.56c9.337,25.418,26.764,72.859,37.741,102.739"/>
+			<polygon stroke="#000000" points="625.439,-680.011 625.602,-669.417 618.868,-677.597 			"/>
+			<text transform="matrix(1 0 0 1 617 -691.4004)" font-family="'Times-Roman'" font-size="14">47.690</text>
+		</g>
+		<g id="node21">
+			<title>N20</title>
+			<polygon fill="none" stroke="#000000" points="861.49,-669.301 784.51,-669.301 784.51,-632.699 861.49,-632.699 			"/>
+			<text transform="matrix(1 0 0 1 792.3398 -657.4004)" font-family="'Times-Roman'" font-size="8">testing.(*B).launch</text>
+			<text transform="matrix(1 0 0 1 811.668 -647.7998)" font-family="'Times-Roman'" font-size="8">0.000 (0.0%)</text>
+			<text transform="matrix(1 0 0 1 799.0039 -638.2002)" font-family="'Times-Roman'" font-size="8">of 12.198 (2.2%)</text>
+		</g>
+		<g id="edge25">
+			<title>N1-&gt;N20</title>
+			<path fill="none" stroke="#000000" d="M607.067-781.56c44.389,26.634,129.077,77.447,178.169,106.902"/>
+			<polygon stroke="#000000" points="787.197,-677.564 793.971,-669.417 783.595,-671.561 			"/>
+			<text transform="matrix(1 0 0 1 757 -691.4004)" font-family="'Times-Roman'" font-size="14">12.198</text>
+		</g>
+		<g id="node3">
+			<title>N2</title>
+			<polygon fill="none" stroke="#000000" points="501.245,-228 138.755,-228 138.755,-118 501.245,-118 			"/>
+			<text transform="matrix(1 0 0 1 146.5034 -181.5)" font-family="'Times-Roman'" font-size="42.5">sync.(*Mutex).Lock</text>
+			<text transform="matrix(1 0 0 1 206.6636 -130.5)" font-family="'Times-Roman'" font-size="42.5">265.302 (47.5%)</text>
+		</g>
+		<g id="node5">
+			<title>N4</title>
+			<polygon fill="none" stroke="#000000" points="350.311,-467.301 233.689,-467.301 233.689,-430.699 350.311,-430.699 			"/>
+			<text transform="matrix(1 0 0 1 241.127 -455.4004)" font-family="'Times-Roman'" font-size="8">net/rpc.(*Server).sendResponse</text>
+			<text transform="matrix(1 0 0 1 300.8809 -445.7998)" font-family="'Times-Roman'" font-size="8">0.000 (0.0%)</text>
+			<text transform="matrix(1 0 0 1 280.2168 -436.2002)" font-family="'Times-Roman'" font-size="8">of 166.540 (29.8%)</text>
+		</g>
+		<g id="edge22">
+			<title>N3-&gt;N4</title>
+			<path fill="none" stroke="#000000" stroke-width="1.7893" d="M335.658-637.275C324.446-631.872,313.524-624.35,306.5-614
+				c-14.624,21.548-15.776,95.509-15.225,136.353"/>
+			<polygon stroke="#000000" points="294.776,-477.613 291.455,-467.552 287.777,-477.488 			"/>
+			<text transform="matrix(1 0 0 1 307 -599.4004)" font-family="'Times-Roman'" font-size="14">166.540</text>
+		</g>
+		<g id="edge18">
+			<title>N4-&gt;N2</title>
+			<path fill="none" stroke="#000000" stroke-width="1.7884" d="M293.794-430.443c3.882,37.985,13.226,129.428,19.639,192.186"/>
+			<polygon stroke="#000000" points="316.941,-238.362 314.476,-228.058 309.977,-237.65 			"/>
+			<text transform="matrix(1 0 0 1 303 -341.4004)" font-family="'Times-Roman'" font-size="14">166.457</text>
+		</g>
+		<g id="node7">
+			<title>N6</title>
+			<polygon fill="none" stroke="#000000" points="276.554,-578 -0.555,-578 -0.555,-486 276.554,-486 			"/>
+			<text transform="matrix(1 0 0 1 7.2969 -539)" font-family="'Times-Roman'" font-size="35">runtime.chanrecv2</text>
+			<text transform="matrix(1 0 0 1 32.4873 -497)" font-family="'Times-Roman'" font-size="35">163.420 (29.3%)</text>
+		</g>
+		<g id="edge15">
+			<title>N5-&gt;N6</title>
+			<path fill="none" stroke="#000000" stroke-width="1.7558" d="M177.964-632.484c-4.817,11.99-11.488,28.596-18.001,44.809"/>
+			<polygon stroke="#000000" points="163.138,-586.187 156.162,-578.212 156.642,-588.796 			"/>
+			<text transform="matrix(1 0 0 1 170 -599.4004)" font-family="'Times-Roman'" font-size="14">163.420</text>
+		</g>
+		<g id="node9">
+			<title>N8</title>
+			<polygon fill="none" stroke="#000000" points="406.154,-411.301 325.846,-411.301 325.846,-374.699 406.154,-374.699 			"/>
+			<text transform="matrix(1 0 0 1 333.5645 -399.4004)" font-family="'Times-Roman'" font-size="8">net/rpc.(*Client).Go</text>
+			<text transform="matrix(1 0 0 1 356.4438 -389.7998)" font-family="'Times-Roman'" font-size="8">0.000 (0.0%)</text>
+			<text transform="matrix(1 0 0 1 339.7798 -380.2002)" font-family="'Times-Roman'" font-size="8">of 98.686 (17.7%)</text>
+		</g>
+		<g id="edge1">
+			<title>N7-&gt;N8</title>
+			<path fill="none" stroke="#000000" d="M485.817-642.948c-35.604,8.67-86.272,27.165-111.317,64.948
+				c-31.492,47.509-23.252,118.06-15.34,156.535"/>
+			<polygon stroke="#000000" points="362.62,-422.028 361.349,-411.509 355.783,-420.524 			"/>
+			<text transform="matrix(1 0 0 1 375 -526.4004)" font-family="'Times-Roman'" font-size="14">91.614</text>
+		</g>
+		<g id="node11">
+			<title>N10</title>
+			<polygon fill="none" stroke="#000000" points="627.146,-566 422.854,-566 422.854,-498 627.146,-498 			"/>
+			<text transform="matrix(1 0 0 1 430.2363 -537)" font-family="'Times-Roman'" font-size="25">runtime.chansend1</text>
+			<text transform="matrix(1 0 0 1 464.4531 -507)" font-family="'Times-Roman'" font-size="25">64.682 (11.6%)</text>
+		</g>
+		<g id="edge27">
+			<title>N7-&gt;N10</title>
+			<path fill="none" stroke="#000000" d="M525-632.484c0,14.806,0,36.651,0,56.102"/>
+			<polygon stroke="#000000" points="528.5,-576.182 525,-566.182 521.5,-576.182 			"/>
+			<text transform="matrix(1 0 0 1 525 -599.4004)" font-family="'Times-Roman'" font-size="14">64.682</text>
+		</g>
+		<g id="node10">
+			<title>N9</title>
+			<polygon fill="none" stroke="#000000" points="407.32,-319.301 322.68,-319.301 322.68,-282.699 407.32,-282.699 			"/>
+			<text transform="matrix(1 0 0 1 330.1211 -307.4004)" font-family="'Times-Roman'" font-size="8">net/rpc.(*Client).send</text>
+			<text transform="matrix(1 0 0 1 357.8867 -297.7998)" font-family="'Times-Roman'" font-size="8">0.000 (0.0%)</text>
+			<text transform="matrix(1 0 0 1 341.2227 -288.2002)" font-family="'Times-Roman'" font-size="8">of 98.686 (17.7%)</text>
+		</g>
+		<g id="edge12">
+			<title>N8-&gt;N9</title>
+			<path fill="none" stroke="#000000" stroke-width="1.0603" d="M365.807-374.647c-0.141,12.742-0.337,30.313-0.5,44.982"/>
+			<polygon stroke="#000000" points="368.807,-329.567 365.196,-319.607 361.807,-329.645 			"/>
+			<text transform="matrix(1 0 0 1 366 -341.4004)" font-family="'Times-Roman'" font-size="14">98.686</text>
+		</g>
+		<g id="edge19">
+			<title>N9-&gt;N2</title>
+			<path fill="none" stroke="#000000" stroke-width="1.0602" d="M358.743-282.48c-4.219,11.814-10.07,28.196-15.948,44.654"/>
+			<polygon stroke="#000000" points="346.003,-236.401 339.343,-228.161 339.41,-238.755 			"/>
+			<text transform="matrix(1 0 0 1 352 -249.4004)" font-family="'Times-Roman'" font-size="14">98.676</text>
+		</g>
+		<g id="node12">
+			<title>N11</title>
+			<polygon fill="none" stroke="#000000" points="808.077,-64.16 617.923,-64.16 617.923,0.16 808.077,0.16 			"/>
+			<text transform="matrix(1 0 0 1 625.6152 -36.6797)" font-family="'Times-Roman'" font-size="23.4">runtime.chanrecv1</text>
+			<text transform="matrix(1 0 0 1 665.8574 -8.5996)" font-family="'Times-Roman'" font-size="23.4">52.844 (9.5%)</text>
+		</g>
+		<g id="node13">
+			<title>N12</title>
+			<polygon fill="none" stroke="#000000" points="730.32,-550.301 645.68,-550.301 645.68,-513.699 730.32,-513.699 			"/>
+			<text transform="matrix(1 0 0 1 653.7871 -538.4004)" font-family="'Times-Roman'" font-size="8">net/rpc.(*Client).Call</text>
+			<text transform="matrix(1 0 0 1 680.2207 -528.7998)" font-family="'Times-Roman'" font-size="8">0.000 (0.0%)</text>
+			<text transform="matrix(1 0 0 1 667.5566 -519.2002)" font-family="'Times-Roman'" font-size="8">of 47.690 (8.5%)</text>
+		</g>
+		<g id="edge5">
+			<title>N12-&gt;N11</title>
+			<path fill="none" stroke="#000000" d="M687.364-513.268C686.483-487.157,685-436.823,685-394c0,0,0,0,0,222
+				c0,33.544,7.933,70.761,15.354,98.236"/>
+			<polygon stroke="#000000" points="703.732,-74.68 703.049,-64.106 696.99,-72.798 			"/>
+			<text transform="matrix(1 0 0 1 685 -295.4004)" font-family="'Times-Roman'" font-size="14">40.618</text>
+		</g>
+		<g id="edge28">
+			<title>N12-&gt;N8</title>
+			<path fill="none" stroke="#000000" d="M671.024-513.322C661.442-504.155,648.841-493.367,636-486
+				c-71.169,40.832-163.315,67.348-219.472,80.974"/>
+			<polygon stroke="#000000" points="417.013,-401.543 406.474,-402.631 415.391,-408.353 			"/>
+			<text transform="matrix(1 0 0 1 595 -443.4004)" font-family="'Times-Roman'" font-size="14">7.072</text>
+		</g>
+		<g id="edge24">
+			<title>N13-&gt;N12</title>
+			<path fill="none" stroke="#000000" d="M640.384-632.484c9.196,19.214,24.066,50.281,34.742,72.587"/>
+			<polygon stroke="#000000" points="678.399,-561.167 679.559,-550.636 672.085,-558.145 			"/>
+			<text transform="matrix(1 0 0 1 656 -599.4004)" font-family="'Times-Roman'" font-size="14">47.690</text>
+		</g>
+		<g id="node15">
+			<title>N14</title>
+			<polygon fill="none" stroke="#000000" points="818.994,-550.301 749.006,-550.301 749.006,-513.699 818.994,-513.699 			"/>
+			<text transform="matrix(1 0 0 1 767.0039 -538.4004)" font-family="'Times-Roman'" font-size="8">main.main</text>
+			<text transform="matrix(1 0 0 1 769.3359 -528.7998)" font-family="'Times-Roman'" font-size="8">0.000 (0.0%)</text>
+			<text transform="matrix(1 0 0 1 756.6719 -519.2002)" font-family="'Times-Roman'" font-size="8">of 12.226 (2.2%)</text>
+		</g>
+		<g id="node18">
+			<title>N17</title>
+			<polygon fill="none" stroke="#000000" points="818.994,-411.301 749.006,-411.301 749.006,-374.699 818.994,-374.699 			"/>
+			<text transform="matrix(1 0 0 1 763.8906 -399.4004)" font-family="'Times-Roman'" font-size="8">testing.Main</text>
+			<text transform="matrix(1 0 0 1 769.3359 -389.7998)" font-family="'Times-Roman'" font-size="8">0.000 (0.0%)</text>
+			<text transform="matrix(1 0 0 1 756.6719 -380.2002)" font-family="'Times-Roman'" font-size="8">of 12.226 (2.2%)</text>
+		</g>
+		<g id="edge4">
+			<title>N14-&gt;N17</title>
+			<path fill="none" stroke="#000000" d="M784-513.649c0,23.137,0,64.363,0,91.857"/>
+			<polygon stroke="#000000" points="787.5,-421.643 784,-411.643 780.5,-421.643 			"/>
+			<text transform="matrix(1 0 0 1 784 -443.4004)" font-family="'Times-Roman'" font-size="14">12.226</text>
+		</g>
+		<g id="edge2">
+			<title>N15-&gt;N14</title>
+			<path fill="none" stroke="#000000" d="M736.384-632.484c9.196,19.214,24.066,50.281,34.742,72.587"/>
+			<polygon stroke="#000000" points="774.399,-561.167 775.559,-550.636 768.085,-558.145 			"/>
+			<text transform="matrix(1 0 0 1 752 -599.4004)" font-family="'Times-Roman'" font-size="14">12.226</text>
+		</g>
+		<g id="node17">
+			<title>N16</title>
+			<polygon fill="none" stroke="#000000" points="801.994,-191.301 732.006,-191.301 732.006,-154.699 801.994,-154.699 			"/>
+			<text transform="matrix(1 0 0 1 741.6699 -179.4004)" font-family="'Times-Roman'" font-size="8">testing.(*B).run</text>
+			<text transform="matrix(1 0 0 1 752.3359 -169.7998)" font-family="'Times-Roman'" font-size="8">0.000 (0.0%)</text>
+			<text transform="matrix(1 0 0 1 739.6719 -160.2002)" font-family="'Times-Roman'" font-size="8">of 12.226 (2.2%)</text>
+		</g>
+		<g id="edge11">
+			<title>N16-&gt;N11</title>
+			<path fill="none" stroke="#000000" d="M760.27-154.677c-7.806,20.093-20.938,53.897-31.383,80.783"/>
+			<polygon stroke="#000000" points="732.059,-72.393 725.175,-64.339 725.534,-74.928 			"/>
+			<text transform="matrix(1 0 0 1 738 -85.4004)" font-family="'Times-Roman'" font-size="14">12.226</text>
+		</g>
+		<g id="node19">
+			<title>N18</title>
+			<polygon fill="none" stroke="#000000" points="833.993,-319.301 742.007,-319.301 742.007,-282.699 833.993,-282.699 			"/>
+			<text transform="matrix(1 0 0 1 749.6719 -307.4004)" font-family="'Times-Roman'" font-size="8">testing.RunBenchmarks</text>
+			<text transform="matrix(1 0 0 1 784.3359 -297.7998)" font-family="'Times-Roman'" font-size="8">0.000 (0.0%)</text>
+			<text transform="matrix(1 0 0 1 771.6719 -288.2002)" font-family="'Times-Roman'" font-size="8">of 12.226 (2.2%)</text>
+		</g>
+		<g id="edge23">
+			<title>N17-&gt;N18</title>
+			<path fill="none" stroke="#000000" d="M784.771-374.647c0.566,12.742,1.347,30.313,1.998,44.982"/>
+			<polygon stroke="#000000" points="790.27,-329.752 787.217,-319.607 783.277,-329.441 			"/>
+			<text transform="matrix(1 0 0 1 786 -341.4004)" font-family="'Times-Roman'" font-size="14">12.226</text>
+		</g>
+		<g id="edge13">
+			<title>N18-&gt;N16</title>
+			<path fill="none" stroke="#000000" d="M785.08-282.48c-3.495,20.97-9.389,56.333-13.494,80.963"/>
+			<polygon stroke="#000000" points="774.992,-200.659 769.895,-191.371 768.087,-201.81 			"/>
+			<text transform="matrix(1 0 0 1 781 -249.4004)" font-family="'Times-Roman'" font-size="14">12.226</text>
+		</g>
+		<g id="node20">
+			<title>N19</title>
+			<polygon fill="none" stroke="#000000" points="1004.98,-195.46 839.02,-195.46 839.02,-150.54 1004.98,-150.54 			"/>
+			<text transform="matrix(1 0 0 1 846.6807 -176.0801)" font-family="'Times-Roman'" font-size="15.4">sync.(*WaitGroup).Wait</text>
+			<text transform="matrix(1 0 0 1 908.7842 -157.5996)" font-family="'Times-Roman'" font-size="15.4">12.198 (2.2%)</text>
+		</g>
+		<g id="node22">
+			<title>N21</title>
+			<polygon fill="none" stroke="#000000" points="939.329,-550.301 866.671,-550.301 866.671,-513.699 939.329,-513.699 			"/>
+			<text transform="matrix(1 0 0 1 874.7812 -538.4004)" font-family="'Times-Roman'" font-size="8">testing.(*B).runN</text>
+			<text transform="matrix(1 0 0 1 889.2266 -528.7998)" font-family="'Times-Roman'" font-size="8">0.000 (0.0%)</text>
+			<text transform="matrix(1 0 0 1 876.5625 -519.2002)" font-family="'Times-Roman'" font-size="8">of 12.198 (2.2%)</text>
+		</g>
+		<g id="edge6">
+			<title>N20-&gt;N21</title>
+			<path fill="none" stroke="#000000" d="M834.977-632.484c13.314,19.472,34.953,51.119,50.244,73.483"/>
+			<polygon stroke="#000000" points="888.186,-560.866 890.941,-550.636 882.408,-556.915 			"/>
+			<text transform="matrix(1 0 0 1 858 -599.4004)" font-family="'Times-Roman'" font-size="14">12.198</text>
+		</g>
+		<g id="node26">
+			<title>N25</title>
+			<polygon fill="none" stroke="#000000" points="968.39,-411.301 837.61,-411.301 837.61,-374.699 968.39,-374.699 			"/>
+			<text transform="matrix(1 0 0 1 845.4062 -399.4004)" font-family="'Times-Roman'" font-size="8">net/rpc.BenchmarkEndToEndHTTP</text>
+			<text transform="matrix(1 0 0 1 918.6016 -389.7998)" font-family="'Times-Roman'" font-size="8">0.000 (0.0%)</text>
+			<text transform="matrix(1 0 0 1 909.9375 -380.2002)" font-family="'Times-Roman'" font-size="8">of 3.492 (0.6%)</text>
+		</g>
+		<g id="edge10">
+			<title>N21-&gt;N25</title>
+			<path fill="none" stroke="#000000" d="M903-513.649c0,23.137,0,64.363,0,91.857"/>
+			<polygon stroke="#000000" points="906.5,-421.643 903,-411.643 899.5,-421.643 			"/>
+			<text transform="matrix(1 0 0 1 903 -443.4004)" font-family="'Times-Roman'" font-size="14">3.492</text>
+		</g>
+		<g id="node25">
+			<title>N24</title>
+			<polygon fill="none" stroke="#000000" points="1097.39,-411.301 986.61,-411.301 986.61,-374.699 1097.39,-374.699 			"/>
+			<text transform="matrix(1 0 0 1 994.4062 -399.4004)" font-family="'Times-Roman'" font-size="8">net/rpc.BenchmarkEndToEnd</text>
+			<text transform="matrix(1 0 0 1 1047.5977 -389.7998)" font-family="'Times-Roman'" font-size="8">0.000 (0.0%)</text>
+			<text transform="matrix(1 0 0 1 1038.9336 -380.2002)" font-family="'Times-Roman'" font-size="8">of 3.544 (0.6%)</text>
+		</g>
+		<g id="edge26">
+			<title>N21-&gt;N24</title>
+			<path fill="none" stroke="#000000" d="M920.604-513.649c24.307,23.956,68.287,67.304,96.106,94.724"/>
+			<polygon stroke="#000000" points="1019.43,-421.155 1024.1,-411.643 1014.52,-416.17 			"/>
+			<text transform="matrix(1 0 0 1 1004 -443.4004)" font-family="'Times-Roman'" font-size="14">3.544</text>
+		</g>
+		<g id="node23">
+			<title>N22</title>
+			<polygon fill="none" stroke="#000000" points="970.389,-319.301 861.611,-319.301 861.611,-282.699 970.389,-282.699 			"/>
+			<text transform="matrix(1 0 0 1 869.0742 -307.4004)" font-family="'Times-Roman'" font-size="8">net/rpc.benchmarkEndToEnd</text>
+			<text transform="matrix(1 0 0 1 920.9336 -297.7998)" font-family="'Times-Roman'" font-size="8">0.000 (0.0%)</text>
+			<text transform="matrix(1 0 0 1 912.2695 -288.2002)" font-family="'Times-Roman'" font-size="8">of 7.036 (1.3%)</text>
+		</g>
+		<g id="edge14">
+			<title>N22-&gt;N19</title>
+			<path fill="none" stroke="#000000" d="M916.834-282.48c0.943,19.791,2.496,52.405,3.653,76.715"/>
+			<polygon stroke="#000000" points="923.992,-205.744 920.972,-195.589 917,-205.411 			"/>
+			<text transform="matrix(1 0 0 1 918 -249.4004)" font-family="'Times-Roman'" font-size="14">7.036</text>
+		</g>
+		<g id="node24">
+			<title>N23</title>
+			<polygon fill="none" stroke="#000000" points="1119.22,-319.301 988.78,-319.301 988.78,-282.699 1119.22,-282.699 			"/>
+			<text transform="matrix(1 0 0 1 996.8535 -307.4004)" font-family="'Times-Roman'" font-size="8">net/rpc.benchmarkEndToEndAsync</text>
+			<text transform="matrix(1 0 0 1 1069.1582 -297.7998)" font-family="'Times-Roman'" font-size="8">0.000 (0.0%)</text>
+			<text transform="matrix(1 0 0 1 1060.4941 -288.2002)" font-family="'Times-Roman'" font-size="8">of 5.162 (0.9%)</text>
+		</g>
+		<g id="edge20">
+			<title>N23-&gt;N19</title>
+			<path fill="none" stroke="#000000" d="M1035.65-282.48c-21.67,20.68-57.996,55.356-83.743,79.933"/>
+			<polygon stroke="#000000" points="954.268,-199.962 944.617,-195.589 949.433,-205.025 			"/>
+			<text transform="matrix(1 0 0 1 1014 -249.4004)" font-family="'Times-Roman'" font-size="14">5.162</text>
+		</g>
+		<g id="edge8">
+			<title>N24-&gt;N22</title>
+			<path fill="none" stroke="#000000" d="M1017.71-374.647c-19.575,13.979-47.282,33.771-68.836,49.165"/>
+			<polygon stroke="#000000" points="950.821,-322.571 940.648,-319.607 946.752,-328.267 			"/>
+			<text transform="matrix(1 0 0 1 990 -341.4004)" font-family="'Times-Roman'" font-size="14">3.544</text>
+		</g>
+		<g id="edge16">
+			<title>N25-&gt;N22</title>
+			<path fill="none" stroke="#000000" d="M905.507-374.647c1.84,12.742,4.378,30.313,6.497,44.982"/>
+			<polygon stroke="#000000" points="915.491,-330.004 913.457,-319.607 908.562,-329.004 			"/>
+			<text transform="matrix(1 0 0 1 910 -341.4004)" font-family="'Times-Roman'" font-size="14">3.492</text>
+		</g>
+	</g>
+</g>
+</svg>
