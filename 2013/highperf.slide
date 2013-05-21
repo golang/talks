@@ -1,0 +1,232 @@
+High Performance Apps with Go on App Engine
+Google I/O, May 2013
+
+David Symonds
+Software Engineer, Google
+dsymonds@golang.org
+
+* Video
+
+This talk was presented at Google I/O in May 2013.
+
+.link http://www.youtube.com/watch?v=fc25ihfXhbg Watch the talk on YouTube
+
+* Overview
+
+- Why Go + App Engine
+- History, Status
+- Gopher Mart
+- Finding performance bottlenecks
+- Defer work
+- Batching
+- Caching
+- Concurrency
+- Control variance
+
+* Why Go + App Engine
+
+- Go compiles to native code
+- App Engine is an auto-scaling low-maintenance platform
+- Fastest runtime on App Engine: starts fast, runs fast
+
+.image highperf/aegopher.jpg
+
+* History
+
+- Go runtime for App Engine unveiled at Google I/O 2011
+- Steady growth, several high-profile users
+
+.image highperf/appenginegophercolor.jpg
+
+* Turkey doodle (Nov 2011)
+
+.image highperf/turkey.png
+
+- Written by a Go newcomer, launched in under 24 hours
+- Half the latency of a Python 2.7 version
+- Launched on google.com front page
+
+[[http://golang.org/s/turkey-doodle][golang.org/s/turkey-doodle]]
+
+* Santa Tracker (Dec 2012)
+
+.html highperf/santaembed.html
+
+- Nearly 5000 queries per second
+- Did not make any children cry
+
+.image highperf/santagraph.png
+
+* Gopher Mart
+
+* Gopher Mart
+
+- Imagine your app is the Gopher Mart, the one-stop-shop for all your gopher needs
+
+.image highperf/gophermart.png
+
+* Gopher Mart
+
+- Each checkout gopher is an app instance
+- Each shopping gopher is a user request
+- The scheduler directs requests to instances
+- A checkout gopher can deal with one customer at a time
+- Checkout gophers (instances) can be hired/fired, but there's overhead
+
+.image highperf/gophermart2.png
+
+* Gopher Mart
+
+- Gophers waiting in queues get grumpy
+- Let's make it fast
+
+* Finding performance bottlenecks
+
+- _Understand_why_your_checkout_gophers_might_work_slowly_
+- Measure first
+
+.image highperf/gopherrulespanner.png
+
+- Measure periodically; performance characteristics changes over time
+- Go 1.1 brings lots of performance improvements
+
+* Appstats
+
+- Appstats traces API RPCs, shows timeline
+- [[http://github.com/mjibson/appstats][github.com/mjibson/appstats]]
+
+- Gopher Mart baseline:
+.image highperf/appstats1.png
+
+* Performance Techniques
+
+* Defer work
+
+- Not all work needs to be done during the request
+- Use `appengine/taskqueue` or `appengine/delay` to move non-critical work outside the request scope
+- _Gopher_Mart_can_replace_slow_ `mail.Send` _with_quick_ `taskqueue.Add`
+
+* Defer work II
+
+Import `"appengine/delay"` and transform
+
+.code highperf/mart/1/mart.go /sendReceipt/
+.code highperf/mart/1/mart.go /func sendReceipt/
+
+into
+
+.code highperf/mart/2/mart.go /sendReceipt/
+.code highperf/mart/2/mart.go /var sendReceipt/
+
+.image highperf/appstats2.png
+
+* Batching
+
+- _Buying_10_boxes_of_Gopher_Flakes_is_easier_than_buying_a_single_box_10_times_
+- _Calling_for_a_price_check_on_three_items_is_faster_than_three_separate_price_checks_
+- Use `GetMulti` instead of `Get`, `PutMulti` instead of `Put`, etc.
+
+.code highperf/mart/2/mart.go /Dumb load/+1,/Print items/-1
+
+* Batching II
+
+.code highperf/mart/3/mart.go /Batch get/+1,/}/
+
+.image highperf/appstats3.png
+
+* Caching
+
+- _Checkout_gophers_can_make_notes_and_memorize_things_
+- Using datastore is fine, but it can be slow
+- Using memcache is good (shared among instances), but remember it can disappear
+- Using local memory is okay too, but it can disappear as well
+
+.html highperf/cachingembed.html
+
+* Concurrency
+
+- _A_price_check_may_delay_dealing_with_a_shopping_gopher_
+- RPC-bound requests are very common, and often least-cacheable
+- _Get_your_checkout_gopher_doing_something_else_while_waiting_
+
+* Concurrency II
+
+.code highperf/concurrency.go.notouch /func serial/+1,/^}/-1
+
+* Concurrency III
+
+- Run queries concurrently
+- Easy way to speed up RPC-bound requests
+
+.code highperf/concurrency.go.notouch /func parallel/+1,/^}/-1
+
+- Visit Sameer Ajmani's talk (today, 4:25PM, Room 7)
+
+* Control variance
+
+- _Some_shopping_gophers_can_take_much_longer_than_others_
+- Variance in request processing is very common (e.g. 99% take 10ms, 1% take 100ms)
+- Some requests are harder than others
+- Infrastructure is reliable, but not perfect
+
+* Control variance II
+
+- Effects of variance can cascade
+- Variable requests make scheduling harder, requires more instances (billed)
+- We want to control variance
+
+[[http://cacm.acm.org/magazines/2013/2/160173-the-tail-at-scale/fulltext]["The Tail at Scale", Dean, Barroso; Commun. ACM 56, 2]]
+
+* Control variance III
+
+- For example, storing in memcache is usually an optimisation, and thus optional
+- Bound time spent on optional work
+
+- First approach: save to memcache asynchronously
+
+.code highperf/longtail.go /long_tail_memcache_bad/+1,/^}/
+
+- Problem: Response will be returned to user as soon as handler returns, and outstanding API calls will be canceled
+
+* Control variance IV
+
+- Solution: Use Go's concurrency primitives to timeout waiting
+
+.code highperf/longtail.go /long_tail_memcache_good/+1,/^}/
+
+* Before and After
+
+Baseline:
+
+.image highperf/appstats1.png
+
+Defer work:
+
+.image highperf/appstats2.png
+
+Batching:
+
+.image highperf/appstats3.png
+
+* Summary
+
+- Finding performance bottlenecks
+- Defer work
+- Batching
+- Caching
+- Concurrency
+- Control variance
+
+* Finally...
+
+- [[http://golang.org][golang.org]]
+- [[http://developers.google.com/appengine/docs/go/][developers.google.com/appengine/docs/go/]]
+- [[http://golang.org/s/io13-ae-talk][golang.org/s/io13-ae-talk]] (this talk, plus gophermart app)
+- [[http://github.com/mjibson/appstats][github.com/mjibson/appstats]]
+
+More Go things:
+
+- _Go_in_Production_ (_office_hours_), 3:30PM-4:15PM, Cloud Sandbox
+- _Advanced_Go_Concurrency_Patterns_, 4:25PM, Room 7
+- _Fireside_Chat_with_the_Go_Team_, 5:20PM, Room 2
+- _Go_App_Engine_ (_office_hours_), 1:45PM-2:30PM *tomorrow*, Cloud Sandbox
