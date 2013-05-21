@@ -1,0 +1,62 @@
+googleblog.blogspot.com Item 0
+googleblog.blogspot.com Item 1
+googledevelopers.blogspot.com Item 0
+blog.golang.org Item 0
+googledevelopers.blogspot.com Item 1
+blog.golang.org Item 1
+blog.golang.org Item 2
+googledevelopers.blogspot.com Item 2
+googledevelopers.blogspot.com Item 3
+googleblog.blogspot.com Item 2
+googledevelopers.blogspot.com Item 4
+==================
+WARNING: DATA RACE
+Read by goroutine 4: // HL
+  code.google.com/p/go.talks/2013/reader.(*naiveSub).loop() // HL
+      /Users/sameer/gocode/src/code.google.com/p/go.talks/2013/reader/reader.go:105 +0x46
+  gosched0()
+      /Users/sameer/go/src/pkg/runtime/proc.c:1218 +0x9f
+
+Previous write by goroutine 7: // HL
+  code.google.com/p/go.talks/2013/reader.(*naiveSub).Close() // HL
+      /Users/sameer/gocode/src/code.google.com/p/go.talks/2013/reader/reader.go:125 +0x38
+  code.google.com/p/go.talks/2013/reader.func·002()
+      /Users/sameer/gocode/src/code.google.com/p/go.talks/2013/reader/reader.go:353 +0x1da
+  gosched0()
+      /Users/sameer/go/src/pkg/runtime/proc.c:1218 +0x9f
+
+Goroutine 4 (running) created at:
+  code.google.com/p/go.talks/2013/reader.NaiveSubscribe()
+      /Users/sameer/gocode/src/code.google.com/p/go.talks/2013/reader/reader.go:87 +0xff
+  main.main()
+      /Users/sameer/gocode/src/code.google.com/p/go.talks/2013/advconc/naivemain.go:18 +0xca
+  runtime.main()
+      /Users/sameer/go/src/pkg/runtime/proc.c:182 +0x91
+
+Goroutine 7 (finished) created at:
+  code.google.com/p/go.talks/2013/reader.Merge()
+      /Users/sameer/gocode/src/code.google.com/p/go.talks/2013/reader/reader.go:357 +0x1f5
+  main.main()
+      /Users/sameer/gocode/src/code.google.com/p/go.talks/2013/advconc/naivemain.go:20 +0x261
+  runtime.main()
+      /Users/sameer/go/src/pkg/runtime/proc.c:182 +0x91
+
+==================
+googleblog.blogspot.com Item 3
+closed: <nil>
+panic: show me the stacks
+
+goroutine 1 [running]:
+main.main()
+	/Users/sameer/gocode/src/code.google.com/p/go.talks/2013/advconc/naivemain.go:33 +0x4f5
+
+goroutine 2 [syscall]:
+
+goroutine 5 [sleep]:
+time.Sleep(0xee5ad23)
+	/Users/sameer/go/src/pkg/runtime/ztime_darwin_amd64.c:19 +0x2f
+code.google.com/p/go.talks/2013/reader.(*naiveSub).loop(0xc2000aea50)
+	/Users/sameer/gocode/src/code.google.com/p/go.talks/2013/reader/reader.go:119 +0x2a3
+created by code.google.com/p/go.talks/2013/reader.NaiveSubscribe
+	/Users/sameer/gocode/src/code.google.com/p/go.talks/2013/reader/reader.go:87 +0xff
+exit status 2
