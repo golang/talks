@@ -5,7 +5,7 @@ import (
 	"math/rand"
 	"time"
 
-	. "code.google.com/p/go.talks/2013/reader"
+	. "code.google.com/p/go.talks/2013/advconc/reader"
 )
 
 func init() {
