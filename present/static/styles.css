@@ -12,7 +12,7 @@ body {
 
   height: 100%;
   min-height: 740px;
-  
+
   overflow-x: hidden;
   overflow-y: auto;
 
@@ -30,7 +30,7 @@ body {
   height: 100%;
   left: 0;
   top: 0;
-  
+
   position: absolute;
 
   -webkit-transform: translate3d(0, 0, 0);
@@ -50,7 +50,7 @@ body {
 
   margin-left: -450px;
   margin-top: -350px;
-  
+
   padding: 40px 60px;
 
   box-sizing: border-box;
@@ -79,7 +79,7 @@ body {
 .slides.layout-faux-widescreen > article {
   margin-left: -550px;
   width: 1100px;
-  
+
   padding: 40px 160px;
 }
 
@@ -97,14 +97,14 @@ body {
   left: 0;
   top: 0;
   width: 150px;
-  height: 700px;  
+  height: 700px;
 
   left: 50%;
   top: 50%;
 
-  cursor: pointer;  
-  margin-top: -350px;  
-  
+  cursor: pointer;
+  margin-top: -350px;
+
   tap-highlight-color: transparent;
   -o-tap-highlight-color: transparent;
   -moz-tap-highlight-color: transparent;
@@ -424,4 +424,30 @@ div.output .buttons {
 	margin: 0;
 	font-size: 28px;
 	line-height: 1.2em;
+}
+
+/* Output resize details */
+.ui-resizable-handle {
+  position: absolute;
+}
+.ui-resizable-n {
+  cursor: n-resize;
+  height: 7px;
+  width: 100%;
+  top: -5px;
+  left: 0;
+}
+.ui-resizable-w {
+  cursor: w-resize;
+  width: 7px;
+  left: -5px;
+  top: 0;
+  height: 100%;
+}
+.ui-resizable-nw {
+  cursor: nw-resize;
+  width: 9px;
+  height: 9px;
+  left: -5px;
+  top: -5px;
 }

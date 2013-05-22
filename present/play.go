@@ -17,7 +17,7 @@ import (
 func playScript(root string, path ...string) {
 	modTime := time.Now()
 	var buf bytes.Buffer
-	for _, p := range append(path, "play.js") {
+	for _, p := range append(path, "jquery.js", "jquery-ui.js", "play.js") {
 		b, err := ioutil.ReadFile(filepath.Join(root, "js", p))
 		if err != nil {
 			panic(err)
