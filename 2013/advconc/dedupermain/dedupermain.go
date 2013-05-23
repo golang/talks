@@ -1,11 +1,11 @@
-package reader
+// dedupermain runs the Subscribe example with several duplicate
+// subscriptions to demonstrate deduping.
+package main
 
 import (
 	"fmt"
 	"math/rand"
 	"time"
-
-	rss "github.com/jteeuwen/go-pkg-rss"
 )
 
 // STARTITEM OMIT
@@ -483,16 +483,9 @@ func (d *deduper) Updates() <-chan Item {
 	return d.updates
 }
 
-// FakeFetch causes Fetch to use a fake fetcher instead of the real
-// one.
-var FakeFetch bool
-
 // Fetch returns a Fetcher for Items from domain.
 func Fetch(domain string) Fetcher {
-	if FakeFetch {
-		return fakeFetch(domain)
-	}
-	return realFetch(domain)
+	return fakeFetch(domain)
 }
 
 func fakeFetch(domain string) Fetcher {
@@ -524,49 +517,33 @@ func (f *fakeFetcher) Fetch() (items []Item, next time.Time, err error) {
 	return
 }
 
-// realFetch returns a fetcher for the specified blogger domain.
-func realFetch(domain string) Fetcher {
-	return NewFetcher(fmt.Sprintf("http://%s/feeds/posts/default?alt=rss", domain))
+func init() {
+	rand.Seed(time.Now().UnixNano())
 }
 
-type fetcher struct {
-	uri   string
-	feed  *rss.Feed
-	items []Item
-}
+// STARTMAIN OMIT
+func main() {
+	// STARTMERGECALL OMIT
+	// Subscribe to some feeds, and create a merged update stream.
+	merged := Dedupe(Merge(
+		Subscribe(Fetch("blog.golang.org")),
+		Subscribe(Fetch("blog.golang.org")),
+		Subscribe(Fetch("blog.golang.org")),
+		Subscribe(Fetch("googleblog.blogspot.com")),
+		Subscribe(Fetch("googledevelopers.blogspot.com"))))
+	// STOPMERGECALL OMIT
 
-// NewFetcher returns a Fetcher for uri.
-func NewFetcher(uri string) Fetcher {
-	f := &fetcher{
-		uri: uri,
+	// Close the subscriptions after some time.
+	time.AfterFunc(3*time.Second, func() {
+		fmt.Println("closed:", merged.Close())
+	})
+
+	// Print the stream.
+	for it := range merged.Updates() {
+		fmt.Println(it.Channel, it.Title)
 	}
-	newChans := func(feed *rss.Feed, chans []*rss.Channel) {}
-	newItems := func(feed *rss.Feed, ch *rss.Channel, items []*rss.Item) {
-		for _, it := range items {
-			f.items = append(f.items, Item{
-				Channel: ch.Title,
-				GUID:    it.Guid,
-				Title:   it.Title,
-			})
-		}
-	}
-	f.feed = rss.New(1 /*minimum interval in minutes*/, true /*respect limit*/, newChans, newItems)
-	return f
+
+	panic("show me the stacks")
 }
 
-func (f *fetcher) Fetch() (items []Item, next time.Time, err error) {
-	fmt.Println("fetching", f.uri)
-	if err = f.feed.Fetch(f.uri, nil); err != nil {
-		return
-	}
-	items = f.items
-	f.items = nil
-	next = time.Now().Add(time.Duration(f.feed.SecondsTillUpdate()) * time.Second)
-	return
-}
-
-// TODO: in a longer talk: move the Subscribe function onto a Reader type, to
-// support dynamically adding and removing Subscriptions.  Reader should dedupe.
-
-// TODO: in a longer talk: make successive Subscribe calls for the same uri
-// share the same underlying Subscription, but provide duplicate streams.
+// STOPMAIN OMIT

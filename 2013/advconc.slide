@@ -39,15 +39,15 @@ For more on the basics, watch [[http://talks.golang.org/2012/concurrency.slide#1
 
 * Example: ping-pong
 
-.play advconc/pingpong1.go /STARTMAIN1/,/STOPMAIN1/
+.play advconc/pingpong/pingpong.go /STARTMAIN1/,/STOPMAIN1/
 
 * Deadlock detection
 
-.play advconc/pingpongdeadlock.go /STARTMAIN1/,/STOPMAIN1/
+.play advconc/pingpongdeadlock/pingpongdeadlock.go /STARTMAIN1/,/STOPMAIN1/
 
 * Panic dumps the stacks
 
-.play advconc/pingpongpanic.go /STARTMAIN1/,/STOPMAIN1/
+.play advconc/pingpongpanic/pingpongpanic.go /STARTMAIN1/,/STOPMAIN1/
 
 * It's easy to go, but how to stop?
 
@@ -111,7 +111,7 @@ And I want multiple subscriptions.
 
 * Example
 
-.play advconc/fakemain.go /func main/,/^}/
+.play advconc/fakemain/fakemain.go /func main/,/^}/
 
 * Subscribe
 
@@ -140,7 +140,7 @@ And I want multiple subscriptions.
 
 To implement the `Subscription` interface, define `Updates` and `Close`.
 
-.code advconc/reader/reader.go /func.* Updates/,/^}/
+.code advconc/fakemain/fakemain.go /func.* Updates/,/^}/
 
   func (s *sub) Close() error {
       // TODO: make loop exit
@@ -157,16 +157,16 @@ To implement the `Subscription` interface, define `Updates` and `Close`.
 * Naive Implementation
 
 # Not quite enough room for this; retry after format change:
-# .play advconc/naivemain.go /naiveSub\) loop/,/^}/
+# .play advconc/naivemain/naivemain.go /naiveSub\) loop/,/^}/
 # also on subsequent slides.
 
-.play advconc/naivemain.go /STARTNAIVE/,/STOPNAIVE/
-.code advconc/naivemain.go /naiveSub\) Close/,/^}/
+.play advconc/naivemain/naivemain.go /STARTNAIVE /,/STOPNAIVE /
+.code advconc/naivemain/naivemain.go /naiveSub\) Close/,/^}/
 
 * Bug 1: unsynchronized access to s.closed/s.err
 
-.code advconc/naivemain.go /STARTNAIVE/,/STOPNAIVE/ HLsync
-.code advconc/naivemain.go /naiveSub\) Close/,/^}/ HLsync
+.code advconc/naivemain/naivemain.go /STARTNAIVE /,/STOPNAIVE / HLsync
+.code advconc/naivemain/naivemain.go /naiveSub\) Close/,/^}/ HLsync
 
 * Race Detector
 
@@ -174,19 +174,16 @@ To implement the `Subscription` interface, define `Updates` and `Close`.
 
 # original is 400x1500
 .image advconc/race.png 150 562
-.play advconc/naivemain.go /STARTNAIVE/,/s.err/ HLsync
-.code advconc/naivemain.go /naiveSub\) Close/,/^}/ HLsync
-
-#* Race demo
-#.play go1.1/race.go
+.play advconc/naivemain/naivemain.go /STARTNAIVE /,/s.err/ HLsync
+.code advconc/naivemain/naivemain.go /naiveSub\) Close/,/^}/ HLsync
 
 * Bug 2: time.Sleep may keep loop running
 
-.code advconc/naivemain.go /STARTNAIVE/,/STOPNAIVE/ HLsleep
+.code advconc/naivemain/naivemain.go /STARTNAIVE/,/STOPNAIVE/ HLsleep
 
 * Bug 3: loop may block forever on s.updates
 
-.code advconc/naivemain.go /STARTNAIVE/,/STOPNAIVE/ HLsend
+.code advconc/naivemain/naivemain.go /STARTNAIVE /,/STOPNAIVE / HLsend
 
 * Solution
 
@@ -237,17 +234,17 @@ In this case, the only thing in the request is the _reply_channel_.
 
 `Close` asks loop to exit and waits for a response.
 
-.code advconc/reader/reader.go /\*sub\) Close/,/^}/ HLchan
+.code advconc/fakemain/fakemain.go /\*sub\) Close/,/^}/ HLchan
 
 `loop` handles `Close` by replying with the `Fetch` error and exiting.
 
-.code advconc/reader/reader.go /STARTCLOSEONLY /,/STOPCLOSEONLY / HLchan
+.code advconc/fakemain/fakemain.go /STARTCLOSEONLY /,/STOPCLOSEONLY / HLchan
 
 * Case 2: Fetch
 
 Schedule the next `Fetch` after some delay.
 
-.code advconc/reader/reader.go /STARTFETCHONLY /,/STOPFETCHONLY /
+.code advconc/fakemain/fakemain.go /STARTFETCHONLY /,/STOPFETCHONLY /
 
 * Case 3: Send
 
@@ -271,19 +268,19 @@ Sends and receives on nil channels block.
 
 Select never selects a blocking case.
 
-.play advconc/nilselect.go /func main/,/^}/
+.play advconc/nilselect/nilselect.go /func main/,/^}/
 
 * Case 3: Send (fixed)
 
 Enable send only when pending is non-empty.
 
-.code advconc/reader/reader.go /STARTSENDONLY /,/STOPSENDONLY / HLupdates
+.code advconc/fakemain/fakemain.go /STARTSENDONLY /,/STOPSENDONLY / HLupdates
 
 * Select
 
 Put the three cases together:
 
-.code advconc/reader/reader.go /STARTSELECT /,/STOPSELECT /
+.code advconc/fakemain/fakemain.go /STARTSELECT /,/STOPSELECT /
 
 The cases interact via `err`, `next`, and `pending`.
 
@@ -295,35 +292,35 @@ No locks, no condition variables, no callbacks.
 - Bug 2: `time.Sleep` may keep loop running
 - Bug 3: `loop` may block forever sending on `s.updates`
 
-.code advconc/reader/reader.go /STARTSELECT /,/STOPSELECT / HLcases
+.code advconc/fakemain/fakemain.go /STARTSELECT /,/STOPSELECT / HLcases
 
 * We can improve loop further
 
 * Issue: Fetch may return duplicates
 
-.code advconc/reader/reader.go /STARTFETCHVARS /,/STOPFETCHVARS / HLfetch
-.code advconc/reader/reader.go /STARTFETCHCASE /,/STOPFETCHCASE / HLfetch
+.code advconc/fakemain/fakemain.go /STARTFETCHVARS /,/STOPFETCHVARS / HLfetch
+.code advconc/fakemain/fakemain.go /STARTFETCHCASE /,/STOPFETCHCASE / HLfetch
 
 * Fix: Filter items before adding to pending
 
-.code advconc/reader/reader.go /STARTSEEN /,/STOPSEEN / HLseen
-.code advconc/reader/reader.go /STARTDEDUPE /,/STOPDEDUPE / HLdupe
+.code advconc/fakemain/fakemain.go /STARTSEEN /,/STOPSEEN / HLseen
+.code advconc/fakemain/fakemain.go /STARTDEDUPE /,/STOPDEDUPE / HLdupe
 
 * Issue: Pending queue grows without bound
 
-.code advconc/reader/reader.go /STARTDEDUPE /,/STOPDEDUPE / HLdupe
+.code advconc/fakemain/fakemain.go /STARTDEDUPE /,/STOPDEDUPE / HLdupe
 
 * Fix: Disable fetch case when too much pending
 
   const maxPending = 10
 
-.code advconc/reader/reader.go /STARTCAP /,/STOPCAP / HLcap
+.code advconc/fakemain/fakemain.go /STARTCAP /,/STOPCAP / HLcap
 
 Could instead drop older items from the head of `pending`.
 
 * Issue: Loop blocks on Fetch
 
-.code advconc/reader/reader.go /STARTDEDUPE /,/STOPDEDUPE / HLfetch
+.code advconc/fakemain/fakemain.go /STARTDEDUPE /,/STOPDEDUPE / HLfetch
 
 * Fix: Run Fetch asynchronously
 
@@ -331,9 +328,9 @@ Add a new `select` case for `fetchDone`.
 
   type fetchResult struct{ fetched []Item; next time.Time; err error }
 
-.code advconc/reader/reader.go /STARTFETCHDONE /,/STOPFETCHDONE / HLfetch
-.code advconc/reader/reader.go /STARTFETCHIF /,/STOPFETCHIF / HLfetch
-.code advconc/reader/reader.go /STARTFETCHASYNC /,/STOPFETCHASYNC / HLfetch
+.code advconc/fakemain/fakemain.go /STARTFETCHDONE /,/STOPFETCHDONE / HLfetch
+.code advconc/fakemain/fakemain.go /STARTFETCHIF /,/STOPFETCHIF / HLfetch
+.code advconc/fakemain/fakemain.go /STARTFETCHASYNC /,/STOPFETCHASYNC / HLfetch
 
 * Implemented Subscribe
 
@@ -379,6 +376,3 @@ Share memory by communicating
 Go Tour (learn Go in your browser)
 
 .link http://tour.golang.org
-
-*Go*Team*Fireside*Chat*
-5:20pm Room 2
