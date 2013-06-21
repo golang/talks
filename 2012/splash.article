@@ -812,7 +812,7 @@ Although type hierarchies have been used to build much successful
 software, it is our opinion that the model has been overused and that it
 is worth taking a step back.
 
-Instead, Go has _interfaces_, an idea that as been discussed at length elsewhere (see
+Instead, Go has _interfaces_, an idea that has been discussed at length elsewhere (see
 [[http://research.swtch.com/interfaces][research.swtch.com/interfaces]]
 for example), but here is a brief summary.
 
