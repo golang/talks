@@ -157,7 +157,7 @@ func parseArg(arg interface{}, max int) (ival int, sval string, isInt bool, err 
 	switch n := arg.(type) {
 	case int:
 		if n <= 0 || n > max {
-			return 0, "", false, fmt.Errorf("%%d is out of range", n)
+			return 0, "", false, fmt.Errorf("%d is out of range", n)
 		}
 		return n, "", true, nil
 	case string:

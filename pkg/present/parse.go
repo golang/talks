@@ -90,8 +90,8 @@ type Section struct {
 
 func (s Section) Sections() (sections []Section) {
 	for _, e := range s.Elem {
-		if s, ok := e.(Section); ok {
-			sections = append(sections, s)
+		if section, ok := e.(Section); ok {
+			sections = append(sections, section)
 		}
 	}
 	return
