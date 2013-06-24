@@ -273,6 +273,7 @@ function handleTouchMove(event) {
   } else {
     touchDX = event.touches[0].pageX - touchStartX;
     touchDY = event.touches[0].pageY - touchStartY;
+    event.preventDefault();
   }
 };
 
