@@ -5,6 +5,7 @@
 package present
 
 import (
+	"bufio"
 	"bytes"
 	"errors"
 	"fmt"
@@ -171,11 +172,15 @@ type Lines struct {
 }
 
 func readLines(r io.Reader) (*Lines, error) {
-	contentBytes, err := ioutil.ReadAll(r)
-	if err != nil {
+	var lines []string
+	s := bufio.NewScanner(r)
+	for s.Scan() {
+		lines = append(lines, s.Text())
+	}
+	if err := s.Err(); err != nil {
 		return nil, err
 	}
-	return &Lines{0, strings.Split(string(contentBytes), "\n")}, nil
+	return &Lines{0, lines}, nil
 }
 
 func (l *Lines) next() (text string, ok bool) {
