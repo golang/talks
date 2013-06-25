@@ -8,7 +8,7 @@
   var websocket, outputs = {};
 
   function onClose() {
-    window.alert('websocket connection closed');
+    console.log('websocket connection closed');
   }
 
   function sendMessage(m) {
