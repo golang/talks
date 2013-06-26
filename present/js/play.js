@@ -16,7 +16,7 @@
     var s = "";
     for (var i = 0; i < node.childNodes.length; i++) {
       var n = node.childNodes[i];
-      if (n.nodeType === 1 && n.tagName === "PRE") {
+      if (n.nodeType === 1 && n.tagName === "SPAN" && n.className != "number") {
         var innerText = n.innerText === undefined ? "textContent" : "innerText";
         s += n[innerText] + "\n";
         continue;

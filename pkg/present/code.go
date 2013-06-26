@@ -5,13 +5,14 @@
 package present
 
 import (
+	"bufio"
+	"bytes"
 	"fmt"
 	"html/template"
 	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
-	"unicode"
 )
 
 // Is the playground available?
@@ -37,8 +38,11 @@ func (c Code) TemplateName() string { return "code" }
 // The input line is a .code or .play entry with a file name and an optional HLfoo marker on the end.
 // Anything between the file and HL (if any) is an address expression, which we treat as a string here.
 // We pick off the HL first, for easy parsing.
-var highlightRE = regexp.MustCompile(`\s+HL([a-zA-Z0-9_]+)?$`)
-var codeRE = regexp.MustCompile(`\.(code|play)\s+([^\s]+)(\s+)?(.*)?$`)
+var (
+	highlightRE = regexp.MustCompile(`\s+HL([a-zA-Z0-9_]+)?$`)
+	hlCommentRE = regexp.MustCompile(`(.+) // HL(.*)$`)
+	codeRE      = regexp.MustCompile(`\.(code|play)\s+([^\s]+)(\s+)?(.*)?$`)
+)
 
 func parseCode(ctx *Context, sourceFile string, sourceLine int, cmd string) (Elem, error) {
 	cmd = strings.TrimSpace(cmd)
@@ -85,44 +89,91 @@ func parseCode(ctx *Context, sourceFile string, sourceLine int, cmd string) (Ele
 			hi++
 		}
 	}
-	text := string(textBytes[lo:hi])
 
-	// Clear ommitted lines.
-	text = skipOMIT(text)
+	lines := codeLines(textBytes, lo, hi)
 
-	// Replace tabs by spaces, which work better in HTML.
-	text = strings.Replace(text, "\t", "    ", -1)
+	for i, line := range lines {
+		// Replace tabs by spaces, which work better in HTML.
+		line.L = strings.Replace(line.L, "\t", "    ", -1)
 
-	// Clear trailing newlines.
-	text = strings.TrimRight(text, "\n")
+		// Highlight lines that end with "// HL[highlight]"
+		// and strip the magic comment.
+		if m := hlCommentRE.FindStringSubmatch(line.L); m != nil {
+			line.L = m[1]
+			line.HL = m[2] == highlight
+		}
 
-	// Escape the program text for HTML.
-	text = template.HTMLEscapeString(text)
+		lines[i] = line
+	}
 
-	// Highlight and span-wrap lines.
-	text = "<pre>" + highlightLines(text, highlight) + "</pre>"
+	data := &codeTemplateData{Lines: lines}
 
 	// Include before and after in a hidden span for playground code.
 	if play {
-		text = hide(skipOMIT(string(textBytes[:lo]))) +
-			text + hide(skipOMIT(string(textBytes[hi:])))
+		data.Prefix = textBytes[:lo]
+		data.Suffix = textBytes[hi:]
 	}
 
-	// Include the command as a comment.
-	text = fmt.Sprintf("<!--{{%s}}\n-->%s", cmd, text)
-
-	return Code{Text: template.HTML(text), Play: play}, nil
+	var buf bytes.Buffer
+	if err := codeTemplate.Execute(&buf, data); err != nil {
+		return nil, err
+	}
+	return Code{Text: template.HTML(buf.String()), Play: play}, nil
 }
 
-// skipOMIT turns text into a string, dropping lines ending with OMIT.
-func skipOMIT(text string) string {
-	lines := strings.SplitAfter(text, "\n")
-	for k := range lines {
-		if strings.HasSuffix(lines[k], "OMIT\n") {
-			lines[k] = ""
+type codeTemplateData struct {
+	Lines          []codeLine
+	Prefix, Suffix []byte
+}
+
+var leadingSpaceRE = regexp.MustCompile(`^[ \t]*`)
+
+var codeTemplate = template.Must(template.New("code").Funcs(template.FuncMap{
+	"trimSpace":    strings.TrimSpace,
+	"leadingSpace": leadingSpaceRE.FindString,
+}).Parse(codeTemplateHTML))
+
+const codeTemplateHTML = `
+{{with .Prefix}}<pre style="display: none"><span>{{printf "%s" .}}</span></pre>{{end}}
+
+<pre>{{range .Lines}}<span num="{{.N}}">{{/*
+	*/}}{{if .HL}}{{leadingSpace .L}}<b>{{trimSpace .L}}</b>{{/*
+	*/}}{{else}}{{.L}}{{end}}{{/*
+*/}}</span>
+{{end}}</pre>
+
+{{with .Suffix}}<pre style="display: none"><span>{{printf "%s" .}}</span></pre>{{end}}
+`
+
+// codeLine represents a line of code extracted from a source file.
+type codeLine struct {
+	L  string // The line of code.
+	N  int    // The line number from the source file.
+	HL bool   // Whether the line should be highlighted.
+}
+
+// codeLines takes a source file and returns the lines that
+// span the byte range specified by start and end.
+// It discards lines that end in "OMIT".
+func codeLines(src []byte, start, end int) (lines []codeLine) {
+	startLine := 1
+	for i, b := range src {
+		if i == start {
+			break
+		}
+		if b == '\n' {
+			startLine++
 		}
 	}
-	return strings.Join(lines, "")
+	s := bufio.NewScanner(bytes.NewReader(src[start:end]))
+	for n := startLine; s.Scan(); n++ {
+		l := s.Text()
+		if strings.HasSuffix(l, "OMIT") {
+			continue
+		}
+		lines = append(lines, codeLine{L: l, N: n})
+	}
+	return
 }
 
 func parseArgs(name string, line int, args []string) (res []interface{}, err error) {
@@ -255,36 +306,4 @@ func match(file string, start int, lines []string, pattern string) (int, error) 
 		return 0, fmt.Errorf("%s: no match for %#q", file, pattern)
 	}
 	return 0, fmt.Errorf("unrecognized pattern: %q", pattern)
-}
-
-var hlRE = regexp.MustCompile(`(.+) // HL(.*)$`)
-
-// highlightLines emboldens lines that end with "// HL" and
-// wraps any other lines in span tags.
-func highlightLines(text, label string) string {
-	lines := strings.Split(text, "\n")
-	for i, line := range lines {
-		m := hlRE.FindStringSubmatch(line)
-		if m == nil {
-			continue
-		}
-		line := m[1]
-		if m[2] != "" && m[2] != label {
-			lines[i] = line
-			continue
-		}
-		space := ""
-		if j := strings.IndexFunc(line, func(r rune) bool {
-			return !unicode.IsSpace(r)
-		}); j > 0 {
-			space = line[:j]
-			line = line[j:]
-		}
-		lines[i] = space + "<b>" + line + "</b>"
-	}
-	return strings.Join(lines, "\n")
-}
-
-func hide(text string) string {
-	return fmt.Sprintf(`<pre style="display: none">%s</pre>`, template.HTMLEscapeString(text))
 }
