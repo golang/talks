@@ -120,31 +120,47 @@ Word:
 	return strings.Join(words, "")
 }
 
-// split is like strings.Fields but also returns the runs of spaces.
+// split is like strings.Fields but also returns the runs of spaces
+// and treats inline links as distinct words.
 func split(s string) []string {
-	words := make([]string, 0, 10)
-	prevWasSpace := false
-	mark := 0
-	for i, r := range s {
-		newMark := mark
-		isSpace := unicode.IsSpace(r)
-		if i > mark && isSpace != prevWasSpace {
-			words = append(words, s[mark:i])
-			newMark = i
-		}
-		// If we're at the beginning of the the string, or we've just
-		// skipped over a word, see if a link begins at s[i].
-		if mark == 0 || newMark > mark {
-			if _, length := parseInlineLink(s[i:]); length > 0 {
-				words = append(words, s[i:i+length])
-				newMark = i + length
+	var (
+		words = make([]string, 0, 10)
+		start = 0
+	)
+
+	// appendWord appends the string s[start:end] to the words slice.
+	// If the word contains the beginning of a link, the non-link portion
+	// of the word and the entire link are appended as separate words,
+	// and the start index is advanced to the end of the link.
+	appendWord := func(end int) {
+		if j := strings.Index(s[start:end], "[["); j > -1 {
+			if _, l := parseInlineLink(s[start+j:]); l > 0 {
+				// Append portion before link, if any.
+				if j > 0 {
+					words = append(words, s[start:start+j])
+				}
+				// Append link itself.
+				words = append(words, s[start+j:start+j+l])
+				// Advance start index to end of link.
+				start = start + j + l
+				return
 			}
 		}
-		mark = newMark
-		prevWasSpace = isSpace
+		// No link; just add the word.
+		words = append(words, s[start:end])
+		start = end
 	}
-	if mark < len(s) {
-		words = append(words, s[mark:])
+
+	wasSpace := false
+	for i, r := range s {
+		isSpace := unicode.IsSpace(r)
+		if i > start && isSpace != wasSpace {
+			appendWord(i)
+		}
+		wasSpace = isSpace
+	}
+	for start < len(s) {
+		appendWord(len(s))
 	}
 	return words
 }

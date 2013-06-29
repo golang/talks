@@ -32,6 +32,8 @@ func TestSplit(t *testing.T) {
 			[]string{"[[http://golang.org][foo bar]]"}},
 		{"ends with [[http://golang.org][link]]",
 			[]string{"ends", " ", "with", " ", "[[http://golang.org][link]]"}},
+		{"my talk ([[http://talks.golang.org/][slides here]])",
+			[]string{"my", " ", "talk", " ", "(", "[[http://talks.golang.org/][slides here]]", ")"}},
 	}
 	for _, test := range tests {
 		out := split(test.in)
@@ -68,6 +70,8 @@ func TestFont(t *testing.T) {
 			`<i>hey</i> <a href="http://golang.org" target="_blank">so <i>many</i> <b>Gophers</b></a> <b>around</b>`},
 		{"Visit [[http://golang.org]] now",
 			`Visit <a href="http://golang.org" target="_blank">http://golang.org</a> now`},
+		{"my talk ([[http://talks.golang.org/][slides here]])",
+			`my talk (<a href="http://talks.golang.org/" target="_blank">slides here</a>)`},
 	}
 	for _, test := range tests {
 		out := font(test.in)
