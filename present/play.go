@@ -6,24 +6,29 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"path/filepath"
 	"time"
 )
 
-// playScript registers an HTTP handler at /play.js that contains all the
-// scripts specified by path, relative to basePath.
-func playScript(root string, path ...string) {
+var scripts = []string{"jquery.js", "jquery-ui.js", "playground.js", "play.js"}
+
+// playScript registers an HTTP handler at /play.js that serves all the
+// scripts specified by the variable above, and appends a line that
+// initializes the playground with the specified transport.
+func playScript(root, transport string) {
 	modTime := time.Now()
 	var buf bytes.Buffer
-	for _, p := range append(path, "jquery.js", "jquery-ui.js", "play.js") {
+	for _, p := range scripts {
 		b, err := ioutil.ReadFile(filepath.Join(root, "js", p))
 		if err != nil {
 			panic(err)
 		}
 		buf.Write(b)
 	}
+	fmt.Fprintf(&buf, "\ninitPlayground(new %v());\n", transport)
 	b := buf.Bytes()
 	http.HandleFunc("/play.js", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "application/javascript")

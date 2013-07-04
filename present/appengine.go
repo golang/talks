@@ -14,6 +14,6 @@ import (
 var basePath = "./present/"
 
 func init() {
-	playScript(basePath, "playground.js")
+	playScript(basePath, "HTTPTransport")
 	present.PlayEnabled = true
 }

@@ -40,7 +40,7 @@ func main() {
 	}
 
 	if present.PlayEnabled {
-		playScript(basePath, "socket.js")
+		playScript(basePath, "SocketTransport")
 		http.Handle("/socket", socket.Handler)
 	}
 	http.Handle("/static/", http.FileServer(http.Dir(basePath)))
