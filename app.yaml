@@ -12,4 +12,4 @@ handlers:
 - url: /.*
   script: _go_app
 
-nobuild_files: ^(?!(present|code.google.com)/)
+nobuild_files: ^((201[0-9]|pkg)/)
