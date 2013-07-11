@@ -654,7 +654,7 @@ The following sections provide brief discussions of two of these topics in Go,
 concurrency and garbage collection,
 mostly from a software engineering perspective.
 For a full discussion of the language semantics and uses see the many
-resources on the [[golang.org]] web site.
+resources on the [[http://golang.org]] web site.
 
 * Concurrency
 
@@ -813,7 +813,7 @@ software, it is our opinion that the model has been overused and that it
 is worth taking a step back.
 
 Instead, Go has _interfaces_, an idea that has been discussed at length elsewhere (see
-[[http://research.swtch.com/interfaces][research.swtch.com/interfaces]]
+[[http://research.swtch.com/interfaces]]
 for example), but here is a brief summary.
 
 In Go an interface is _just_ a set of methods. For instance, here is the definition

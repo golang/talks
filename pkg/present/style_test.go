@@ -69,7 +69,7 @@ func TestFont(t *testing.T) {
 		{"_hey_ [[http://golang.org][so _many_ *Gophers*]] *around*",
 			`<i>hey</i> <a href="http://golang.org" target="_blank">so <i>many</i> <b>Gophers</b></a> <b>around</b>`},
 		{"Visit [[http://golang.org]] now",
-			`Visit <a href="http://golang.org" target="_blank">http://golang.org</a> now`},
+			`Visit <a href="http://golang.org" target="_blank">golang.org</a> now`},
 		{"my talk ([[http://talks.golang.org/][slides here]])",
 			`my talk (<a href="http://talks.golang.org/" target="_blank">slides here</a>)`},
 	}

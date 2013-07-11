@@ -13,9 +13,9 @@ func TestInlineParsing(t *testing.T) {
 		text   string
 		length int
 	}{
-		{"[[http://golang.org]]", "http://golang.org", "http://golang.org", 21},
+		{"[[http://golang.org]]", "http://golang.org", "golang.org", 21},
 		{"[[http://golang.org][]]", "http://golang.org", "http://golang.org", 23},
-		{"[[http://golang.org]] this is ignored", "http://golang.org", "http://golang.org", 21},
+		{"[[http://golang.org]] this is ignored", "http://golang.org", "golang.org", 21},
 		{"[[http://golang.org][link]]", "http://golang.org", "link", 27},
 		{"[[http://golang.org][two words]]", "http://golang.org", "two words", 32},
 		{"[[http://golang.org][*link*]]", "http://golang.org", "<b>link</b>", 29},
@@ -24,15 +24,17 @@ func TestInlineParsing(t *testing.T) {
 		{"[[http:// *spaces* .com]]", "", "", 0},
 		{"[[http://bad`char.com]]", "", "", 0},
 		{" [[http://google.com]]", "", "", 0},
+		{"[[mailto:gopher@golang.org][Gopher]]", "mailto:gopher@golang.org", "Gopher", 36},
+		{"[[mailto:gopher@golang.org]]", "mailto:gopher@golang.org", "gopher@golang.org", 28},
 	}
 
-	for _, test := range tests {
+	for i, test := range tests {
 		link, length := parseInlineLink(test.in)
 		if length == 0 && test.length == 0 {
 			continue
 		}
 		if a := renderLink(test.link, test.text); length != test.length || link != a {
-			t.Errorf("parseInlineLink(%q):\ngot\t%q, %d\nwant\t%q, %d", test.in, link, length, a, test.length)
+			t.Errorf("#%d: parseInlineLink(%q):\ngot\t%q, %d\nwant\t%q, %d", i, test.in, link, length, a, test.length)
 		}
 	}
 }
