@@ -117,6 +117,7 @@ type process struct {
 	out  chan<- *Message
 	done chan struct{} // closed when wait completes
 	run  *exec.Cmd
+	bin  string
 }
 
 // startProcess builds and runs the given program, sending its output
@@ -166,7 +167,7 @@ func (p *process) start(body string, opt *Options) error {
 	}
 
 	// build x.go, creating x
-	defer os.Remove(bin)
+	p.bin = bin // to be removed by p.end
 	dir, file := filepath.Split(src)
 	args := []string{"go", "build"}
 	if opt != nil && opt.Race {
@@ -203,8 +204,11 @@ func (p *process) wait() {
 }
 
 // end sends an "end" message to the client, containing the process id and the
-// given error value.
+// given error value. It also removes the binary.
 func (p *process) end(err error) {
+	if p.bin != "" {
+		defer os.Remove(p.bin)
+	}
 	m := &Message{Id: p.id, Kind: "end"}
 	if err != nil {
 		m.Body = err.Error()
