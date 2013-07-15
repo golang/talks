@@ -128,7 +128,7 @@ func dirList(w io.Writer, name string) (isDir bool, err error) {
 		}
 		e := dirEntry{
 			Name: fi.Name(),
-			Path: filepath.Join(name, fi.Name()),
+			Path: filepath.ToSlash(filepath.Join(name, fi.Name())),
 		}
 		if fi.IsDir() && showDir(e.Name) {
 			d.Dirs = append(d.Dirs, e)
