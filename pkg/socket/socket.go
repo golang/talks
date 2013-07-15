@@ -16,6 +16,9 @@ package socket
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
+	"go/parser"
+	"go/token"
 	"io"
 	"io/ioutil"
 	"log"
@@ -24,6 +27,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strconv"
+	"strings"
 	"unicode/utf8"
 
 	"code.google.com/p/go.net/websocket"
@@ -190,6 +194,12 @@ func (p *process) start(body string, opt *Options) error {
 		cmd.Env = append(cmd.Env, "GOMAXPROCS=2")
 	}
 	if err := cmd.Start(); err != nil {
+		// If we failed to exec, that might be because they built
+		// a non-main package instead of an executable.
+		// Check and report that.
+		if name, err := packageName(body); err == nil && name != "main" {
+			return errors.New(`executable programs must use "package main"`)
+		}
 		return err
 	}
 	p.run = cmd
@@ -225,6 +235,15 @@ func (p *process) cmd(dir string, args ...string) *exec.Cmd {
 	cmd.Stdout = &messageWriter{p.id, "stdout", p.out}
 	cmd.Stderr = &messageWriter{p.id, "stderr", p.out}
 	return cmd
+}
+
+func packageName(body string) (string, error) {
+	f, err := parser.ParseFile(token.NewFileSet(), "prog.go",
+		strings.NewReader(body), parser.PackageClauseOnly)
+	if err != nil {
+		return "", err
+	}
+	return f.Name.String(), nil
 }
 
 // messageWriter is an io.Writer that converts all writes to Message sends on
