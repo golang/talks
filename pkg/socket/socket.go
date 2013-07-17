@@ -173,7 +173,7 @@ func (p *process) start(body string, opt *Options) error {
 	// build x.go, creating x
 	p.bin = bin // to be removed by p.end
 	dir, file := filepath.Split(src)
-	args := []string{"go", "build"}
+	args := []string{"go", "build", "-tags", "OMIT"}
 	if opt != nil && opt.Race {
 		p.out <- &Message{
 			Id: p.id, Kind: "stderr",
