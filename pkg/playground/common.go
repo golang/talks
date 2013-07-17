@@ -13,16 +13,17 @@ import (
 	"net/http"
 )
 
-const runURL = "http://golang.org/compile"
+const baseURL = "http://play.golang.org"
 
 func init() {
-	http.HandleFunc("/compile", compile)
+	http.HandleFunc("/compile", bounce)
+	http.HandleFunc("/share", bounce)
 }
 
-func compile(w http.ResponseWriter, r *http.Request) {
+func bounce(w http.ResponseWriter, r *http.Request) {
 	b := new(bytes.Buffer)
 	if err := passThru(b, r); err != nil {
-		http.Error(w, "Compile server error.", http.StatusInternalServerError)
+		http.Error(w, "Server error.", http.StatusInternalServerError)
 		report(r, err)
 		return
 	}
@@ -31,7 +32,8 @@ func compile(w http.ResponseWriter, r *http.Request) {
 
 func passThru(w io.Writer, req *http.Request) error {
 	defer req.Body.Close()
-	r, err := client(req).Post(runURL, req.Header.Get("Content-type"), req.Body)
+	url := baseURL + req.URL.Path
+	r, err := client(req).Post(url, req.Header.Get("Content-type"), req.Body)
 	if err != nil {
 		return fmt.Errorf("making POST request: %v", err)
 	}
