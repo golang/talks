@@ -1,3 +1,5 @@
+// +build OMIT
+
 package string_test
 
 import (

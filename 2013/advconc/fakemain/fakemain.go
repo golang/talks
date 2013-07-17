@@ -1,3 +1,5 @@
+// +build OMIT
+
 // fakemain runs the Subscribe example with a fake RSS fetcher.
 package main
 

@@ -1,3 +1,5 @@
+// +build OMIT
+
 package main
 
 func f(x int) int {

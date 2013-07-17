@@ -1,3 +1,5 @@
+// +build OMIT
+
 package main
 
 func Fprintln(w io.Writer, a ...interface{}) (n int, err error)

@@ -17,6 +17,8 @@ limitations under the License.
 // This is a somewhat cut back version of webfront, available at
 // http://github.com/nf/webfront
 
+// +build OMIT
+
 /*
 webfront is an HTTP server and reverse proxy.
 

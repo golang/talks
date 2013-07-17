@@ -1,3 +1,5 @@
+// +build OMIT
+
 package mart
 
 import (

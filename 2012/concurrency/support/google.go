@@ -1,4 +1,6 @@
 
+// +build OMIT
+
 package main
 
 import (

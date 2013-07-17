@@ -1,3 +1,5 @@
+// +build OMIT
+
 // dedupermain runs the Subscribe example with several duplicate
 // subscriptions to demonstrate deduping.
 package main

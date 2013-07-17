@@ -1,3 +1,5 @@
+// +build OMIT
+
 package main
 
 // This Markov chain code is taken from the "Generating arbitrary text"

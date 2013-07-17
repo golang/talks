@@ -1,3 +1,5 @@
+// +build OMIT
+
 package io
 
 type Writer interface {

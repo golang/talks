@@ -1,5 +1,7 @@
 // naivemain runs the Subscribe example with the naive Subscribe
 // implementation and a fake RSS fetcher.
+// +build OMIT
+
 package main
 
 import (

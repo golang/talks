@@ -1,3 +1,5 @@
+// +build OMIT
+
 package main
 
 // START1 OMIT
