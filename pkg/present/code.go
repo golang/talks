@@ -173,6 +173,13 @@ func codeLines(src []byte, start, end int) (lines []codeLine) {
 		}
 		lines = append(lines, codeLine{L: l, N: n})
 	}
+	// Trim leading and trailing blank lines.
+	for len(lines) > 0 && len(lines[0].L) == 0 {
+		lines = lines[1:]
+	}
+	for len(lines) > 0 && len(lines[len(lines)-1].L) == 0 {
+		lines = lines[:len(lines)-1]
+	}
 	return
 }
 
