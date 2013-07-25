@@ -7,8 +7,9 @@
 package main
 
 import (
-	_ "code.google.com/p/go.talks/pkg/playground"
 	"code.google.com/p/go.talks/pkg/present"
+
+	_ "code.google.com/p/go.tools/godoc/playground"
 )
 
 var basePath = "./present/"
