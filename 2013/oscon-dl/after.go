@@ -1,3 +1,5 @@
+// +build ignore,OMIT
+
 package download
 
 func (s *Server) handleDownload(w http.ResponseWriter, r *http.Request) {

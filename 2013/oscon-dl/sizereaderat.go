@@ -1,3 +1,5 @@
+// +build ignore,OMIT
+
 package sizereaderat
 
 import (
