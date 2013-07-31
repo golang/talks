@@ -297,6 +297,14 @@ function cancelTouch() {
   document.body.removeEventListener('touchend', handleTouchEnd, true);  
 };
 
+/* Mouse wheel events */
+
+function handleMouseWheel(event) {
+  var delta = event.wheelDelta;
+  if (delta > 0) nextSlide();
+  if (delta < 0) prevSlide();
+}
+
 /* Preloading frames */
 
 function disableSlideFrames(no) {
@@ -365,6 +373,10 @@ function setupInteraction() {
   /* Swiping */
   
   document.body.addEventListener('touchstart', handleTouchStart, false);
+
+  /* Scrolling */
+
+  document.body.addEventListener('mousewheel', handleMouseWheel, false);
 }
 
 /* Hash functions */
