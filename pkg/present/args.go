@@ -227,34 +227,3 @@ func addrRegexp(data []byte, lo, hi int, dir byte, pattern string) (int, int, er
 	}
 	return m[0], m[1], nil
 }
-
-// lineToByte returns the byte index of the first byte of line n.
-// Line numbers begin at 1.
-func lineToByte(data []byte, n int) int {
-	if n <= 1 {
-		return 0
-	}
-	n--
-	for i, c := range data {
-		if c == '\n' {
-			if n--; n == 0 {
-				return i + 1
-			}
-		}
-	}
-	return len(data)
-}
-
-// byteToLine returns the number of the line containing the byte at index i.
-func byteToLine(data []byte, i int) int {
-	l := 1
-	for j, c := range data {
-		if j == i {
-			return l
-		}
-		if c == '\n' {
-			l++
-		}
-	}
-	return l
-}
