@@ -297,6 +297,26 @@ function cancelTouch() {
   document.body.removeEventListener('touchend', handleTouchEnd, true);  
 };
 
+/* Mouse wheel events */
+
+// Used to limit the number of slides advanced.
+var tooSoon = false;
+
+function handleMouseWheel(event) {
+  event.preventDefault();
+  if (tooSoon) return;
+
+  // FireFox exposes delta in detail, instead of wheelDelta.
+  var delta = event.wheelDelta ? event.wheelDelta : -event.detail;
+  // Scrolling down or left means next.
+  if (delta > 0) nextSlide();
+  // Scrolling up or right means previous.
+  if (delta < 0) prevSlide();
+
+  tooSoon = true;
+  setTimeout(function() { tooSoon = false;}, 250);
+}
+
 /* Preloading frames */
 
 function disableSlideFrames(no) {
@@ -365,6 +385,12 @@ function setupInteraction() {
   /* Swiping */
   
   document.body.addEventListener('touchstart', handleTouchStart, false);
+
+  /* Scrolling */
+
+  document.body.addEventListener('mousewheel', handleMouseWheel, false);
+  // Needed for FireFox (Gecko)
+  document.body.addEventListener('DOMMouseScroll', handleMouseWheel, false);
 }
 
 /* Hash functions */
