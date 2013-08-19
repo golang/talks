@@ -1,57 +1,50 @@
-// +build ignore,OMIT
+// +build OMIT
 
 package main
 
 import (
 	"encoding/binary"
-	"image/color"
 	"io"
 	"log"
 	"os"
 )
 
-// GOPHER OMIT
 type Gopher struct {
 	Name     string
-	Age      int32
-	FurColor color.Color
+	AgeYears int
 }
 
-// BINWRITER OMIT
 type binWriter struct {
-	w   io.Writer
-	err error
+	w    io.Writer
+	size int64
+	err  error
 }
 
-// WRITE OMIT
-// Write writes a value into its writer using little endian.
+// Write writes a value to the provided writer in little endian form.
 func (w *binWriter) Write(v interface{}) {
 	if w.err != nil {
 		return
 	}
-	w.err = binary.Write(w.w, binary.LittleEndian, v)
+	if w.err = binary.Write(w.w, binary.LittleEndian, v); w.err == nil {
+		w.size += int64(binary.Size(v))
+	}
 }
 
-// DUMP OMIT
-func (g *Gopher) DumpBinary(w io.Writer) error {
+func (g *Gopher) WriteTo(w io.Writer) (int64, error) {
 	bw := &binWriter{w: w}
 	bw.Write(int32(len(g.Name)))
 	bw.Write([]byte(g.Name))
-	bw.Write(g.Age)
-	bw.Write(g.FurColor)
-	return bw.err
+	bw.Write(int64(g.AgeYears))
+	return bw.size, bw.err
 }
 
-// MAIN OMIT
 func main() {
-	w := os.Stdout
 	g := &Gopher{
 		Name:     "Gophertiti",
-		Age:      3383,
-		FurColor: color.RGBA{B: 255},
+		AgeYears: 3382,
 	}
 
-	if err := g.DumpBinary(w); err != nil {
-		log.Fatal("DumpBinary: %v", err)
+	if _, err := g.WriteTo(os.Stdout); err != nil {
+		log.Printf("DumpBinary: %v\n", err)
 	}
 }

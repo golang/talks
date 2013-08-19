@@ -24,13 +24,13 @@ Techniques to write Go code that is
 
 * Some code
 
-.code bestpractices/shortercode1.go /GOPHER/,/DUMP/
+.code bestpractices/shortercode1.go /type Gopher/,/^}/
 
-.code bestpractices/shortercode1.go /DUMP/,/MAIN/
+.code bestpractices/shortercode1.go /WriteTo/,/^}/
 
 * Avoid nesting by handling errors first
 
-.code bestpractices/shortercode2.go /DUMP/,/MAIN/
+.code bestpractices/shortercode2.go /WriteTo/,/^}/
 
 Less nesting means less cognitive load on the reader
 
@@ -38,19 +38,37 @@ Less nesting means less cognitive load on the reader
 
 Deploy one-off utility types for simpler code
 
-.code bestpractices/shortercode3.go /BINWRITER/,/DUMP/
+.code bestpractices/shortercode3.go /binWriter/,/^}/
 
-.code bestpractices/shortercode3.go /DUMP/,/MAIN/
+.code bestpractices/shortercode3.go /Write writes/,/^}/
+
+* Avoid repetition when possible
+
+Using `binWriter`
+
+.code bestpractices/shortercode3.go /WriteTo/,/^}/
 
 * Type switch to handle special cases
 
-.code bestpractices/shortercode4.go /WRITE/,/DUMP/
+.code bestpractices/shortercode4.go /func .* Write/,/^}/
 
-.code bestpractices/shortercode4.go /DUMP/,/MAIN/
+.code bestpractices/shortercode4.go /WriteTo/,/^}/
 
 * Type switch with short variable declaration
 
-.code bestpractices/shortercode5.go /WRITE/,/DUMP/
+.code bestpractices/shortercode5.go /func .* Write/,/^}/
+
+* Writing everything or nothing
+
+.code bestpractices/shortercode6.go /binWriter/,/^}/
+
+.code bestpractices/shortercode6.go /Write writes/,/^}/
+
+* Writing everything or nothing
+
+.code bestpractices/shortercode6.go /Flush/,/^}/
+
+.code bestpractices/shortercode6.go /func .* WriteTo/,/^}/
 
 * Function adapters
 
@@ -154,19 +172,19 @@ an executable command may not.
 
 Let's use the Gopher type from before
 
-.code bestpractices/shortercode1.go /GOPHER/,/DUMP/
+.code bestpractices/shortercode1.go /type Gopher/,/^}/
 
 We could define this method
 
-.code bestpractices/shortercode1.go /DumpToFile/,/DumpToFile/
+.code bestpractices/shortercode1.go /WriteToFile/
 
 But using a concrete type makes this code difficult to test, so we use an interface.
 
-.code bestpractices/shortercode1.go /DumpToReadWriter/,/DumpToReadWriter/
+.code bestpractices/shortercode1.go /WriteToReadWriter/
 
 And, since we're using an interface, we should ask only for the methods we need.
 
-.code bestpractices/shortercode1.go /DumpToWriter/,/DumpToWriter/
+.code bestpractices/shortercode1.go /WriteToWriter/
 
 * Keep independent packages independent
 
