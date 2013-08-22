@@ -8,10 +8,10 @@ import "testing"
 
 func TestToUpper(t *testing.T) {
 	in := "loud noises"
-	expected := "LOUD NOISES"
+	want := "LOUD NOISES"
 	got := strings.ToUpper(in)
 	if got != want {
-		t.Errorf("ToUpper(%v) = %v, want %v", in, got, expected)
+		t.Errorf("ToUpper(%v) = %v, want %v", in, got, want)
 	}
 }
 
