@@ -26,14 +26,15 @@ function initPlayground(transport) {
 		var outpre = document.createElement('pre');
 		var running;
 
-		// TODO(adg): check that jquery etc is loaded.
-		$(output).resizable({
-			handles: "n,w,nw",
-			minHeight:	27,
-			minWidth:	135,
-			maxHeight: 608,
-			maxWidth:	990
-		});
+		if ($ && $(output).resizable) {
+			$(output).resizable({
+				handles: "n,w,nw",
+				minHeight:	27,
+				minWidth:	135,
+				maxHeight: 608,
+				maxWidth:	990
+			});
+		}
 
 		function onKill() {
 			if (running) running.Kill();
