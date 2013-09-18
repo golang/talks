@@ -1,0 +1,175 @@
+Go Language for Ops and Site Reliability Engineering
+
+Gustavo Franco
+Site Reliability Engineer, Google
+http://developers.google.com
+
+* Operations vs Site Reliability Engineering
+
+Operations
+
+- Interrupt driven
+- Repetitive
+- Hard to scale
+
+Site Reliability Engineering
+
+- Project oriented
+- Values automation
+- Focus on scale
+
+* Go Programming Language
+
+"Go is an open source programming environment that makes it easy to build simple,
+reliable, and efficient software." -- golang.org
+
+* Hello OSCON
+
+.play go-sreops/hello.go
+
+  $ go run hello.go -help
+  Usage of /tmp/go-build212699297/command-line-arguments/_obj/a.out:
+    -message="Hello, OSCON!": what to say
+  exit status 2
+
+* Programming for SRE and Ops - State of the Union
+
+- "I will just write a small throw away script for that"
+
+- "I don't want to learn a new language"
+
+- "Language X is awesome and solves everything"
+
+* Programming for SRE and Ops - Where do we go?
+
+- One liners are here to stay
+
+- Throw away scripts too so let's make them better
+
+- Think of languages you can read as a toolkit
+
+- Get very good at writing in just a few of them
+
+* Agenda
+
+- Why Go for Ops and SRE?
+
+- Go features
+
+- Go in production at Google
+
+- Go in production outside Google
+
+- Q&A
+
+* Why Go for Ops and SRE? Simple, reliable and efficient
+
+- Open Source
+
+- One binary to rule them all
+
+- No need for a Makefile, import defined dependencies
+
+- Very fast compilation
+
+* Why Go for Ops and SRE? Simple, reliable and efficient
+
+- Garbage collection
+
+- Readability is easy to achieve via gofmt
+
+- RE2 regular expressions
+
+- Testing, benchmarking and profiling built-in
+
+* Why Go for Ops and SRE? Standard library examples
+
+.link http://golang.org/pkg/fmt fmt
+
+.link http://golang.org/pkg/io/ioutil io/ioutil
+
+.link http://golang.org/pkg/net/http net/http
+
+.link http://golang.org/pkg/os/exec os/exec
+
+.link http://golang.org/pkg/path/filepath path/filepath
+
+.link http://golang.org/pkg/regexp regexp
+
+.link http://golang.org/pkg/strings strings
+
+.link http://golang.org/pkg/text/tabwriter text/tabwriter
+
+.link http://golang.org/pkg/time time
+
+[[godoc.org]] to your needs beyond the standard library
+ 
+* Why Go for Ops and SRE? Concurrency via Goroutines
+
+.play go-sreops/goroutines.go
+
+* Why Go for Ops and SRE? Concurrency and Channels
+
+.play go-sreops/goroutines-channels.go /START/,/STOP/
+
+* Go features
+
+- Hashes or dicts? Maps
+
+- Arrays? Yes, but you will probably want to use Slices instead
+
+- Modules are called Packages
+
+- Structs
+
+- Methods
+
+- Pointers without arithmetic operations
+
+Go grows with you - see interfaces and reflection
+
+* Go in production at Google
+
+dl.google.com - OSCON talk by Brad Fitzpatrick Friday, 10:00am
+
+.link http://code.google.com/p/vitess Vitess
+
+ vtocc: front-end to MySQL that improves scalability
+
+.link http://code.google.com/p/emtail Emtail
+
+ Whitebox monitoring data from logs to a timeseries database
+
+.link http://code.google.com/p/go-commander Go Commander
+
+ Command line library for Go
+
+Machine lifecycle management
+
+via App Engine
+
+* Go in production outside Google
+
+.link http://labix.org/pipe Pipe
+
+ Unix-like pipelines for Go
+
+.link http://www.gocircuit.org Gocircuit
+
+ Inter host Goroutines
+
+.link http://juju.ubuntu.com Juju 
+
+ Service orchestration management tool
+
+.link http://www.docker.io Docker
+
+ Containers management tool
+
+.link http://www.packer.io Packer 
+
+ Tool for creating identical machine images for multiple platforms
+
+* Q&A
+
+ Take the tour - [[tour.golang.org]]
