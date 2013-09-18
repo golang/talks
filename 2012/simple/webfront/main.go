@@ -1,3 +1,8 @@
+// +build OMIT
+
+// This is a somewhat cut back version of webfront, available at
+// http://github.com/nf/webfront
+
 /*
 Copyright 2011 Google Inc.
 
@@ -13,11 +18,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-
-// This is a somewhat cut back version of webfront, available at
-// http://github.com/nf/webfront
-
-// +build OMIT
 
 /*
 webfront is an HTTP server and reverse proxy.

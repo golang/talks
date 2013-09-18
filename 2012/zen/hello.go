@@ -1,4 +1,5 @@
 // +build OMIT
+
 package main
 
 import "fmt"
