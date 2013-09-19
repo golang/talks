@@ -15,8 +15,8 @@ import (
 	"os"
 	"strings"
 
-	"code.google.com/p/go.talks/pkg/present"
-	"code.google.com/p/go.talks/pkg/socket"
+	"code.google.com/p/go.tools/playground/socket"
+	"code.google.com/p/go.tools/present"
 )
 
 const basePkg = "code.google.com/p/go.talks/present"
