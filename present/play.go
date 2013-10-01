@@ -11,6 +11,8 @@ import (
 	"net/http"
 	"path/filepath"
 	"time"
+
+	"code.google.com/p/go.tools/godoc/static"
 )
 
 var scripts = []string{"jquery.js", "jquery-ui.js", "playground.js", "play.js"}
@@ -22,6 +24,10 @@ func playScript(root, transport string) {
 	modTime := time.Now()
 	var buf bytes.Buffer
 	for _, p := range scripts {
+		if s, ok := static.Files[p]; ok {
+			buf.WriteString(s)
+			continue
+		}
 		b, err := ioutil.ReadFile(filepath.Join(root, "js", p))
 		if err != nil {
 			panic(err)
