@@ -53,7 +53,7 @@ Static typing with inferred types, like Go.
 	// but no
 	a = 2
 
-Statically-typed Python? Check Guido's [[http://www.mypy-lang.org/][mypy]]
+Statically-typed Python? Check [[http://www.mypy-lang.org/][mypy]] and [[http://cython.org/][Cython]].
 
 * Run time pyrotechnics
 
