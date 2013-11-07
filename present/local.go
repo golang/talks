@@ -55,6 +55,10 @@ func main() {
 	log.Fatal(http.ListenAndServe(*httpListen, nil))
 }
 
+func playable(c present.Code) bool {
+	return present.PlayEnabled && c.Play
+}
+
 const basePathMessage = `
 By default, gopresent locates the slide template files and associated
 static content by looking for a %q package

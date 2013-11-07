@@ -18,3 +18,7 @@ func init() {
 	playScript(basePath, "HTTPTransport")
 	present.PlayEnabled = true
 }
+
+func playable(c present.Code) bool {
+	return present.PlayEnabled && c.Play && c.Ext == ".go"
+}

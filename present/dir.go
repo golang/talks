@@ -81,6 +81,7 @@ func renderDoc(w io.Writer, base, docFile string) error {
 
 	// Read and parse the input.
 	tmpl := present.Template()
+	tmpl = tmpl.Funcs(template.FuncMap{"playable": playable})
 	if _, err := tmpl.ParseFiles(actionTmpl, contentTmpl); err != nil {
 		return err
 	}
