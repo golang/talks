@@ -24,6 +24,6 @@ the generated output. The supported formats are:
 	.article      // article format, such as a blog post
 
 The present file format is documented by the present package:
-http://godoc.org/code.google.com/p/go.tools/godoc/present
+http://godoc.org/code.google.com/p/go.tools/present
 */
 package main
