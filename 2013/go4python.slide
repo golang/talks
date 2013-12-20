@@ -89,7 +89,7 @@ A list of magic methods in Python:
 
 A lot has been said about Python's infamous Global Interpreter Lock.
 
-You should watch [[http://blip.tv/carlfk/mindblowing-python-gil-2243379][Mindblowing Python GIL]], by David Beazley.
+You should watch [[http://youtu.be/ph374fJqFPE][Mindblowing Python GIL]], by David Beazley.
 
 * Things I like about Python
 
