@@ -1,0 +1,323 @@
+Toward Go 1.3
+(and beyond)
+
+Andrew Gerrand
+Gopher
+@enneff
+http://golang.org
+
+
+* Go 1.3
+
+Code freeze is March 1, 2014.
+
+Release is June 1, 2014.
+
+(Six months after Go 1.2, released December 1, 2013.)
+
+
+* A to-do list
+
+After Go 1.2 the Go contributors compiled a to-do list:
+
+.link http://golang.org/s/go13todo
+
+The list is aspirational; not all of it will get done.
+
+This talk is based on that list.
+
+
+* 100% precise GC
+
+Finally!
+
+
+* Copying stacks (1/2)
+
+.link http://golang.org/s/contigstacks
+
+Go 1.2's stack split mechanism has a "hot split" problem.
+
+Copying (or "contiguous") stacks are grown by reallocation and copying.
+Resolves the "hot split" problem.
+Makes smaller initial stacks practical - more goroutines in the same space.
+
+* Copying stacks (2/2)
+
+.image go1.3/json.png
+
+
+* Dmitry's bag of performance tricks
+
+Runtime changes:
+
+- increase page size to 8K (~10% GC less pause time)
+- do not collect GC roots explicitly (~6% GC less pause time)
+- prefetch next block in mallocgc (~2% less CPU)
+- smarter slice grow (2-20% less CPU)
+- combine small NoScan allocations (10% faster json benchmark)
+- do not zero terminate strings (1% fewer allocs json benchmark)
+- remove locks from netpoll hotpaths (~5% faster TCP)
+- allocate goroutine ids in batches (8-66% faster goroutine creation)
+- use lock-free ring for work queues (5-40% faster goroutine scheduling)
+- per-P defer pool (memory savings for programs with many goroutines)
+
+And many more to come...
+
+
+* Channel rewrite
+
+.link http://golang.org/s/go13chan
+
+Goals:
+
+- make single-threaded (non-contended) channel operations faster
+- make contended buffered (producer/consumer) channel operations faster
+- make non-blocking failing operations (e.g. checking of "stop" channel) faster
+- make chan semaphores (chan struct{}) faster
+- make select statements faster
+
+Non-goals:
+
+- make channels completely lock-free (this would significantly complicate implementation and make it slower for common cases)
+- make contended synchronous channel operations faster
+
+
+* sync.Pool (1/2)
+
+Many Go libraries include custom thread-safe free lists, like this:
+
+	var objPool = make(chan *Object, 10)
+
+	func obj() *Object {
+		select {
+		case p := <-objPool:
+			return p
+		default:
+		}
+		return NewObject()
+	}
+
+	func objPut(p *Object) {
+		select {
+		case objPool <- p:
+		default:
+		}
+	}
+  
+	p := obj()
+	// use p
+	objPut(p)
+
+* sync.Pool (2/2)
+
+The `sync.Pool` type provides a general thread-safe global free list.
+
+It allows the runtime to reclaim entries when appropriate
+(for example, during garbage collection).
+
+	var objPool = sync.Pool{
+		New: func() interface{} {
+			return NewObject()
+		},
+	}
+  
+	p := objPool.Get().(*Object)
+	// use p
+	objPool.Put(p)
+
+This is an experimental type and might not be released.
+
+
+* Native Client port
+
+.link http://golang.org/s/go13nacl
+
+Native Client (NaCl) is a restricted execution environment for x86 binaries.
+
+Notably used to run compiled binaries inside Google Chrome.
+NaCl also provides a tool for executing command-line binaries
+
+Go 1.3 targets that command-line tool for 32-bit and 64-bit x86 architectures.
+(NaCl supports 32-bit ARM, but we have no plans to support it.)
+
+The [[http://play.golang.org][Go Playground]] uses the NaCl tool chain to safely execute untrusted programs.
+
+The NaCl tool chain includes the fake time, network, and file system capabilities of the playground.
+
+
+* OS ports
+
+Solaris: work in progress, on track for Go 1.3.
+
+DragonflyBSD: work is done, looking for a maintainer.
+
+Plan 9: still not finished.
+
+darwin/arm, android/arm: a contributor is working on these, some way to go.
+
+
+* The go command and fsnotify
+
+.link http://golang.org/s/go13fsnotify
+
+In Go 1.2, `go` `build` stats every dependent source file to see whether they have changed.
+
+This is a big chunk of total build time.
+
+The proposed "go background" command starts a daemon that watches source files for changes.
+
+When building, the `go` commands can ask the daemon which files have changed.
+
+A new `os/fsnotify` package will be added to the standard library to support the `go` command.
+
+A proposed interface is discussed here:
+
+.link http://golang.org/cl/48310043
+
+
+* Support for linking against Objective C code
+
+The Go 1.2 tool chain can link against C++ code using `cgo` (but you need to write a small C bridge into the C++ code).
+
+The same can be done for Objective C code, with some modifications to the go tool.
+
+This will make it easier to write native OS X applications.
+
+
+* Address binary bloat
+
+.link http://golang.org/issue/6853
+
+Go binaries are getting pretty big. Rob ran an experiment:
+
+	As an experiment, I built "hello, world" at the release points for go 1.0. 1.1, and 1.2.
+	Here are the binary's sizes:
+
+	% ls -l x.1.?
+	-rwxr-xr-x  1 r  staff  1191952 Nov 30 10:25 x.1.0
+	-rwxr-xr-x  1 r  staff  1525936 Nov 30 10:20 x.1.1
+	-rwxr-xr-x  1 r  staff  2188576 Nov 30 10:18 x.1.2
+
+Go binaries contain several sets of debugging symbols (for gdb, profilers, reflection, etc).
+
+We intend to rationalize these as part of some work on the linker.
+Speaking of which...
+
+
+* Linker overhaul (1/3)
+
+.link http://golang.org/s/go13linker
+
+The `gc` tool chain is a bit unconventional.
+
+The compilers don't emit machine code but an intermediate assembly language.
+
+The linker translates it into machine code.
+
+The packages can be compiled in parallel by independent runs of the compiler,
+but the linking must be done by a single linker process after compilation is complete.
+
+The `gc` linker has become a bottleneck in building programs
+because it does more work than a typical linker.
+
+* Linker overhaul (2/3)
+
+The Go 1.2 linker's job can be split into two parts:
+
+- translate an input stream of pseudo-instructions into executable code, data blocks, and a list of relocations,
+- delete dead code, merge what's left, resolve relocations, and generate a few whole-program data structures.
+
+.image go1.3/liblink1.png
+
+* Linker overhaul (3/3)
+
+In Go 1.3, much of the old linker is moved to a `liblink` library that is then used by assemblers and compilers (`6a`, `6c`, `6g`, etc). This allows more work to be done in parallel.
+
+.image go1.3/liblink2.png
+
+And because the linker is much simpler now, we can rewrite it in Go.
+
+
+* Compiler overhaul
+
+.link http://golang.org/s/go13compiler
+
+The "gc" tool chain is based on the Plan 9 C compilers.
+
+The assemblers, C compilers, and linkers were lifted wholesale.
+
+The Go compilers are new C programs that fit into that tool chain.
+
+Wouldn't it be nice to have a Go compiler written in Go?
+
+* Compiler overhaul: why C then?
+
+Many benefits to writing the compiler in C:
+
+- Go did not exist
+- Once Go did exist, it changed often
+
+Today, Go does exist and is stable as of Go 1.
+These benefits not as relevant now.
+
+* Compiler overhaul: why Go now?
+
+The benefits of a Go-based compiler:
+
+- Go code is easier to write and debug
+- Go has better support for modularity, automated rewriting, unit testing, and profiling
+- Go programmers are more likely to work on a compiler written in Go
+- Go code is easier to parallelize
+- Go is more fun!
+
+* Compiler overhaul: the plan
+
+Not a rewrite.
+
+Translate the C compilers to Go.
+
+Write and use an automatic translator to do this.
+
+Start the process with Go 1.3 and continue in future releases.
+
+* Compiler overhaul: five phases
+
+- Develop and debug the translator.
+- Translate the C to Go and delete the C code.
+- Clean up and document the code, add unit tests. (Target Go 1.4)
+- Profile and optimize the compiler and split it into packages.
+- Replace the front end with `go/parser` and `go/types`. (Maybe with new versions of those packages.)
+
+* Compiler overhaul: bootstrapping
+
+Must have a way to build the compiler from scratch.
+
+Our plan is that the Go 1.3 compiler must compile using Go 1.2, and Go 1.4 must compile with Go 1.3, and so on.
+
+Write a shell script to do this automatically. Bootstrap once per machine.
+
+This scales poorly over time, so we might write a back end for the compiler that generates C code, and keep the C version of the compiler sources checked in.
+
+* Compiler overhaul: alternatives
+
+Write new compilers from scratch?
+
+- The existing compilers are well-tested and handle many subtle cases well; would be foolish to throw away 10 man-years of effort.
+
+Translate the compiler manually?
+
+- Translation is tedious and error-prone, mistakes are subtle and hard to find. Can continue to work on existing compilers while writing the translator.
+
+Translate just the back ends and connect to `go/parser` and `go/types` immediately?
+
+- The existing APIs are very different; too much work to undertake at once.
+
+Discard the current compilers and use gccgo (or `go/parser` and `go/types` and LLVM)?
+
+- The current compilers are a large part of our flexibility. Tying Go to large C/C++ projects like GCC or LLVM hurts that flexibility.
+
+
+* Lots of small things
+
+As with previous releases, we'll see a long tail of small fixes and changes.
