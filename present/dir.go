@@ -269,10 +269,10 @@ const dirListHTML = `<!DOCTYPE html>
 </div>
 
 <div id="footer">
-Except as <a href="http://code.google.com/policies.html#restrictions">noted</a>,
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
 the content of this page is licensed under the
 Creative Commons Attribution 3.0 License,
-and code is licensed under a <a href="/LICENSE">BSD license</a>.<br>
+and code is licensed under a <a href="http://golang.org/LICENSE">BSD license</a>.<br>
 <a href="http://golang.org/doc/tos.html">Terms of Service</a> | 
 <a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
 </div>
