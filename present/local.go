@@ -13,6 +13,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"runtime"
 	"strings"
 
 	"code.google.com/p/go.tools/playground/socket"
@@ -21,12 +22,16 @@ import (
 
 const basePkg = "code.google.com/p/go.talks/present"
 
-var basePath string
+var (
+	basePath     string
+	nativeClient bool
+)
 
 func main() {
 	httpListen := flag.String("http", "127.0.0.1:3999", "host:port to listen on")
 	flag.StringVar(&basePath, "base", "", "base path for slide template and static resources")
 	flag.BoolVar(&present.PlayEnabled, "play", true, "enable playground (permit execution of arbitrary user code)")
+	flag.BoolVar(&nativeClient, "nacl", false, "use Native Client environment playground (prevents non-Go code execution)")
 	flag.Parse()
 
 	if basePath == "" {
@@ -40,6 +45,15 @@ func main() {
 	}
 
 	if present.PlayEnabled {
+		if nativeClient {
+			socket.RunScripts = false
+			socket.Environ = func() []string {
+				if runtime.GOARCH == "amd64" {
+					return environ("GOOS=nacl", "GOARCH=amd64p32")
+				}
+				return environ("GOOS=nacl")
+			}
+		}
 		playScript(basePath, "SocketTransport")
 		http.Handle("/socket", socket.Handler)
 	}
@@ -47,7 +61,7 @@ func main() {
 
 	if !strings.HasPrefix(*httpListen, "127.0.0.1") &&
 		!strings.HasPrefix(*httpListen, "localhost") &&
-		present.PlayEnabled {
+		present.PlayEnabled && !nativeClient {
 		log.Print(localhostWarning)
 	}
 
@@ -57,6 +71,24 @@ func main() {
 
 func playable(c present.Code) bool {
 	return present.PlayEnabled && c.Play
+}
+
+func environ(vars ...string) []string {
+	env := os.Environ()
+	for _, r := range vars {
+		k := strings.SplitAfter(r, "=")[0]
+		var found bool
+		for i, v := range env {
+			if strings.HasPrefix(v, k) {
+				env[i] = r
+				found = true
+			}
+		}
+		if !found {
+			env = append(env, r)
+		}
+	}
+	return env
 }
 
 const basePathMessage = `
