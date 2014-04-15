@@ -1,7 +1,10 @@
+// +build OMIT
+
 package main
 
 import (
 	"flag"
+
 	"github.com/golang/glog"
 )
 
