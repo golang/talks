@@ -1,0 +1,31 @@
+counter:=prog(end: int, c: chan of int)
+{
+	i:int;
+	for(i=2; i<end; i++)
+		c<-=i;
+};
+
+filter:=prog(prime: int, listen: chan of int, send: chan of int)
+{
+	i:int;
+	for(;;)
+		if((i=<-listen)%prime)
+			send<-=i;
+};
+# BREAK OMIT
+sieve:=prog(c: chan of int)
+{
+	for(;;){
+		prime:=<-c;
+		print(prime, " ");
+		newc:=mk(chan of int);
+		begin filter(prime, c, newc);
+		c=newc;
+	}
+};
+
+count:=mk(chan of int);
+
+begin counter(10000, count);
+begin sieve(count);
+"";
