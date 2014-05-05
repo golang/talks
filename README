@@ -1,3 +1,7 @@
-This repository holds the Go presentation tool (present) and various Go talks.
+This repository holds various Go talks that may be viewed with the present tool.
+
+To install the present tool, use go get:
+
+	go get code.google.com/p/go.tools/cmd/present
 
 To submit changes to this repository, see http://golang.org/doc/contribute.html.
