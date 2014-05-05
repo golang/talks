@@ -11,7 +11,9 @@ import (
 	"fmt"
 	"go/build"
 	"log"
+	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"runtime"
 	"strings"
@@ -55,7 +57,13 @@ func main() {
 			}
 		}
 		playScript(basePath, "SocketTransport")
-		http.Handle("/socket", socket.Handler)
+
+		host, port, err := net.SplitHostPort(*httpListen)
+		if err != nil {
+			log.Fatal(err)
+		}
+		origin := &url.URL{Scheme: "http", Host: host + ":" + port}
+		http.Handle("/socket", socket.NewHandler(origin))
 	}
 	http.Handle("/static/", http.FileServer(http.Dir(basePath)))
 
