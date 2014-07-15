@@ -1,0 +1,207 @@
+Camlistore: Android, ARM, App Engine, anywhere.
+
+25 June 2014
+Tags: camlistore
+
+Brad Fitzpatrick
+Gopher, Google
+@bradfitz
+bradfitz@golang.org
+http://bradfitz.com/
+http://camlistore.org/
+
+* Me
+
+- bradfitz
+- LiveJournal, memcached, OpenID, ...
+- Google
+- Go Standard Library, etc
+- Camlistore
+
+* Camlistore
+
+* Camlistore
+
+- "Your personal storage system for life"
+- 4 year+ open source project:
+.link http://camlistore.org
+- All in Go.
+- Early user of Go's standard library. Helped shape it.
+
+* Camlistore
+
+- stores, indexes, searches, syncs, shares content
+- can optionally model POSIX filesystems
+- lightweight object storage model, stores all mutations
+
+Stores on:
+
+- local disk, S3, Google Cloud Storage
+- MySQL, Postgres, SQLite, LevelDB,
+- MongoDB, App Engine,
+- itself,
+- encrypted, sharded, replicated, load balanced,
+- ...
+
+* Camlistore screenshots
+
+* Web UI
+
+.image camlistore/cam-mix-types.png _ 1000
+
+* Location search
+
+.image camlistore/cam-moscow.png 580 _
+
+* Panos
+
+.image camlistore/cam-pano.png _ 1000
+
+* Paris + Portrait
+
+.image camlistore/cam-paris-portrait.png _ 1000
+
+* Non-images
+
+.image camlistore/cam-other.png _ 1000
+
+* FUSE
+
+.image camlistore/cam-fuse.png _ 1000
+
+* Android
+
+.image camlistore/cam-android.png 600 _
+
+* Camlistore Demo
+
+* Camlistore does much, in many places
+
+* Camlistore
+
+does:
+
+- a web & API server
+- a FUSE filesystem (OS X, Linux)
+- command-line tools
+
+on:
+
+- desktops, personal servers
+- Raspberry Pi, etc (ARM)
+- Android
+- App Engine
+- Cloud (EC2, GCE)
+
+* Desktops, personal servers
+
+- Linux, FreeBSD, Mac, Windows, ...
+
+  $ go {get,build,install,test} camlistore.org/{cmd,pkg,server}/...
+
+- Occasional use of +build windows, etc.
+- Nothing fancy.
+
+* Raspberry Pi
+
+- Most ARM devices are very slow
+- Cross compile from any OS, architecture on a fast machine:
+
+  $ GOARCH=arm GOOS=linux go build camlistore.org/server/camlistored
+
+- ... then copy binary to the slow ARM device.
+- Popular helper tool:
+
+.link https://github.com/davecheney/golang-crosscompile
+
+- For debugging: ChromeOS + crouton is nice, pretty fast
+
+* App Engine
+
+- Just upload the code.
+- App Engine APIs require context plumbing.
+- Ugly hacks avoid context plumbing, but don't.
+.link https://developers.google.com/appengine/docs/go/reference#Context
+.link http://godoc.org/camlistore.org/pkg/context
+.link http://godoc.org/code.google.com/p/go.net/context
+- Restructure code to not assume long-running goroutines; handlers only
+- No unsafe, syscall, etc: use build tags on files:
+
+  // +build !appengine
+
+* Cloud
+
+- Same as desktop.
+- Static binaries make deployment easy
+- Even easier: 
+- Embed resources (CSS, JS, HTML, images) with fileembed
+- Camlistore has: camlistore.org/pkg/fileembed + genfileembed
+
+* fileembed
+
+Definition:
+
+  package fileembed
+  func (f *Files) Open(filename string) (http.File, error)
+
+Use in Camlistore:
+
+  package server
+  uistatic.Files = &fileembed.Files{
+      DirFallback: ui.uiDir,
+      Listable:    true,
+      // In dev_appserver, allow edit-and-reload without
+      // restarting. In production, though, it's faster to just
+      // slurp it in.
+      SlurpToMemory: uistatic.IsProdAppEngine,
+  }
+
+- Just reload in dev; embedded in binary in production.
+
+* Camlistore's genfileembed
+
+  $ genfileembed ./path/to/dir
+
+- generates zindex.html.go
+
+* Embedding resources
+
+- Many options in the Go community
+- Coming to Go 1.4 built-in
+
+* Web server
+
+- Obvious
+- net/http is great: no need for Apache, nginx, etc
+- WebSockets support is great and easy
+
+* FUSE
+
+- Native filesystem on OS X & Linux
+- hanwen/gofuse (then only Linux) -> rsc/fuse (then only Mac) -> Camlistore fork (both) -> bazil.org (community maintained)
+- Easy to write fast filesystems in Go
+
+* Android
+
+- child process
+- on Application start, unzip arm binary to Unix (not media) filesystem 
+.link https://camlistore.googlesource.com/camlistore/+/master/clients/android/src/org/camlistore/UploadApplication.java UploadApplication.java
+.link https://camlistore.googlesource.com/camlistore/+/master/clients/android/src/org/camlistore/UploadThread.java UploadThread.java
+- build with Docker (demo)
+.link https://camlistore.googlesource.com/camlistore/+/master/clients/android/devenv/Dockerfile Dockerfile
+.link https://camlistore.googlesource.com/camlistore/+/master/clients/android/Makefile Makefile
+.link https://camlistore.googlesource.com/camlistore/+/master/clients/android/build-in-docker.pl build-in-docker.pl
+
+* Command-line tools
+
+  $ cmdtool [--global=foo] subcmd [--subcommand opts]
+
+.link http://camlistore.org/pkg/cmdmain/
+.link https://camlistore.googlesource.com/camlistore/+/master/cmd/camtool/describe.go camtool's describe.go
+.link https://github.com/codegangsta/cli Popular: codegangsta/cli
+
+* In summary
+
+Go is awesome and runs lots of places, easily.
+
+- Web, CLI, FUSE, x86, ARM, Android, App Engine
