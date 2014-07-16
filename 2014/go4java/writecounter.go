@@ -12,7 +12,7 @@ var (
 	_ = os.Stdout
 )
 
-// WriteCounter counts how many times `Write` is called
+// WriteCounter tracks the total number of bytes written.
 type WriteCounter struct {
 	io.ReadWriter
 	count int

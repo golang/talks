@@ -259,7 +259,7 @@ Pointers allow modifying the pointed receiver:
 
 The method receiver is a copy of a pointer (pointing to the same address).
 
-Method calls on nil receivers are perfectly valid (and useulf!).
+Method calls on nil receivers are perfectly valid (and useful!).
 
 	func (p *Person) Name() string {
 		if p == nil {
