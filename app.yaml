@@ -9,6 +9,7 @@ handlers:
   upload: present/static/favicon.ico
 - url: /static
   static_dir: present/static
+  application_readable: true
 - url: /.*
   script: _go_app
 
