@@ -261,6 +261,12 @@ A goroutine `G` calls `time.Sleep`:
 
 5. The corresponding goroutines are woken up.
 
+* Sleeping fast
+
+Faking time allows precise sleep durations.
+
+.play playground/sleepfast.go
+
 * So there's no actual sleep?
 
 The playground's `write` syscall inserts a timestamp before each write.
@@ -303,7 +309,7 @@ These slides: [[http://talks.golang.org/2014/playground.slide]]
 
 More about the Go tour:
 
-- Inside the Go: playground [[http://blog.golang.org/playground]]
+- Inside the Go playground: [[http://blog.golang.org/playground]]
 
 - The Go tour: [[http://tour.golang.org]]
 
