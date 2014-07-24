@@ -15,23 +15,23 @@ Looking back on the first months.
 
 The complaints started right away…
 
-.image gosf/msg-wrong.png _ 600
+.image state-of-go/msg-wrong.png _ 600
 
-.image gosf/msg-lacks.png _ 600
-
-
-* Familiar complaints
-
-.image gosf/msg-generics.png _ 600
-
-.image gosf/msg-type.png _ 600
-
-.image gosf/msg-exceptions1b.png _ 600
+.image state-of-go/msg-lacks.png _ 600
 
 
 * Familiar complaints
 
-.image gosf/indent.png 500 _
+.image state-of-go/msg-generics.png _ 600
+
+.image state-of-go/msg-type.png _ 600
+
+.image state-of-go/msg-exceptions1b.png _ 600
+
+
+* Familiar complaints
+
+.image state-of-go/indent.png 500 _
 
 The first HN thread about Go was mostly an argument about braces and indentation.
 
@@ -40,34 +40,34 @@ The first HN thread about Go was mostly an argument about braces and indentation
 
 The first public language change (Dec 10, 2009):
 
-.image gosf/msg-semi.png _ 400
+.image state-of-go/msg-semi.png _ 400
 
 
 * The gopher
 
-.image gosf/msg-logo1.png _ 800
+.image state-of-go/msg-logo1.png _ 800
 
-.image gosf/sadgopher.png _ 250
-
-
-* The gopher
-
-.image gosf/msg-logo2.png _ 800
+.image state-of-go/sadgopher.png _ 250
 
 
 * The gopher
 
-.image gosf/msg-logo3.jpg _ 700
+.image state-of-go/msg-logo2.png _ 800
+
+
+* The gopher
+
+.image state-of-go/msg-logo3.jpg _ 700
 
 
 * A keen observation
 
-.image gosf/msg-exceptions2.png _ 800
+.image state-of-go/msg-exceptions2.png _ 800
 
 
 * Signs of hope
 
-.image gosf/msg-nogenerics.png _ 600
+.image state-of-go/msg-nogenerics.png _ 600
 
 
 * Today
@@ -75,9 +75,9 @@ The first public language change (Dec 10, 2009):
 
 * Growth
 
-.image gosf/redmonk.png _ 600
+.image state-of-go/redmonk.png _ 600
 
-.image gosf/oloh.png
+.image state-of-go/oloh.png
 
 
 * User groups
@@ -87,22 +87,22 @@ Today there are 48 active user groups in 15 countries across 5 continents.
 
 * GopherCon
 
-.image gosf/gophercon.png
+.image state-of-go/gophercon.png
 
 Community-driven. 3 days. 700 attendees. 24 talks. 1 panel. 4 hours of lightning talks!
 
 
 * The gopher
 
-.image gosf/gophers.jpg
+.image state-of-go/gophers.jpg
 
 * The gopher
 
-.image gosf/bus.jpg
+.image state-of-go/bus.jpg
 
 * The gopher
 
-.image gosf/tattoo.jpg
+.image state-of-go/tattoo.jpg
 
 
 * Go 1.3
@@ -124,9 +124,9 @@ Highlights:
 
 * Upcoming conferences
 
-.image gosf/dotgo.png
+.image state-of-go/dotgo.png
 
-.image gosf/india.png
+.image state-of-go/india.png
 
 
 * Go 1.4
