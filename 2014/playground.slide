@@ -208,7 +208,7 @@ The network stack is also faked in-memory.
 ## TIME ##
 ##########
 
-* Sleeping int the playground
+* Sleeping in the playground
 
 Go is about concurrency.
 

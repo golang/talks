@@ -1,7 +1,7 @@
 package main
 
 type list struct {
-	buf  [1000]byte
+	buf  [100000]byte
 	next *list
 }
 
