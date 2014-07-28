@@ -1,3 +1,5 @@
+// +build OMIT
+
 package main
 
 func foo(a [1000]byte) {

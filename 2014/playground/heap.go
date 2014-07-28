@@ -1,3 +1,5 @@
+// +build OMIT
+
 package main
 
 type list struct {
