@@ -40,7 +40,7 @@ func walk(dir string, f func(string) bool) bool {
 }
 
 func walkStdLib(f func(filename string) bool) {
-	walk(filepath.Join(runtime.GOROOT(), "src/pkg"), f)
+	walk(filepath.Join(runtime.GOROOT(), "src"), f)
 }
 
 type histogram map[string]int
