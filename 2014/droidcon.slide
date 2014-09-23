@@ -125,7 +125,7 @@ Today, gobind supports many basic Go types, structs, and callbacks.
 
 When finished, `gobind` will support *all* Go types.
 
-Go's simplicity makes langauge bindings simple.
+Go's simplicity makes language bindings simple.
 For C++, SWIG has many hard-to-use features.
 
 With Go we get configuration-free language bindings.
