@@ -78,10 +78,10 @@ Longer names may help in long functions, or functions with many local variables.
 	func RuneCount(b []byte) int {
 		i, n := 0, 0
 		for i < len(b) {
-			if p[i] < RuneSelf {
+			if b[i] < RuneSelf {
 				i++
 			} else {
-				_, size := DecodeRune(p[i:])
+				_, size := DecodeRune(b[i:])
 				i += size
 			}
 			n++
