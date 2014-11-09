@@ -212,15 +212,15 @@ May now be rewritten as:
 
 * Exp and old subtrees moved
 
-The exp and old source subtrees, which are not included in binary distributions, have been moved to the new `go.exp` sub-repository at `code.google.com/p/go.exp`.
+The exp and old source subtrees, which are not included in binary distributions, have been moved to the new `go.exp` sub-repository at `golang.org/x/exp`.
 
 To access the `ssa` package, for example, run
 
-	$ go get code.google.com/p/go.exp/ssa
+	$ go get golang.org/x/exp/ssa
 
 and then in Go source,
 
-	import "code.google.com/p/go.exp/ssa"
+	import "golang.org/x/exp/ssa"
 
 The old package `exp/norm` has also been moved, but to a new repository `go.text`, where the Unicode APIs and other text-related packages will be developed.
 

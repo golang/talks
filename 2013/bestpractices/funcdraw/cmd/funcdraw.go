@@ -11,8 +11,8 @@ import (
 
 // IMPORT OMIT
 import (
-	"code.google.com/p/go.talks/2013/bestpractices/funcdraw/drawer"
-	"code.google.com/p/go.talks/2013/bestpractices/funcdraw/parser"
+	"golang.org/x/talks/2013/bestpractices/funcdraw/drawer"
+	"golang.org/x/talks/2013/bestpractices/funcdraw/parser"
 )
 
 // ENDIMPORT OMIT

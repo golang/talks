@@ -5,7 +5,7 @@ package main
 import (
 	"fmt"
 
-	"code.google.com/p/go.tools/imports"
+	"golang.org/x/tools/imports"
 )
 
 func main() {

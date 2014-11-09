@@ -17,7 +17,7 @@ import (
 	"runtime"
 	"strconv"
 
-	"code.google.com/p/go.net/websocket"
+	"golang.org/x/net/websocket"
 )
 
 const socketPresent = true
@@ -87,7 +87,7 @@ func socketHandler(c *websocket.Conn) {
 			switch m.Kind {
 			case "run":
 				proc[m.Id].Kill()
-				lOut := limiter(in, out) // HL
+				lOut := limiter(in, out)                      // HL
 				proc[m.Id] = StartProcess(m.Id, m.Body, lOut) // HL
 			case "kill":
 				proc[m.Id].Kill()
@@ -211,6 +211,7 @@ func (w *messageWriter) Write(b []byte) (n int, err error) {
 	w.out <- &Message{Id: w.id, Kind: w.kind, Body: string(b)}
 	return len(b), nil
 }
+
 // END OMIT
 
 // limiter returns a channel that wraps dest. Messages sent to the channel are

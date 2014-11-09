@@ -175,7 +175,7 @@ The `go` tool also fetches Go code from remote repositories.
 
 Import paths can be URLs:
 
-	import "code.google.com/p/go.net/websocket"
+	import "golang.org/x/net/websocket"
 
 To fetch, build and install a package:
 

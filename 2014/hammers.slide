@@ -196,7 +196,7 @@ Generate output
 
 * goimports ftw
 
-	import "code.google.com/p/go.tools/imports"
+	import "golang.org/x/tools/imports"
 
 .play hammers/importpath.go /func main/,/^}/
 

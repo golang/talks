@@ -8,7 +8,7 @@ import (
 	"log"
 	"net/http"
 
-	"code.google.com/p/go.net/websocket"
+	"golang.org/x/net/websocket"
 )
 
 const listenAddr = "localhost:4000"
@@ -24,7 +24,7 @@ func main() {
 
 type socket struct {
 	io.ReadWriter // HL
-	done chan bool
+	done          chan bool
 }
 
 func (s socket) Close() error {

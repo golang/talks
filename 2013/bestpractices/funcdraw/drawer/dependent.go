@@ -6,7 +6,7 @@ package drawer
 import (
 	"image"
 
-	"code.google.com/p/go.talks/2013/bestpractices/funcdraw/parser"
+	"golang.org/x/talks/2013/bestpractices/funcdraw/parser"
 )
 
 // Draw draws an image showing a rendering of the passed ParsedFunc.
