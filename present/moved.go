@@ -7,11 +7,11 @@ import (
 
 const moved = `
 
-The present tool has moved to the go.tools repository.
+The present tool has moved to the Go tools repository.
 
 Please install it from its new location:
 
-	go get code.google.com/p/go.tools/cmd/present
+	go get golang.org/x/tools/cmd/present
 
 
 `
