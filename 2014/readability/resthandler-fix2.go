@@ -1,3 +1,5 @@
+// +build OMIT
+
 package resthandler // OMIT
 
 func finishStatus(r Result, complete bool) int {

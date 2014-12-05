@@ -1,3 +1,5 @@
+// +build OMIT
+
 package sample // OMIT
 
 type Modifier struct {

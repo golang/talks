@@ -1,3 +1,5 @@
+// +build OMIT
+
 package binary // OMIT
 
 func ExampleWrite() {

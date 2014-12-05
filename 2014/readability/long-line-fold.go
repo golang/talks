@@ -1,3 +1,5 @@
+// +build OMIT
+
 package sampling
 
 import (

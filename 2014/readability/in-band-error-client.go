@@ -1,3 +1,5 @@
+// +build OMIT
+
 package client // OMIT
 
 func proc(it Iterator) (ret time.Duration) {

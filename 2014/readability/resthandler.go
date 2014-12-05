@@ -1,3 +1,5 @@
+// +build OMIT
+
 package resthandler // OMIT
 
 func (h *RESTHandler) finishReq(op *Operation, req *http.Request, w http.ResponseWriter) {

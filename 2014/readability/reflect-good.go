@@ -1,3 +1,5 @@
+// +build OMIT
+
 package sample // OMIT
 
 type LayerExperiment struct{ Layer, Experiment string } // HL

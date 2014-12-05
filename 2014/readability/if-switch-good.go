@@ -1,3 +1,5 @@
+// +build OMIT
+
 package sample // OMIT
 
 func BrowserHeightBucket(s *session.Event) string {

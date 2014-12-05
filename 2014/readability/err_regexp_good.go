@@ -1,3 +1,5 @@
+// +build OMIT
+
 package sample // OMIT
 
 import "regex" // OMIT

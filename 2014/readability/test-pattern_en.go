@@ -1,3 +1,5 @@
+// +build OMIT
+
 package sample // OMIT
 
 func TestSample(t *testing.T) { // OMIT
