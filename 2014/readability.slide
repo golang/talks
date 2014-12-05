@@ -30,7 +30,7 @@ A skill to read or write *idiomatic* code.
 Each programming language has its own preferred style.
 In C++, each project chooses a preferred style.
 
-- [[http://google-styleguide.googlecode.com/svn/trunk/cppguide.html][google]]([[http://www.chromium.org/developers/coding-style][chromium]]), [[https://www.webkit.org/coding/coding-style.html][webkit]]([[http://www.chromium.org/blink/coding-style][blink]])
+- [[http://google-styleguide.googlecode.com/svn/trunk/cppguide.html][google]] ([[http://www.chromium.org/developers/coding-style][chromium]]), [[https://www.webkit.org/coding/coding-style.html][webkit]] ([[http://www.chromium.org/blink/coding-style][blink]])
 
 Don't write Go code as you write code in C++/Java/Python.
 Write Go code as Gophers write code.
@@ -96,7 +96,7 @@ revised
 .code readability/err_regexp_good.go
 
 - Check error with [[https://golang.org/pkg/regexp/#MustCompile][regexp.MustCompile]].
-- Must should be used only in [[http://golang.org/ref/spec#Package_initialization][initialization]](package `var` or `init()` ).
+- Must should be used only in [[http://golang.org/ref/spec#Package_initialization][initialization]] (package `var` or `init()`).
 
 - [[http://golang.org/ref/spec#String_literals][Raw string literal]] makes it easy to read regexp.
 
@@ -144,8 +144,7 @@ If you want to put detailed information in error.
 	&FooError{ /* set error data */ }
 
 Don't use `panic`.
-
-- But when you do, use it only within the package, and [[http://golang.org/doc/effective_go.html#recover][return error with catching it by recover]].
+But when you do, use it only within the package, and [[http://golang.org/doc/effective_go.html#recover][return error with catching it by recover]].
 
 * nil error
 
@@ -153,10 +152,7 @@ Don't use `panic`.
 
 [[https://golang.org/doc/faq#nil_error][FAQ: Why is my nil error value not equal to nil?]]
 
-[[http://blog.golang.org/laws-of-reflection][interface has 2 data]]. interface value is nil == both data is nil.
-
-- value
-- type information
+[[http://blog.golang.org/laws-of-reflection][interface has 2 data]] (type and value). interface value is nil == both are nil.
 
 * embed interface: original code
 
@@ -196,7 +192,7 @@ It would be useful in a test when you want to implement only a subset of methods
 
 .code readability/long-line-fold.go
 
-* into one line
+* Merge into one line
 
 .code readability/long-line-nofold.go
 
@@ -218,7 +214,7 @@ Short and accurate names.
 - Use short names for local variables: prefer `i` to `index`, `r` to `reader`.
 - Short names should be fine if function is not long.
 
-* one line
+* Revised one line version
 
 .code readability/long-line-short.go
 
@@ -236,11 +232,11 @@ revised
 
 .code readability/if-else-good.go
 
-* conditional branch (2) original code
+* conditional branch (2): original code
 
 .code readability/resthandler.go
 
-* conditional branch (2) revised
+* conditional branch (2): revised
 
 .code readability/resthandler-fix2.go
 
@@ -333,7 +329,7 @@ Browse with [[http://blog.golang.org/godoc-documenting-go-code][godoc]]
 
 If you feel comments are unclear or hard to write concisely, reconsider your API design.
 
-* API design.
+* API design
 
 Important to choose a good package name.
 
@@ -346,8 +342,7 @@ Make API simple.
 - Don't use pointer to slice, map, chan or interface.
 - [[http://golang.org/doc/effective_go.html#multiple-returns][Return error as error]]: [[https://golang.org/s/comments#Don't_Panic][don't panic]]
 - Implement common interfaces ([[https://golang.org/pkg/fmt/#Stringer][fmt.Stringer]], [[https://golang.org/pkg/io/#Reader][io.Reader]] and so on) if they match your code.
-- Use interfaces for parameters. They makes it easier to test.
-- e.g.: If a function reads from a file, use [[https://golang.org/pkg/io/#Reader][io.Reader]] as a parameter instead of [[https://golang.org/pkg/os/#File][*os.File]].
+- Use interfaces for parameters. They makes it easier to test. e.g.: If a function reads from a file, use [[https://golang.org/pkg/io/#Reader][io.Reader]] as a parameter instead of [[https://golang.org/pkg/os/#File][*os.File]].
 - Prefer synchronous API to async API: refrain from using chan across package boundary.
 - Clients can easily run synchronous API concurrently with goroutine and chan.
 
