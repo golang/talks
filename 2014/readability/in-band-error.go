@@ -17,7 +17,7 @@ func (it Iterator) DurationAt() time.Duration {
 	case -2:
 		return -2 // HL
 	default:
-		return time.Duation(durationUsec) * time.Microsecond // HL
+		return time.Duration(durationUsec) * time.Microsecond // HL
 	}
 	return -3 // HL
 }

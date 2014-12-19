@@ -209,7 +209,7 @@ Short and accurate names.
 
 - [[https://golang.org/s/comments#Package_Names][SamplingServer in sampling package is stutter]]. Name `Server`, which clients will write as `sampling.Server`.
 - Use [[https://golang.org/s/comments#Receiver_Names][one or two letters for receiver names]].
-- Use short namse for parameters since type name will give some information.
+- Use short names for parameters since type name will give some information.
 - Use descriptive names for basic types, though.
 - Use short names for local variables: prefer `i` to `index`, `r` to `reader`.
 - Short names should be fine if function is not long.
