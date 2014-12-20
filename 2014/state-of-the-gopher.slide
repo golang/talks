@@ -182,9 +182,9 @@ Requires knowing what every position in memory _actually_ is.
 
 * Better docs
 
-- [[http://blog.golangorg][Blog]] articles,
-- Community [[https://code.google.com/p/go-wiki/w/list][Wiki]],
-- [[https://code.google.com/p/go-wiki/wiki/Books][Books]]
+- [[http://blog.golang.org][Blog]] articles,
+- Community [[https://golang.org/wiki][Wiki]],
+- [[https://golang.org/wiki/Books][Books]]
 
 * Users: up and to the right
 
