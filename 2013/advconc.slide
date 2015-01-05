@@ -179,7 +179,7 @@ To implement the `Subscription` interface, define `Updates` and `Close`.
 
 * Bug 2: time.Sleep may keep loop running
 
-.code advconc/naivemain/naivemain.go /STARTNAIVE/,/STOPNAIVE/ HLsleep
+.code advconc/naivemain/naivemain.go /STARTNAIVE /,/STOPNAIVE / HLsleep
 
 * Bug 3: loop may block forever on s.updates
 
