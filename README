@@ -2,11 +2,11 @@ This repository holds various Go talks that may be viewed with the present tool.
 
 To install the present tool, use go get:
 
-	go get code.google.com/p/go.tools/cmd/present
+	go get golang.org/x/tools/cmd/present
 
-To deploy these talks to App Engine, copy the go.tools/cmd/present directory to
+To deploy these talks to App Engine, copy the tools/cmd/present directory to
 the root of this repository and run:
 
-	appcfg.py update -A your-app-id -V your-app-version /path/to/go.talks
+	appcfg.py update -A your-app-id -V your-app-version /path/to/talks
 
 To submit changes to this repository, see http://golang.org/doc/contribute.html.
