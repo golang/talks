@@ -4,6 +4,12 @@ GothamGo 2014
 Sameer Ajmani
 sameer@golang.org
 
+* Video
+
+This talk was presented at GothamGo in New York City, November 2014.
+
+.link http://vimeo.com/115309491 Watch the talk on Vimeo
+
 * Introduction
 
 In Go servers, each incoming request is handled in its own goroutine.
@@ -85,7 +91,7 @@ Method on the pending result object:
   // goroutine #1
   pending := conn.Start(req)
   ...
-  result, err := pending.Result()  
+  result, err := pending.Result()
 
   // goroutine #2
   pending.Cancel()
