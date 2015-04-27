@@ -392,7 +392,7 @@ The language is designed for tooling.
 
 * gofmt and goimports
 
-Gofmt formats code is formatted automatically.  No options.
+Gofmt formats code automatically.  No options.
 
 Goimports updates import statements based on your workspace.
 
