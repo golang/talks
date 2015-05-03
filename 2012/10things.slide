@@ -132,7 +132,7 @@ Yep:
 
 	go get camlistore.org/pkg/netutil
 
-See `go help remote` for the details.
+See `go help importpath` for the details.
 
 
 * 6. Mock out the file system
