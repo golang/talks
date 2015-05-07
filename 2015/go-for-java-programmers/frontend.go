@@ -1,3 +1,5 @@
+// +build OMIT
+
 // The server program issues Google search requests. It serves on port 8080.
 //
 // The /search endpoint accepts these query params:
