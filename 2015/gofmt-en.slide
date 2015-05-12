@@ -1,0 +1,461 @@
+The Cultural Evolution of gofmt
+gofmt 的文化演变
+
+Robert Griesemer
+Google, Inc.
+gri@golang.org
+
+
+* gofmt
+
+- Go source code formatter
+
+- Defines _de_facto_ Go formatting
+
+- All submitted Go code must be formatted with `gofmt` in `golang.org` repos.
+
+- Functionality available outside gofmt via `go/format` library.
+
+- No knobs!
+
+
+* Original motivation
+
+- Code reviews are software engineering best practice.
+
+- Code reviews are informed by style guides, prescribe formatting.
+# Google C++ style guide: ~65 pages (~15p on formatting)
+# Go spec: ~50 pages
+
+- *Much*too*much*time*lost*on*reviewing*formatting*rather*than*code.*
+# Example: Formatting review time 10 min/day, 600 engineers => 100 manhours/day!
+
+- Yet it's the perfect job for a machine.
+
+- Day 1 decision to write a pretty printer for Go.
+# informed by experience with Java and C++ code reviews at Google
+
+
+* History
+
+- Pretty printers and code beautifiers existed since the early days of computing.
+
+- Essential to produce readable Lisp code:
+	GRINDEF  (Bill Gosper, 1967)           first to measure line length
+
+- Many others:
+	SOAP     (R. Scowen et al, 1969)       Simplifies Obscure Algol Programs
+	NEATER2  (Ken Conrow, R. Smith, 1970)  PL/1 reformatter, use as (early) error detection tool
+	cb       (Unix Version 7, 1979)        C program beautifier
+	indent   (4.2 BSD, 1983)               indent and format C source code
+	etc.
+
+- More recently:
+	ClangFormat                            C/C++/Objective-C formatter
+	Uncrustify                             beautifier for C, C++, C#, ObjectiveC, D, Java, Pawn and VALA
+	etc.
+
+
+* Reality check
+
+- In 2007, nobody seemed to like source code formatters.
+
+- Exception: IDE-imposed formatting.
+
+- But: Many programmers don't use IDEs...
+
+- Problem: If automatic formatting feels too destructive, it is not used.
+
+- Missing insight: "good enough" uniform formatting style is better than having lots of different formats.
+
+- Value of style guide: Uniformity, not perfection.
+
+
+* The problem with pretty printers
+
+- The more people think about their own formatting style, the more they get attached to it.
+# religion
+
+- Wrong conclusion: Automatic formatters must permit a lot of formatting options!
+
+- But: Formatters with too many options defeat the purpose.
+# e.g., indent
+
+- Also: Very hard to do a good job.
+# combinatorial explosion of styles to test
+
+- Respecting user intent is key.
+
+- Dealing with comments is hard.
+
+- Language may add extra complexity (e.g., C macros)
+
+
+* Formatting Go
+
+* Keep it as simple as possible
+
+- Small language makes task much simpler.
+
+- Don't fret over line length control.
+
+- Instead, respect user: Consider line breaks in original source.
+
+- Don't support any options.
+
+- Make it easy to use.
+
+*One*formatting*style*to*rule*them*all!*
+
+
+* Basic structure of gofmt
+
+- Parsing of source code
+
+- Basic formatting
+
+- Enhancement: Handling of comments
+
+- Make it nice: Alignment of code and comments
+
+- But: No fancy general layout algorithms.
+
+- Instead: Node-specific fine tuning.
+
+
+* Parsing source code
+
+- Use `go/scanner`, `go/parser`, and friends.
+
+- Result is an abstract syntax tree (`go/ast`) for each `.go` file.
+# misnomer: AST is actually a concrete syntax tree
+
+- Each syntactic construct has a corresponding AST node.
+
+	// Syntax of an if statement.
+	IfStmt = "if" [ SimpleStmt ";" ] Expression Block [ "else" ( IfStmt | Block ) ] .
+
+	// An IfStmt node represents an if statement.
+	IfStmt struct {
+		If   token.Pos // position of "if" keyword
+		Init Stmt      // initialization statement; or nil
+		Cond Expr      // condition
+		Body *BlockStmt
+		Else Stmt // else branch; or nil
+	}
+
+- AST nodes have (selected) position information.
+
+
+* Basic formatting
+
+- Traverse AST and print nodes.
+
+	case *ast.IfStmt:
+		p.print(token.IF)
+		p.controlClause(false, s.Init, s.Cond, nil)
+		p.block(s.Body, 1)
+		if s.Else != nil {
+			p.print(blank, token.ELSE, blank)
+			switch s.Else.(type) {
+			case *ast.BlockStmt, *ast.IfStmt:
+				p.stmt(s.Else, nextIsRBrace)
+			default:
+				p.print(token.LBRACE, indent, formfeed)
+				p.stmt(s.Else, true)
+				p.print(unindent, formfeed, token.RBRACE)
+			}
+		}
+
+- Printer (`p.print`) accepts a sequence of tokens, including position and white space information.
+
+
+* Fine tuning
+
+- Precedence-dependent spacing between operands.
+# implemented by rsc in gofmt
+
+- Improves readability of expressions.
+
+	x = a + b
+	x = a + b*c
+	if a+b <= d {
+	if a+b*c <= d {
+
+- Use position information to guide line break decisions.
+
+- Various other heuristics.
+
+
+* Handling of comments
+
+- Comments can appear between any two tokens of a program.
+
+- In general, not obviously clear to which AST node a comment belongs.
+# In retrospect, a heuristic might have been better than the list of comments
+# we have now. See Lessons learned.
+
+- Comments often come in groups:
+
+	// A CommentGroup represents a sequence of comments
+	// with no other tokens and no empty lines between.
+	//
+	type CommentGroup struct {
+		List []*Comment // len(List) > 0
+	}
+
+- Grouped comments treated as a single larger comment.
+
+
+* Representation of comments in the AST
+
+- Sequential list of comment groups attached to the ast.File node.
+# In retrospect this was not a good decision. It's general but puts burden on AST clients.
+
+- Additionally, comments that are identified as _doc_strings_ are attached to declaration nodes.
+
+.image ./gofmt/comments.jpg 425 600
+
+
+* Formatting with comments
+
+- Basic idea: Merge "token stream" with "comment stream" based on position information.
+
+.image ./gofmt/merge.jpg 425 700
+
+
+* Devil is in the details
+# It's an entire hell of devils, really.
+
+- Estimate current position in "source code space".
+
+- Compare current position with comment position to decide what's next.
+
+- Token stream also contains "white space" tokens - comments must be properly interspersed!
+
+- Maintain buffer of unprinted white space, flush before next token, intersperse comments.
+
+- Various heuristics to get white space correct.
+
+- Lots of trial and error.
+
+
+* Formatting individual comments
+
+- Distinguish between line and general comments.
+
+- Try to properly indent multi-line general comments:
+
+	func f() {              func() {
+	 /*                             /*
+	  * foo                          * foo
+	  * bar         ==>              * bar
+	  * bal                          * bal
+	 */                              */
+	        if ...                   if  ...
+	}                       }
+
+- Doesn't always work well.
+
+- Want both: comments indented, and comment contents left alone. No good solution.
+
+
+* Alignment
+
+- Carefully chosen alignment can make code easier to read:
+
+        var (                                 var (
+                x, y int = 2, 3 // foo                x, y int     = 2, 3 // foo
+                z float32 // bar         ==>          z    float32        // bar
+                s string // bal                       s    string         // bal
+        )                                     )
+
+- Painful to maintain manually (regular tabs don't do the job).
+
+- Perfect job for a formatter.
+
+
+* Elastic tabstops
+
+Regular tabs (`\t`) advance writing position to fixed tab stops.
+
+Basic idea: Make tab stops _elastic_.
+
+- A tab is used to indicate the _end_ of a text _cell_.
+
+- A _column_block_ is a run of uninterrupted vertically adjacent cells.
+
+- A column block is as wide as the widest piece of text in the cells.
+
+Proposed by Nick Gravgaard, 2006
+
+.link http://nickgravgaard.com/elastic-tabstops/
+
+Implemented by `text/tabwriter` package.
+
+
+* Elastic tabstops illustrated
+
+.image ./gofmt/tabstops.jpg 500 700
+
+
+* Putting it all together (1)
+
+- Parser generates AST.
+
+- Printer prints AST recursively, uses tabs (`\t`) to indicate elastic tab spots.
+
+- The resulting token, position, and whitespace stream is merged with the "stream" of comments.
+
+- Tokens are expanded into strings; all text flows through a tabwriter.
+
+- Tabwriter replaces tabs with appropriate amount of blanks.
+
+Works well for fixed-width fonts.
+
+Proportional fonts could be handled by an editor supporting elastic tab stops.
+# go/printer can produce output containing elastic tab stops
+
+
+* Putting it all together (2)
+
+.image ./gofmt/bigpic.jpg 550 800
+
+
+* The big picture
+
+.image ./gofmt/biggerpic.jpg 400 800
+
+
+* gofmt applications
+
+* gofmt as source code transformer
+
+- Go rewriter (Russ Cox), `gofmt`-r`
+
+	gofmt -w -r 'a[i:len(x)] -> a[i:]' *.go
+
+- Go simplifier, `gofmt`-s`
+
+- API updater (Russ Cox), `go`fix`
+
+- Language changes (removal of semicolons, others)
+
+- goimport (Brad Fitzpatrick)
+
+
+* Reactions
+
+- The Go project mandates that all submitted code is gofmt-ed.
+
+- First, complaints: `gofmt` doesn't do _my_ style!
+
+- Eventually, acquiescence: The Go Team really means it!
+
+- Finally, insight: gofmt's style is _nobody's_ favorite, yet
+`gofmt` is everybody's favorite.
+
+- Now, praise: `gofmt` is one of the many reasons why people like Go.
+
+Formatting has become a non-issue.
+
+
+* Others are starting to take note
+
+- Formatter for Google's BUILD files (Russ Cox).
+
+- Java formatter
+
+- Clang formatter
+
+- Dartfmt
+.link https://www.dartlang.org/tools/dartfmt/
+
+- etc.
+
+Automatic source code formatting is becoming a requirement
+for any kind of language.
+
+
+* Conclusions
+
+* Evolution in programming culture
+
+- `gofmt` is significant selling point for Go
+
+- Insight is spreading that uniform "good enough" formatting is hugely beneficial.
+# no need for detailed formatting style guides
+# no time wasted on formatting
+# improved readability
+# smaller diffs when changing code
+
+- Source code manipulation at AST-level enables a new category of tools.
+# simple to complex automatic source code transformations
+# various auto-completion mechanisms (e.g. goimport)
+# enables syntax evolution
+
+- Others are taking note: Programming culture is slowly evolving.
+
+
+* Lessons learned: Application
+
+- Basic source code formatting is great initial goal.
+
+- True power lies in source code transformation tools.
+
+- Avoid formatting options.
+
+- Keep it simple.
+
+Want:
+
+- Go parser: source code => syntax tree
+
+- Make it easy to manipulate syntax tree in any way possible.
+
+- Go printer: syntax tree => source code
+
+
+* Lessons learned: Implementation
+
+- Lots of trial and error in initial version.
+
+- Single biggest mistake: comments not attached to AST nodes.
+
+=> Current design makes it extremely hard to manipulate AST
+and maintain comments in right places.
+
+- Cludge: ast.CommentMap
+
+Want:
+
+- Easy to manipulate syntax tree with comments attached.
+
+
+* Going forward
+
+- Design of new syntax tree in the works (still experimental).
+
+- Syntax tree simpler and easier to manipulate (e.g., declaration nodes)
+
+- Faster and easier to use parser and printer.
+
+- Make it robust and fast. Don't do anything else.
+# no semantic analyses in parser
+# no options in printer
+
+
+# ----------------------------------------------------------------------------------
+#
+#	Implementation size
+#
+#	go/token           849 lines    lexical tokes, source positions
+#	go/scanner         884 lines    tokenization
+#	go/parser         2689 lines    parsing
+#	go/ast            2966 lines    abstract syntax tree, tree traversal
+#	go/printer        2948 lines    actual AST printer
+#	go/format          115 lines    helper library to make printer easy to use
+#	internal/format    161 lines
+#	cmd/gofmt          801 lines    gofmt tool
+#	----------------------------
+#	                 11413 lines
