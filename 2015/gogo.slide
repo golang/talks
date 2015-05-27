@@ -175,8 +175,8 @@ Changes guided by profiling and other analysis:
 - removes gotos
 - removes unused labels, needless indirections, etc.
 - moves `var` declarations nearer to first use
-		
-.link rsc.io/grind
+
+.link http://rsc.io/grind
 
 * Performance problems
 
