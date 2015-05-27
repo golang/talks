@@ -254,7 +254,8 @@ Go 1.5 provides support for Android and experimental support for iOS.
 
 * The gomobile tool
 
-The `gomobile` tool simplifies SDK installation and app deployment.
+The `gomobile` tool simplifies toolchain installation and app
+deployment.
 (It only supports Android right now.)
 
 To install the Android compiler toolchain:
