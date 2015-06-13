@@ -8,3 +8,14 @@
 # See golang.org/issue/9281
 
 * -text
+
+# The builders assume the git archive *.tar.gz of the tree is under
+# 25 MB but this repo is 31+ MB with all the images.
+# So exclude those.
+# See https://golang.org/issue/11199
+
+*.jpg export-ignore
+*.jpeg export-ignore
+*.png export-ignore
+*.gif export-ignore
+*.pdf export-ignore
