@@ -1,0 +1,8 @@
+ type PollServer struct {
+-       cr, cw *chan *FD;       // buffered >= 1
++       cr, cw chan *FD;        // buffered >= 1
+        pr, pw *os.FD;
+-       pending *map[int64] *FD;
++       pending map[int64] *FD;
+        poll *Pollster; // low-level OS hooks
+ }
