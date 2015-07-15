@@ -319,7 +319,7 @@ The `defer` statement:
 
 - schedules a function call at the end of the current function
 
-- stacks all deferred calls - first in first out
+- stacks all deferred calls - last in first out
 
     var m sync.Mutex
 
