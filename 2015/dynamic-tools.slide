@@ -150,7 +150,7 @@ Dynamic tools are only as good as your tests are.
 
 * Randomized testing
 
-A different appraoch to testing that finds [lots of] bugs that other testing approaches do not. Intended mostly for programs that parse complex inputs.
+A different approach to testing that finds [lots of] bugs that other testing approaches do not. Intended mostly for programs that parse complex inputs.
 
 Generate random blob -> feed into program -> see if it crashes -> profit!
 
