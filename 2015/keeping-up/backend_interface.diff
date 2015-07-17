@@ -1,0 +1,7 @@
+-  tree val_type_tree = type_to_tree(this->type()->get_backend(gogo));
+-  go_assert(val_type_tree != error_mark_node);
+-  return build_int_cstu(val_type_tree, val);
++  mpz_t cst;
++  mpz_init_set_ui(cst, val);
++  Btype* int_btype = this->type()->get_backend(gogo);
++  return gogo->backend()->integer_constant_expression(int_btype, cst);

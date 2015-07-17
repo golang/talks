@@ -1,0 +1,104 @@
+Keeping up with the Gophers
+A brief history of gccgo, improvements, and the future
+
+Chris Manghane
+Google Gopher | Compilers and Toolchains
+cmang@golang.org
+
+* gccgo: "The Other Go Compiler"
+
+- Written and maintained by Ian Lance Taylor (released November 2009)
+
+    2010-01-26  Ian Lance Taylor  <iant@google.com>
+
+    		* MAINTAINERS: Add myself as Go frontend maintainer.
+
+- Compiler frontend for the Go language written in C++
+
+.image keeping-up/gccgo_structure.png 320 _
+
+* gccgo: The Go Team didn't know
+
+"Ian just showed up at our door with a fully working compiler" ~ probably Rob
+
+.html keeping-up/gource_explosion.html
+
+* Why write a Go compiler in C++?
+
+* rationale: architecture support
+
+- cmd/gc (2009) targets 4 major architectures: i386, amd64, ARM, and IBM POWER
+- gcc (4.3, 2009) targets 45 architectures officially, 28 unofficially
+- leveraging gcc => minimal work to support Go on existing architectures
+
+* rationale: code generation
+
+- gcc has ~30 years of work put into code analysis and optimization
+- cmd/gc has only recently focused on code generation (khr's SSA work)
+- leveraging gcc => minimal work to produce optimized binaries
+
+* rationale: technical honesty
+
+- "Keeping each other honest"
+- Distinct implementations => Inconsistencies in specification and implementations
+- Users have options when an implementation lacks features
+- Compilers seek feature parity => Compilers learn from each other
+- Compilers generate better binaries => Virtuous cycle
+
+* gccgo improvements through a telescope
+
+* gofrontend: no dependency on gcc
+
+- gcc implements gofrontend's backend interface
+
+gofrontend (gcc/go/gofrontend/expressions.cc)
+
+.code keeping-up/backend_interface.diff
+
+backend (gcc/go/go-gcc.cc)
+
+.code keeping-up/cst.gcc
+
+* gccgo: builds the `go` tool
+
+- One way to build code across multiple compilers
+
+.code keeping-up/go_build.log
+
+* gofrontend: basic escape analysis
+
+- Implementation of _Escape_analysis_for_Java_ by JD Choi
+
+escape.go
+
+.code keeping-up/escape.go
+
+Connection Graph
+
+.image keeping-up/escape.png
+
+* Keeping up
+
+* gccgo: runtime and garbage collector parity
+
+- gccgo runtime is a modified version of Go 1.3 runtime
+- Go 1.4 runtime was rewritten in Go
+- Go 1.4 changed GC type info
+
+* beyond gccgo: compiler stack maps
+
+- Stack map records locations of live values at a certain address
+- Allows Garbage Collector to be precise about types on stack
+- Enables contiguous stacks to readjust copied pointers
+- Little support in C compilers: gcc has no support, LLVM support is WIP
+
+* llvmgo: another "other Go compiler"
+
+- gofrontend provides backend interface LLVM can implement
+- LLVM byte code is trusted in secure environments such as PNaCl
+- Run native Go in the web
+
+* OS support: OSX and Windows
+
+- gccgo support on not unixes
+- Expert needed
