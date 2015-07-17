@@ -69,9 +69,9 @@ There is no Java or Objective-C or C in my code
 
 golang.org/x/mobile/...
 
-- [[http://golang.org/x/mobile/app][app: App control]]
-- [[http://golang.org/x/mobile/asset][asset: Asset management]]
-- [[http://golang.org/x/mobile/gl][gl: OpenGL ES 2]]
+- [[https://golang.org/x/mobile/app][app: App control]]
+- [[https://golang.org/x/mobile/asset][asset: Asset management]]
+- [[https://golang.org/x/mobile/gl][gl: OpenGL ES 2]]
 - [[https://golang.org/x/mobile/event][event: Events]]
 - [[https://golang.org/x/mobile/geom][geom: Screen geometry]]
 
@@ -122,7 +122,7 @@ Go 1.5 can build Go programs as a library that can be used by non-Go programs
 
 Functions marked with `//export` cgo annotations are callable.
 
-.link http://golang.org/s/execmodes
+.link https://golang.org/s/execmodes
 
 * Working with Foreign Languages
 
@@ -139,7 +139,7 @@ Automates language binding through code generation
 
 Defines the language binding from exported Go APIs; no explicit annotation
 
-Currently supports a [[http://golang.org/x/mobile/cmd/gobind][subset of Go types]]
+Currently supports a [[https://golang.org/x/mobile/cmd/gobind][subset of Go types]]
 
 
 * Binding Functions, Basic Types & Errors
@@ -268,7 +268,7 @@ Rewriting in Java or Objective-C is a non-starter
 * Ivy apps
 
 .image gophercon-go-on-mobile/ivymobile.png 300 _
-.caption Ivy logo by [[http://www.reneefrench.com][Renée French]]
+.caption Ivy logo by [[https://www.reneefrench.com][Renée French]]
 .link https://play.google.com/store/apps/details?id=org.golang.ivy Google Play Store
 .link https://itunes.apple.com/us/app/ivy-big-number-calculator/id1012116478 Apple App Store
 
@@ -301,13 +301,13 @@ Planned release early August 2015
 
 Experimental support for iOS (`arm,arm64`)
 
-iOS builder 
+iOS builder
 
 * Go 1.5: Go programs as libraries
 
 Can call Go functions from foreign language in a clean way
 
-.link golang.org/s/execmodes
+.link https://golang.org/s/execmodes
 
 * Go 1.5: Better tools & more packages
 
