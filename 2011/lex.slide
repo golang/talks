@@ -5,6 +5,14 @@ GTUG Sydney
 Rob Pike
 r@golang.org
 
+
+* Video
+
+A video of this talk was recorded at the Go Sydney Meetup.
+
+.link https://www.youtube.com/watch?v=HxaD_trXwRE Watch the talk on YouTube
+
+
 * Structural mismatch
 
 Many programming problems realign one data structure to fit another structure.
