@@ -1,3 +1,5 @@
+// +build ignore
+
 package main
 
 // BEGIN1 OMIT
