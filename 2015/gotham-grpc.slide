@@ -1,0 +1,236 @@
+gRPC Go
+GothamGo 2015
+
+Sameer Ajmani
+Tech Lead Manager, Go team, Google
+@Sajma
+sameer@golang.org
+
+
+* RPC isn't just Remote Procedure Call
+
+In Go, an RPC *starts*a*goroutine* running on the server and provides _message_passing_ between the client and server goroutines.
+
+*Unary*RPC*: the client sends a _request_ to the server, then the server sends a _response_.
+
+*Streaming*RPC:* the client and server may each send one or more messages.
+
+An RPC ends when:
+
+- both sides are done sending messages
+- either side disconnects
+- the RPC is canceled or times out
+
+This talk will show how we connect RPCs and streams with goroutines and channels.
+
+* Unary RPC: one request, one response
+
+Example: a mobile Maps app requests a route from point A to point B.
+
+On the client side, an RPC blocks until it's done or canceled.
+
+A client use multiple goroutines to run many RPCs simultaneously.
+
+Each RPC is an exchange between a client goroutine and a server goroutine.
+
+* Streaming RPC provides bidirectional message-passing
+
+A client starts a stream with a server.
+
+Messages sent on a stream are delivered FIFO.
+
+Many streams can run simultaneously between the same client and server.
+
+The transport provides buffering and flow control.
+
+Examples:
+
+- bidirectional stream: chat session
+- server → client stream: stock ticker
+- client → server stream: sensor aggregation
+
+* gRPC is a new RPC system from Google
+
+.link http://grpc.io
+
+Provides RPC and streaming RPC
+
+Ten languages: *C*, *Java*, *Go*, C++, Node.js, Python, Ruby, Objective-C, PHP, and C#
+IDL: *Proto3*
+Transport: *HTTP2*
+
+[[http://golang.org/x/net/context][golang.org/x/net/context]] for deadlines, cancelation, and request-scoped values
+[[http://golang.org/x/net/trace][golang.org/x/net/trace]] for real-time request traces and connection logging
+
+* gRPC users
+
+150+ imports of [[https://godoc.org/google.golang.org/grpc?importers][google.golang.org/grpc]] on [[http://godoc.org][godoc.org]]
+
+- [[https://github.com/apcera/kurma][Apcera/Kurma]]: container OS
+- [[http://bazil.org][Bazil]]: distributed file system
+- [[http://coreos.com/etcd/][CoreOS/Etcd]]: distributed consistent key-value store
+- [[https://godoc.org/google.golang.org/cloud/bigtable][Google Cloud Bigtable]]: sparse table storage
+- [[https://github.com/monetas/bmd][Monetas/Bitmessage]]: transaction platform
+- [[http://www.pachyderm.io/][Pachyderm]]: containerized data analytics
+- [[http://vitess.io/][YouTube/Vitess]]: storage platform for scaling MySQL
+
+* Demos and Code: Google search
+
+* Protocol definition
+
+.code gotham-grpc/search-only/search-only.proto
+
+* Generated code
+
+.code gotham-grpc/search/README.md /protoc/
+.code gotham-grpc/search-only/search-only.pb.go /type GoogleClient/,/^}/
+.code gotham-grpc/search-only/search-only.pb.go /type GoogleServer/,/^}/
+.code gotham-grpc/search-only/search-only.pb.go /type Request/,/^}/
+.code gotham-grpc/search-only/search-only.pb.go /type Result/,/^}/
+
+* System diagram
+
+.image gotham-grpc/system.svg _ 1000
+
+* Frontend runs Search on both backends and returns first result
+
+.image gotham-grpc/search.svg _ 1000
+
+* Demo client --mode=search
+
+- Frontend request traces
+- Backend request traces
+- Connection event logs
+
+* Client code
+
+.image gotham-grpc/client.svg _ 1000
+
+* Client code (main)
+
+  import pb "golang.org/x/talks/2015/gotham-grpc/search"
+
+.code gotham-grpc/client/client.go /func main/,/^}/
+
+* Client code (search)
+
+.code gotham-grpc/client/client.go /func search/,/^}/
+
+RPCs block but can be canceled using a Context.
+
+gRPC propagates cancelation from client to server.
+
+* Backend code
+
+.image gotham-grpc/backend.svg _ 1000
+
+* Backend code (main)
+
+.code gotham-grpc/backend/backend.go /net.Listen/,/g.Serve/
+
+`new(server)` must implement the `GoogleServer` interface:
+
+.code gotham-grpc/search/search.pb.go /type GoogleServer/,/^}/
+
+Each call to `Search` or `Watch` runs in its own goroutine.
+
+* Backend code (search)
+
+`ctx.Done` is closed when the RPC is canceled, times out, or returns:
+
+.code gotham-grpc/backend/backend.go /[)] Search/,/^}/
+
+If tracing is enabled, log the sleep duration:
+
+.code gotham-grpc/backend/backend.go /func logSleep/,/^}/
+
+* Frontend code
+
+.image gotham-grpc/frontend.svg _ 1000
+
+* Frontend code (search)
+
+`Search` returns as soon as it gets the first result.
+gRPC cancels the remaining `backend.Search` RPCs by via `ctx`:
+
+.code gotham-grpc/frontend/frontend.go /[)] Search/,/^}/
+
+.code gotham-grpc/frontend/frontend.go /type result/,/^}/
+
+* Streaming RPC
+
+* Add Watch to the Google service
+
+.code gotham-grpc/search/search.proto
+
+* Generated code
+
+.code gotham-grpc/search/search.pb.go /type GoogleClient/,/^}/
+.code gotham-grpc/search/search.pb.go /type GoogleServer/,/^}/
+.code gotham-grpc/search/search.pb.go /type Google_WatchClient/,/^}/
+.code gotham-grpc/search/search.pb.go /type Google_WatchServer/,/^}/
+
+* Frontend runs Watch on both backends and merges results
+
+.image gotham-grpc/watch.svg _ 1000
+
+* Demo client --mode=watch
+
+- Active stream traces
+- Cancelation
+
+* Client code
+
+.image gotham-grpc/client.svg _ 1000
+
+* Client code (watch)
+
+.code gotham-grpc/client/client.go /func watch/,/^}/
+
+* Backend code
+
+.image gotham-grpc/backend.svg _ 1000
+
+* Backend code (watch)
+
+.code gotham-grpc/backend/backend.go /[)] Watch/,/^}/
+
+* Frontend code
+
+.image gotham-grpc/frontend.svg _ 1000
+
+* Frontend code (watch)
+
+.code gotham-grpc/frontend/frontend.go /[)] Watch/,/return nil/
+
+* Frontend code (watchBackend)
+
+`Watch` returns on first error; this closes `ctx.Done` and signals `watchBackend` to exit.
+
+.code gotham-grpc/frontend/frontend.go /func watch/,/^}/
+
+* gRPC extends the Go programming model over the network
+
+Go gRPC works smoothly with goroutines, channels, and cancelation.
+
+It is an excellent fit for building parallel, distributed, and streaming systems.
+
+.image gotham-grpc/watch.svg _ 1000
+
+* References
+
+- [[http://grpc.io][grpc.io]] - gRPC reference and tutorials
+- [[https://github.com/golang/protobuf][github.com/golang/protobuf]] - Protocol buffers
+- [[http://golang.org/x/net/http2][golang.org/x/net/http2]] - HTTP2
+- [[http://golang.org/x/net/trace][golang.org/x/net/trace]] - Request traces and event logs
+- [[http://golang.org/x/net/context][golang.org/x/net/context]] - Cancelation and request-scoped data
+- [[http://blog.golang.org/pipelines][blog.golang.org/pipelines]] - Streaming data pipelines
+
+*Thanks*to* Qi Zhao, David Symonds, Brad Fitzpatrick, and the rest.
+
+*Questions?*
+
+Sameer Ajmani
+Tech Lead Manager, Go team, Google
+[[twitter.com/Sajma][@Sajma]]
+[[mailto:sameer@golang.org][sameer@golang.org]]

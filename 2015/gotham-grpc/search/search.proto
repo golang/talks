@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+service Google {
+  // Search returns a Google search result for the query.
+  rpc Search(Request) returns (Result) {
+  }
+  // Watch returns a stream of Google search results for the query.
+  rpc Watch(Request) returns (stream Result) { // HL
+  }
+}
+
+message Request {
+  string query = 1;
+}
+
+message Result {
+  string title = 1;
+  string url = 2;
+  string snippet = 3;
+}
