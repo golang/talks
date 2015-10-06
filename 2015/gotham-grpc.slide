@@ -29,7 +29,7 @@ Example: a mobile Maps app requests a route from point A to point B.
 
 On the client side, an RPC blocks until it's done or canceled.
 
-A client use multiple goroutines to run many RPCs simultaneously.
+A client uses multiple goroutines to run many RPCs simultaneously.
 
 Each RPC is an exchange between a client goroutine and a server goroutine.
 
