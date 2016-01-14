@@ -1,3 +1,5 @@
+// +build OMIT
+
 // The frontend command runs a Google server that combines results
 // from multiple backends.
 package main

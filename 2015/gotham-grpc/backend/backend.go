@@ -1,4 +1,6 @@
-// Tha backend command runs a Google server that returns fake results.
+// +build OMIT
+
+// The backend command runs a Google server that returns fake results.
 package main
 
 import (

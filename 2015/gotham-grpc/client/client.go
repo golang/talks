@@ -1,3 +1,5 @@
+// +build OMIT
+
 // The client command issues RPCs to a Google server and prints the
 // results.
 //
