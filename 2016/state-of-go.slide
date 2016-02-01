@@ -127,7 +127,7 @@ The template:
 
 generates:
 
-	23 < 45
+	23<45
 
 * text/template: back to our problem
 
@@ -365,7 +365,7 @@ At [[https://www.youtube.com/watch?v=aiv1JOfMjm0][GopherCon 2015 Rick Hudson gav
 
 * Garbage Collector in Go 1.6
 
-At [[https://www.infoq.com/presentations/go-gc-performance][QCon SF in November Rick Hudson]] gave an updated presentation which showed this comparison of Go 1.5 to the upcoming Go 1.6
+At [[http://www.infoq.com/presentations/go-gc-performance][QCon SF in November Rick Hudson]] gave an updated presentation which showed this comparison of Go 1.5 to the upcoming Go 1.6
 
 .image state-of-go/img/gc56.png 400 _
 
@@ -474,7 +474,7 @@ Go vet warns if the code prints a function instead of its result.
 
 	main.go:8: arg foo in Println call is a function value, not a function call
 
-The warning can be removed using `Printf` and the `%v` or `%p` formats.
+The warning can be removed using `%p` in the format string.
 
 * The community
 
@@ -496,14 +496,14 @@ Women Who Go - 7 chapters already!
 - [[https://fosdem.org/2016/][FOSDEM]] Right here, right now. Hello!
 - [[http://gophercon.ae][GopherCon Dubai]], Feb 23rd
 - [[http://www.gophercon.in/][GopherCon India]], Feb 19-20th
-- [[https://gophercon.com/][Gophercon Denver]], July 11-13th
-- [[http://2016.dotgo.eu/][dotGo]], Oct 10th
+- [[https://gophercon.com/][Gophercon Denver]], Jul 11-13th
+- [[http://2016.dotgo.eu/][dotGo]], Nov 9th
 
 * Go 1.6 release party, February 17th
 
 Go 1.6 ships soon!
 
-Go meetups are organising to hold a release party on the 17th of February.
+Go meetups are organising to hold a [[https://github.com/golang/go/wiki/Go-1.6-release-party][release party]] on the 17th of February.
 
 .image state-of-go/img/party-gopher.png _ 300
 .caption Join the party!!!
