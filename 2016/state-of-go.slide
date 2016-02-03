@@ -134,7 +134,7 @@ generates:
 We can now have:
 
 - the result we expected
-- without sacrificing the readibility of our templates.
+- without sacrificing the readability of our templates.
 
 .play state-of-go/template/new.go /`/,/`/
 
