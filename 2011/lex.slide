@@ -311,7 +311,7 @@ Hide the channel and buffer it slightly, turning it into a ring buffer.
 
 Traditional lexer API: return next item.
 Includes the modified state machine runner.
-.
+
 .code lex/r59-lex.go /nextItem.returns/,/^}/
 
 * That's it
