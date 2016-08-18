@@ -1,0 +1,21 @@
+import (
+	"cmd/internal/obj"
+	"cmd/internal/obj/x86"
+)
+
+func archX86(linkArch *obj.LinkArch) *Arch {
+	register := make(map[string]int16)
+	// Create maps for easy lookup of instruction names etc.
+	for i, s := range x86.Register {
+		register[s] = int16(i + x86.REG_AL)
+	}
+	instructions := make(map[string]obj.As)
+	for i, s := range obj.Anames {
+		instructions[s] = x86.As(i)
+	}
+	return &Arch{
+		Instructions:   instructions,
+		Register:       register,
+		...
+	}
+}
