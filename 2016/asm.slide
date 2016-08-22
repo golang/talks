@@ -43,33 +43,33 @@ Some examples...
 
 * IBM System/360
 
-.code asm/360.s
+.code asm/360.s.txt
 
 * Apollo 11 Guidance Computer
 
-.code asm/apollo.s
+.code asm/apollo.s.txt
 
 * PDP-10
 
-.code asm/pdp10.s
+.code asm/pdp10.s.txt
 
 (From the MIT PDP-10 Info file)
 
 * PDP-11
 
-.code asm/pdp11.s
+.code asm/pdp11.s.txt
 
 (From Unix v6 `as/as13.s`)
 
 * Motorola 68000
 
-.code asm/68000.s
+.code asm/68000.s.txt
 
 (From Wikipedia)             
 
 * CRAY-1
 
-.code asm/cray1.s
+.code asm/cray1.s.txt
 
 (From Robert Griesemer's PhD thesis)
 
@@ -221,37 +221,37 @@ Well, not really! Not quite universal across machines, but ...
 
 Look at the generated assembly for this simple program:
 
-.code asm/add.go
+.code asm/add.go.txt
 
 For each architecture, with some noise edited out:
 
 * 32-bit x86 (386)
 
-.code asm/386.s
+.code asm/386.s.txt
 
 * 64-bit x86 (amd64)
 
-.code asm/amd64.s
+.code asm/amd64.s.txt
 
 * 32-bit arm
 
-.code asm/arm.s
+.code asm/arm.s.txt
 
 * 64-bit arm (arm64)
 
-.code asm/arm64.s
+.code asm/arm64.s.txt
 
 * S390 (s390x)
 
-.code asm/s390x.s
+.code asm/s390x.s.txt
 
 * 64-bit MIPS (mips64)
 
-.code asm/mips64.s
+.code asm/mips64.s.txt
 
 * 64-bit Power (ppc64le)
 
-.code asm/ppc64le.s
+.code asm/ppc64le.s.txt
 
 * Common grammar
 
