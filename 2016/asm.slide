@@ -221,7 +221,7 @@ Well, not really! Not quite universal across machines, but ...
 
 Look at the generated assembly for this simple program:
 
-.code asm/add.go.txt
+.code asm/add.go
 
 For each architecture, with some noise edited out:
 
