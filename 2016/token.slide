@@ -1,0 +1,471 @@
+Stacks of Tokens
+A study in interfaces
+
+Sydney Go Meetup
+15 September 2016
+
+Rob Pike
+Google
+@rob_pike
+[[http://golang.org/s/plusrob][+RobPikeTheHuman]]
+http://golang.org/
+
+* Background
+
+Spoke at Gophercon this year: [[https://talks.golang.org/2016/asm.slide]]
+
+That talk was about system design and portability.
+
+Today's talk is about its lexer.
+
+Spoke about lexing before: [[https://talks.golang.org/2011/lex.slide]]
+
+That talk showed a way to use concurrency to build a lexer.
+
+Today's talk is about interfaces.
+
+* Lexer
+
+A lexer, also called a scanner, breaks the input stream into distinct "tokens":
+
+- identifiers
+- numbers
+- quoted strings
+- operators
+- miscellaneous characters such as comma, colon.
+
+Each token has a _type_ and a _value_.
+
+* Example
+
+	MOVQ    R0, 4(R1)
+
+The lexer turns this into the stream
+
+- identifier `MOVQ`
+- identifier `R0`
+- character `,`
+- number `4`
+- character `(`
+- identifier `R1`
+- character `)`
+
+Spaces are ignored.
+
+The parser then reads these tokens to parse the input into a _parse_tree_.
+
+* Go's text/scanner package
+
+There is a nice, efficient lexer package in the Go standard library:
+
+- [[https://golang.org/pkg/text/scanner/][`text/scanner`]]
+
+It can do this job just fine.
+
+But.... that is not enough for the assembler because of
+
+* Backwards compatibility
+
+The new Go assembler had to be totally compatible with the ones it replaces, which used YACC and were written in C. (See [[https://talks.golang.org/2015/gogo.slide][]].)
+
+Each assembler (one per architecture) contained these lines at the end of `lex.c`:
+	
+	#include "../cc/lexbody"
+	#include "../cc/macbody"
+
+This gave the assemblers the same lexer as the C compiler.
+The differences between C tokens and Go tokens are minor and can be handled, but....
+
+
+The C lexer brings in something problematic.
+ 
+* The C preprocessor
+
+The old assemblers had a C preprocessor built in!
+An old-fashioned one, without `#if` and token pasting, but still:
+
+	#include "file" 
+	#define  MAXBUF 512 
+	#define  MULDIV(a, b, c)  ((a)*(b)/(c)) 
+	#ifdef   MAXBUF
+	#endif
+
+The `text/scanner` package can't handle this.
+But we need to do it to be compatible.
+
+This talk is about how to use Go's interfaces to do it.
+
+* An observation
+
+What is standard input? An input source.
+
+- read the input
+
+What is an included file? An input source.
+
+- read the file
+
+What is a macro invocation? An input source.
+
+- read the macro definition
+
+Sounds a lot like `io.Reader`.
+
+* Token reader
+
+We don't want bytes, we want tokens. (Why?)
+
+Instead of
+
+	type Reader interface {
+		Read(p []byte) (n int, err error)
+	}
+
+we want something like
+
+	type TokenReader interface {
+		ReadToken() (Token, error)
+	}
+
+In practice the parser needs something different from `Read`, but the basic idea works.
+
+We build a lexer around an interface that reads tokens.
+
+* The observation in practice
+
+What is standard input? An input source.
+
+- get tokens from the input
+
+What is an included file? An input source.
+
+- get tokens from the file
+
+What is a macro invocation? An input source.
+
+- get tokens from the macro definition
+
+Each of these implements the `TokenReader` interface.
+
+* TokenReader
+
+	type TokenReader interface {
+		// Next returns the next token.
+		Next() ScanToken
+		// The following methods all refer to the most recent token returned by Next.
+		// Text returns the original string representation of the token.
+		Text() string
+		// File reports the source file name of the token.
+		File() string
+		// Line reports the source line number of the token.
+		Line() int
+		// Col reports the source column number of the token.
+		Col() int
+	}
+
+Parser calls `Next`, then can ask about the token: what is, where it is.
+`ScanToken` is just `text/scanner.Token` with tweaks.
+
+Note: No `Peek`. This has no lookahead.
+
+* Tokenizer
+
+`Tokenizer`, the foundational `TokenReader`, turns a `text/scanner.Scanner` into a `TokenReader`.
+
+	// A Tokenizer is a simple wrapping of text/scanner.Scanner, configured
+	// for our purposes and made a TokenReader. It forms the lowest level,
+	// turning text from readers into tokens.
+	type Tokenizer struct {
+		tok      ScanToken // Most recent token.
+		s        *scanner.Scanner
+		line     int
+		fileName string
+	}
+
+	func NewTokenizer(name string, r io.Reader, file *os.File) *Tokenizer
+
+Either the reader or the file may be nil.
+
+`Tokenizer` implements `TokenReader`
+
+* Tokenizer.Next
+
+To give the flavor:
+
+	func (t *Tokenizer) Next() ScanToken {
+		s := t.s
+		for {
+			t.tok = ScanToken(s.Scan())
+			if t.tok != scanner.Comment {
+				break
+			}
+			length := strings.Count(s.TokenText(), "\n")
+			t.line += length
+			histLine += length
+			// For now, just discard all comments.
+		}
+		// Special processing for '\n' etc. elided.
+		return t.tok
+	}
+
+* Tokenizer.Text
+
+	func (t *Tokenizer) Text() string {
+		switch t.tok {
+		case LSH:  // Special handling of odd tokens used by ARM.
+			return "<<"
+		case RSH:
+			return ">>"
+		case ARR:
+			return "->"
+		case ROT:
+			return "@>"
+		}
+		return t.s.TokenText()
+	}
+
+`LSH` etc. are the reason for `ScanToken`: the set of tokens is a superset of the underlying type `text/scanner.Token`.
+
+* Macro definitions
+
+It's easy to see how files work: `NewTokenizer` can do that.
+
+What about a macro definition?
+
+	#define A(arg) 27+(arg)
+
+Becomes the tokens
+
+	27 + ( arg )
+
+When we encounter `A(x)`, we substitute the argument and get
+
+	27 + ( x )
+
+Use a slice of tokens and store them in a `Macro` struct.
+
+	type Macro struct {
+		name   string   // The #define name.
+		args   []string // Formal arguments.
+		tokens []Token  // Body of macro.
+	}
+
+* Slice
+
+	// A Slice reads from a slice of Tokens.
+	type Slice struct {
+		tokens   []Token
+		fileName string
+		line     int
+		pos      int
+	}
+
+Implements `TokenReader`.
+
+	func (s *Slice) Next() ScanToken {
+		s.pos++
+		if s.pos >= len(s.tokens) {
+			return scanner.EOF
+		}
+		return s.tokens[s.pos].ScanToken
+	}
+
+To invoke a macro, substitute the _actuals_ for the _formals_ and make a `Slice`.
+
+* Command-line flags
+
+A command-line flag `-D` can define a macro before execution:
+
+	go tool asm -D 'macro=value' file.s
+
+That's easy!
+
+	var DFlag MultiFlag
+	flag.Var(&DFlag, "D", "predefined symbol D=identifier...")
+
+	type MultiFlag []string // Implements flag.Value, allows multiple settings.
+
+	predefine(DFlag)
+
+* Predefined macros
+
+	// predefine installs the macros set by the -D flag on the command line.
+	func predefine(defines MultiFlag) map[string]*Macro {
+		macros := make(map[string]*Macro)
+		for _, name := range defines {
+			value := "1"
+			i := strings.IndexRune(name, '=')
+			if i > 0 {
+				name, value = name[:i], name[i+1:]
+			}
+			// Various error checks elided.
+			macros[name] = &Macro{
+				name:   name,
+				args:   nil, // No arguments allowed.
+				tokens: Tokenize(value), // Turn the value into tokens.
+			}
+		}
+		return macros
+	}
+
+The return value is the initial symbol table of macros.
+
+* The big picture
+
+We know how to:
+
+- tokenize an input stream from text or `io.Reader`
+- define a macro
+- invoke a macro
+
+But how does it fit together?
+Which implementation `TokenReader` does the parser see?
+
+Consider
+
+- `#include` names a file to process next
+- macro invocation names a slice of tokens to process next
+
+It's a stack! Push new input, pop at EOF.
+
+* Stack
+
+	// A Stack is a stack of TokenReaders. As the top TokenReader hits EOF,
+	// it resumes reading the next one down.
+	type Stack struct {
+		tr []TokenReader
+	}
+
+	// Push adds tr to the top (end) of the input stack. (Popping happens automatically.)
+	func (s *Stack) Push(tr TokenReader) {
+		s.tr = append(s.tr, tr)
+	}
+
+	func (s *Stack) Next() ScanToken {
+		tos := s.tr[len(s.tr)-1]
+		tok := tos.Next()
+		for tok == scanner.EOF && len(s.tr) > 1 {
+			// Pop the topmost item from the stack and resume with the next one down.
+			s.tr = s.tr[:len(s.tr)-1]
+			tok = s.Next()
+		}
+		return tok
+	}
+
+* The Input type
+
+	// Input is the main input: a stack of readers and some macro definitions.
+	// It also handles #include processing (by pushing onto the input stack)
+	// and parses and instantiates macro definitions.
+	type Input struct {
+		Stack
+		includes        []string  // Directories in which to look for #includes
+		macros          map[string]*Macro
+		text            string // Text of last token returned by Next.
+		...
+	}
+
+Note the embedding of `Stack`: `Input` is a wrapping of the `Stack` implementation of `TokenReader`.
+The parser uses a single instance of `Input` as its `TokenReader`.
+
+* Example: #include processing
+
+Some error handling elided for brevity.
+
+	func (in *Input) include() {
+		// Find and parse file name, which is next token, a string.
+		tok := in.Stack.Next()
+		name, _ := strconv.Unquote(in.Stack.Text())
+		in.expectNewline("#include") // Checks that a newline comes now.
+		// Push tokenizer for file onto stack.
+		fd, err := os.Open(name)
+		if err != nil {
+			for _, dir := range in.includes {
+				fd, err = os.Open(filepath.Join(dir, name))
+				if err == nil {
+					break
+				}
+			}
+		}
+		in.Push(NewTokenizer(name, fd, fd))
+	}
+
+* Macro definition
+
+Macro definition is similar but more complex because of the variety of forms.
+Must deal with constants, empty values, macros with arguments, etc.
+
+The end result is to build a `Macro` value and install it in `Input.macros`.
+
+* The final piece: Input.Next
+
+Here is the implementation of a CPP input stream using these types.
+(Error handling mostly elided for brevity.)
+
+	func (in *Input) Next() ScanToken {
+		// If we cannot generate a token after 100 macro invocations, we're in trouble.
+		for nesting := 0; nesting < 100; {
+			tok := in.Stack.Next()
+			switch tok {
+			case '#':
+				in.hash()
+			case scanner.Ident:
+				// Is it a macro name?
+				name := in.Stack.Text()
+				macro := in.macros[name]
+				if macro != nil {
+					nesting++
+					in.invokeMacro(macro)
+					continue
+				}
+				fallthrough
+			default:
+				// Continued on next slide.
+
+* Input.Next part 2
+
+	func (in *Input) Next() ScanToken {
+				// Continued from previous slide.
+			default:
+				if tok == scanner.EOF && len(in.ifdefStack) > 0 {
+					// We're skipping text but have run out of input with no #endif.
+					in.Error("unclosed #ifdef or #ifndef")
+				}
+				if in.enabled() {
+					in.text = in.Stack.Text()
+					return tok
+				}
+			}
+		}
+		in.Error("recursive macro invocation")
+		return 0
+	}
+
+* Initializing and running the lexer
+
+	// NewInput returns an Input from the given path.
+	func NewInput(name string) *Input {
+		return &Input{
+			// include directories: look in source dir, then -I directories.
+			includes:        append([]string{filepath.Dir(name)}, IFlag...),
+			macros:          predefine(DFlag),
+		}
+	}
+
+To run, call `in.Push` to put the input file (or `os.Stdin`) on the stack.
+
+Then the lexer runs until the `Stack` is empty.
+
+* Summary
+
+Interfaces give programs structure.
+
+Interfaces encourage design by composition.
+
+- We have an interface that is implemented by a stack of itself!
+
+Interfaces enable and enforce clean divisions between components.
+
+- The simple idea of a `TokenReader` let us implement `#include` files, `#define` macros, command-line flags, `#ifdef` and more with one simple interface.
+
+And a final tip of the hat to `text/scanner` under it all.
