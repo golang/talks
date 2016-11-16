@@ -45,7 +45,7 @@ But accessors like these make numerical code look clunky, perhaps even unreadabl
 So how can we get around this notation problem? There are a few solutions:
 1) We can say it’s not a problem - and some people will be ok with this.
 2) We can actually change the Go language for the experiment; but that is likely way too costly.
-3) Or, we could rewrite the source: Whenever we see say a[i, j], we change it into a method call a.At(i, j). Basically what the gonum folks are doing now, expect they don’t start with the nice notation.
+3) Or, we could rewrite the source: Whenever we see say a[i, j], we change it into a method call a.At(i, j). Basically what the gonum folks are doing now, except they don’t start with the nice notation.
 Ideally we want to have a tool, a source-to-source rewriter that does this for us.
 
 [10]
