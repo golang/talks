@@ -1,0 +1,698 @@
+Codebase Refactoring (with help from Go)
+
+Russ Cox
+rsc@golang.org
+
+* Abstract
+
+Go should add the ability to create alternate equivalent names for types,
+in order to enable gradual code repair during codebase refactoring.
+This article explains the need for that ability and the implications of not having it
+for today’s large Go codebases.
+This article also examines some potential solutions,
+including the alias feature proposed during the development of
+(but not included in) Go 1.8.
+However, this article is _not_ a proposal of any specific solution.
+Instead, it is intended as the start of a discussion by the Go community
+about what solution should be included in Go 1.9.
+
+This article is an extended version of a talk given at
+GothamGo in New York on November 18, 2016.
+
+* Introduction
+
+Go’s goal is to make it easy to build software that scales.
+There are two kinds of scale that we care about.
+One kind of scale is the size of the systems that you can build with Go,
+meaning how easy it is to use large numbers of computers,
+process large amounts of data, and so on.
+That’s an important focus for Go but not for this article.
+Instead, this article focuses on another kind of scale,
+the size of Go programs,
+meaning how easy it is to work in large codebases
+with large numbers of engineers
+making large numbers of changes independently.
+
+One such codebase is
+[[http://m.cacm.acm.org/magazines/2016/7/204032-why-google-stores-billions-of-lines-of-code-in-a-single-repository/pdf][Google’s single repository]]
+that nearly all engineers work in on a daily basis.
+As of January 2015,
+that repository was seeing 40,000 commits per day
+across 9 million source files
+and 2 billion lines of code.
+Of course, there is more in the repository than just Go code.
+
+Another large codebase is the set of all the open source Go code
+that people have made available on GitHub
+and other code hosting sites.
+You might think of this as `go` `get`’s codebase.
+In contrast to Google’s codebase,
+`go` `get`’s codebase is completely decentralized,
+so it’s more difficult to get exact numbers.
+In November 2016, there were 140,000 packages known to [[https://godoc.org/][godoc.org]],
+and over 160,000
+[[https://github.com/search?utf8=%E2%9C%93&q=language%3AGo&type=Repositories&ref=searchresults][GitHub repos written in Go]].
+
+Supporting software development at this scale was in our
+minds from the very beginning of Go.
+We paid a lot of attention to implementing imports efficiently.
+We made sure that it was difficult to import code but forget to use it, to avoid code bloat.
+We made sure that there weren’t unnecessary dependencies
+between packages, both to simplify programs and to make it
+easier to test and refactor them.
+For more detail about these considerations, see Rob Pike’s 2012 article
+“[[https://talks.golang.org/2012/splash.article][Go at Google: Language Design in the Service of Software Engineering]].”
+
+Over the past few years we’ve come to realize that there’s
+more that can and should be done to make it easier
+to refactor whole codebases,
+especially at the broad package structure level,
+to help Go scale to ever-larger programs.
+
+* Codebase refactoring
+
+Most programs start with one package.
+As you add code, occasionally you recognize
+a coherent section of code that could stand on its own,
+so you move that section into its own package.
+Codebase refactoring is the process of rethinking
+and revising decisions about both the grouping of code
+into packages and the relationships between those packages.
+There are a few reasons you might want to change the way
+a codebase is organized into packages.
+
+The first reason is to split a package into more manageable pieces for users.
+For example, most users of [[https://golang.org/pkg/regexp/][package regexp]] don’t need access to the
+regular expression parser, although [[https://godoc.org/github.com/google/codesearch/regexp][advanced uses may]],
+so the parser is exported in [[https://golang.org/pkg/regexp/syntax][a separate regexp/syntax package]].
+
+The second reason is to [[https://blog.golang.org/package-names][improve naming]]. 
+For example, early versions of Go had an `io.ByteBuffer`,
+but we decided `bytes.Buffer` was a better name and package bytes a better place for the code.
+
+The third reason is to lighten dependencies.
+For example, we moved `os.EOF` to `io.EOF` so that code not using the operating system
+can avoid importing the fairly heavyweight [[https://golang.org/pkg/os][package os]].
+
+The fourth reason is to change the dependency graph
+so that one package can import another.
+For example, as part of the preparation for Go 1, we looked at the explicit dependencies
+between packages and how they constrained the APIs.
+Then we changed the dependency graph to make the APIs better.
+
+Before Go 1, the `os.FileInfo` struct contained these fields:
+
+	type FileInfo struct {
+		Dev      uint64 // device number
+		Ino      uint64 // inode number
+		...
+		Atime_ns int64  // access time; ns since epoch
+		Mtime_ns int64  // modified time; ns since epoch
+		Ctime_ns int64  // change time; ns since epoch
+		Name     string // name of file
+	}
+
+Notice the times `Atime_ns`, `Mtime_ns`, `Ctime_ns` have type int64,
+an `_ns` suffix, and are commented as “nanoseconds since epoch.”
+These fields would clearly be nicer using [[https://golang.org/pkg/time/#Time][`time.Time`]],
+but mistakes in the design of the package structure of the codebase
+prevented that.
+To be able to use `time.Time` here, we refactored the codebase.
+
+This graph shows eight packages from the standard library
+before Go 1, with an arrow from P to Q indicating that P imports Q.
+
+.html refactor/import1.html
+
+Nearly every package has to consider errors,
+so nearly every package, including package time, imported package os for `os.Error`.
+To avoid cycles, anything that imports package os cannot itself be used by package os.
+As a result, operating system APIs could not use `time.Time`.
+
+This kind of problem convinced us that
+`os.Error` and its constructor `os.NewError` were so fundamental
+that they should be moved out of package os.
+In the end, we moved `os.Error` into the language as [[https://golang.org/ref/spec/#Errors][`error`]]
+and `os.NewError` into the new 
+[[https://golang.org/pkg/errors][package errors]]
+as `errors.New`.
+After this and other refactoring, the import graph in Go 1 looked like:
+
+.html refactor/import2.html
+
+Package io and package time had few enough dependencies
+to be used by package os, and
+the Go 1 definition of [[https://golang.org/pkg/os/#FileInfo][`os.FileInfo`]] does use `time.Time`.
+
+(As a side note, our first idea was to move `os.Error` and `os.NewError`
+to a new package named error (singular) as `error.Value` and `error.New`.
+Feedback from Roger Peppe and others in the Go community helped us
+see that making the error type predefined in the language would 
+allow its use even in low-level contexts like the specification of 
+[[https://golang.org/ref/spec#Run_time_panics][run-time panics]].
+Since the type was named `error`, the package became errors (plural)
+and the constructor `errors.New`.
+Andrew Gerrand’s 2015 talk
+“[[https://talks.golang.org/2015/how-go-was-made.slide#37][How Go was Made]]” has more detail.)
+
+* Gradual code repair
+
+The benefits of a codebase refactoring apply throughout the codebase.
+Unfortunately, so do the costs:
+often a large number of repairs must be made as a result of the refactoring.
+As codebases grow, it becomes infeasible to do all the repairs at one time.
+The repairs must be done gradually, 
+and the programming language must make that possible.
+
+As a simple example,
+when we moved `io.ByteBuffer` to `bytes.Buffer` in 2009, the [[https://go.googlesource.com/go/+/d3a412a5abf1ee8815b2e70a18ee092154af7672][initial commit]]
+moved two files, adjusted three makefiles, and repaired 43 other Go source files.
+The repairs outweighed the actual API change by a factor of twenty,
+and the entire codebase was only 250 files.
+As codebases grow, so does the repair multiplier.
+Similar changes in large Go codebases, 
+such as Docker, and Juju, and Kubernetes,
+can have repair multipliers ranging from 10X to 100X.
+Inside Google we’ve seen repair multipliers well over 1000X.
+
+The conventional wisdom is that when making a codebase-wide API change,
+the API change and the associated code repairs should be committed
+together in one big commit:
+
+.html refactor/atomic.html
+
+The argument in favor of this approach, 
+which we will call “atomic code repair,”
+is that it is conceptually simple:
+by updating the API and the code repairs in the same commit,
+the codebase transitions in one step from the old API to the new API,
+without ever breaking the codebase.
+The atomic step avoids the need to plan for a transition
+during which both old and new API must coexist.
+In large codebases, however, the conceptual simplicity
+is quickly outweighed by a practical complexity:
+the one big commit can be very big.
+Big commits are hard to prepare, hard to review,
+and are fundamentally racing against other work in the tree.
+It’s easy to start doing a conversion, prepare your one big commit,
+finally get it submitted, and only then find out that another developer added
+a use of the old API while you were working.
+There were no merge conflicts,
+so you missed that use, and despite all your effort
+the one big commit broke the codebase.
+As codebases get larger,
+atomic code repairs become more difficult
+and more likely to break the codebase inadvertently.
+
+In our experience,
+an approach that scales better is to plan for a transition period
+during which the code repair proceeds gradually,
+across as many commits as needed:
+
+.html refactor/gradual.html
+
+Typically this means the overall process runs in three stages.
+First, introduce the new API.
+The old and new API must be _interchangeable_,
+meaning that it must be possible to convert individual uses
+from the old to the new API without changing the overall
+behavior of the program,
+and uses of the old and new APIs must be able to coexist
+in a single program.
+Second, across as many commits as you need,
+convert all the uses of the old API to the new API.
+Third, remove the old API.
+
+“Gradual code repair” is usually more work
+than the atomic code repair,
+but the work itself is easier:
+you don’t have to get everything right in one try.
+Also, the individual commits are much smaller,
+making them easier to review and submit
+and, if needed, roll back.
+Maybe most important of all, a gradual code repair
+works in situations when one big commit would be impossible,
+for example when code that needs repairs
+is spread across multiple repositories.
+
+The `bytes.Buffer` change looks like an atomic code repair, but it wasn’t.
+Even though the commit updated 43 source files,
+the commit message says,
+“left io.ByteBuffer stub around for now, for protocol compiler.”
+That stub was in a new file named `io/xxx.go` that read:
+
+	// This file defines the type io.ByteBuffer
+	// so that the protocol compiler's output
+	// still works. Once the protocol compiler
+	// gets fixed, this goes away.
+	
+	package io
+	
+	import "bytes"
+	
+	type ByteBuffer struct {
+		bytes.Buffer;
+	}
+
+Back then, just like today,
+Go was developed in a separate source repository
+from the rest of Google’s source code.
+The protocol compiler in Google’s main repository was
+responsible for generating Go source files from protocol buffer definitions;
+the generated code used `io.ByteBuffer`.
+This stub was enough to keep the generated code working
+until the protocol compiler could be updated.
+Then [[https://go.googlesource.com/go/+/832e72beff62e4fe4897699e9b40a2b228e8503b][a later commit]] removed `xxx.go`.
+
+Even though there were many fixes included in the original commit,
+this change was still a gradual code repair, not an atomic one,
+because the old API was only removed in a separate stage
+after the existing code was converted.
+
+In this specific case the gradual repair did succeed, but
+the old and new API were not completely interchangeable:
+if there had been a function taking an `*io.ByteBuffer` argument
+and code calling that function with an `*io.ByteBuffer`,
+those two pieces of code could not have been updated independently:
+code that passed an `*io.ByteBuffer` to a function expecting a `*bytes.Buffer`,
+or vice versa, would not compile.
+
+Again, a gradual code repair consists of three stages:
+
+.html refactor/template.html
+
+These stages apply to a gradual code repair for any API change.
+In the specific case of codebase refactoring—moving
+an API from one package to another, changing its full name in the process—making the old and new API
+interchangeable means making the old and new names interchangeable,
+so that code using the old name has exactly the same behavior
+as if it used the new name.
+
+Let’s look at examples of how Go makes that possible (or not).
+
+** Constants
+
+Let’s start with a simple example of moving a constant.
+
+Package io defines the [[https://golang.org/pkg/io/#Seeker][Seeker interface]],
+but the named constants that developers prefer to use
+when invoking the `Seek` method came from package os.
+Go 1.7 moved the constants to package io and gave them more idiomatic names;
+for example, `os.SEEK_SET` is now available as `io.SeekStart`.
+
+For a constant, one name is interchangeable with another
+when the definitions use the same type and value:
+
+	package io
+	const SeekStart int = 0
+	
+	package os
+	const SEEK_SET int = 0
+
+Due to [[https://golang.org/doc/go1compat][Go 1 compatibility]],
+we’re blocked in stage 2 of this gradual code change.
+We can’t delete the old constants,
+but making the new ones available in package io allows
+developers to avoid importing package os in code that
+does not actually depend on operating system functionality.
+
+This is also an example of a gradual code repair being done
+across many repositories.
+Go 1.7 introduced the new API,
+and now it’s up to everyone with Go code to update their code
+as they see fit.
+There’s no rush, no forced breakage of existing code.
+
+** Functions
+
+Now let’s look at moving a function from one package to another.
+
+As mentioned above,
+in 2011 we replaced `os.Error` with the predefined type `error`
+and moved the constructor `os.NewError` to a new package as
+[[https://golang.org/pkg/errors/#New][`errors.New`]].
+
+For a function, one name is interchangeable with another
+when the definitions use the same signature and implementation.
+In this case, we can define the old function as a wrapper calling
+the new function:
+
+	package errors
+	func New(msg string) error { ... }
+	
+	package os
+	func NewError(msg string) os.Error {
+	    return errors.New(msg)
+	}
+
+Since Go does not allow comparing functions for equality,
+there is no way to tell these two functions apart.
+The old and new API are interchangeable,
+so we can proceed to stages 2 and 3.
+
+(We are ignoring a small detail here: the original 
+`os.NewError` returned an `os.Error`, not an `error`,
+and two functions with different signatures _are_ distinguishable.
+To really make these functions indistinguishable,
+we would also need to make `os.Error` and `error` indistinguishable.
+We will return to that detail in the discussion of types below.)
+
+** Variables
+
+Now let’s look at moving a variable from one package to another.
+
+We are discussing exported package-level API, so the variable
+in question must be an exported global variable.
+Such variables are almost always set at init time
+and then only intended to be read from, never written again,
+to avoid races between reading and writing goroutines.
+For exported global variables that follow this pattern,
+one name is nearly interchangeable with another when the two have
+the same type and value.
+The simplest way to arrange that is to initialize one from the other:
+
+	package io
+	var EOF = ...
+	
+	package os
+	var EOF = io.EOF
+
+In this example, io.EOF and os.EOF are the same value. 
+The variable values are completely interchangeable.
+
+There is one small problem.
+Although the variable values are interchangeable,
+the variable addresses are not.
+In this example, `&io.EOF` and `&os.EOF` are different pointers.
+However, it is rare to export a read-only variable
+from a package and expect clients to take its address:
+it would be better for clients if the package exported a variable set to the address instead,
+and then the pattern works.
+
+** Types
+
+Finally let’s look at moving a type from one package to another.
+This is much harder to do in Go today, as the following three examples demonstrate.
+
+*** Go’s os.Error
+
+Consider once more the conversion from `os.Error` to `error`.
+There’s no way in Go to make two names of types interchangeable.
+The closest we can come in Go is to give `os.Error` and `error` the same underlying definition:
+
+	package os
+	type Error error 
+
+Even with this definition, and even though these are interface types,
+Go still considers these two types [[https://golang.org/ref/spec#Type_identity][different]],
+so that a function returning an os.Error
+is not the same as a function returning an error.
+Consider the [[https://golang.org/pkg/io/#Reader][`io.Reader`]] interface:
+	
+	package io
+	type Reader interface {
+	    Read(b []byte) (n int, err error)
+	}
+
+If `io.Reader` is defined using `error`, as above, then a `Read` method 
+returning `os.Error` will not satisfy the interface.
+
+If there’s no way to make two names for a type interchangeable,
+that raises two questions.
+First, how do we enable a gradual code repair for a moved or renamed type?
+Second, what did we do for `os.Error` in 2011?
+
+To answer the second question, we can look at the source control history.
+It turns out that to aid the conversion, we
+[[https://go.googlesource.com/go/+/47f4bf763dcb120d3b005974fec848eefe0858f0][added a temporary hack to the compiler]]
+to make code written using `os.Error` be interpreted as if it had written `error` instead.
+
+*** Kubernetes
+
+This problem with moving types is not limited to fundamental changes like `os.Error`,
+nor is it limited to the Go repository.
+Here’s a change from the [[https://kubernetes.io/][Kubernetes project]].
+Kubernetes has a package util, and at some point the developers
+decided to split out that package’s `IntOrString` type into its own 
+[[https://godoc.org/k8s.io/kubernetes/pkg/util/intstr][package intstr]].
+
+Applying the pattern for a gradual code repair,
+the first stage is to establish a way for the two types to be interchangeable.
+We can’t do that,
+because the `IntOrString` type is used in struct fields,
+and code can’t assign to that field unless the value being
+assigned has the correct type:
+
+	package util
+	type IntOrString intstr.IntOrString
+
+	// Not good enough for:
+	
+	// IngressBackend describes ...
+	type IngressBackend struct {
+	    ServiceName string             `json:"serviceName"`
+	    ServicePort intstr.IntOrString `json:"servicePort"`
+	}
+
+If this use were the only problem, then you could imagine
+writing a getter and setter using the old type
+and doing a gradual code repair to change all existing code
+to use the getter and setter,
+then modifying the field to use the new type
+and doing a gradual code repair to change all existing code
+to access the field directly using the new type,
+then finally deleting the getter and setter that mention the old type.
+That required two gradual code repairs instead of one,
+and there are many uses of the type other than this one struct field.
+
+In practice, the only option here is an atomic code repair,
+or else breaking all code using `IntOrString`.
+
+*** Docker
+
+As another example,
+here’s a change from the [[https://www.docker.com/][Docker project]].
+Docker has a package utils, and at some point the developers
+decided to split out that package’s `JSONError` type into a separate
+[[https://godoc.org/github.com/docker/docker/pkg/jsonmessage#JSONError][jsonmessage package]].
+
+Again we have the problem that the old and new types are not interchangeable,
+but it shows up in a different way, namely [[https://golang.org/ref/spec#Type_assertions][type assertions]]:
+
+	package utils
+	type JSONError jsonmessage.JSONError
+
+	// Not good enough for:
+	
+	jsonError, ok := err.(*jsonmessage.JSONError)
+	if !ok {
+		jsonError = &jsonmessage.JSONError{
+			Message: err.Error(),
+		}
+	}
+
+If the error `err` not already a `JSONError`, this code wraps it in one,
+but during a gradual repair, this code handles `utils.JSONError` and `jsonmessage.JSONError` differently.
+The two types are not interchangeable.
+(A [[https://golang.org/ref/spec#Type_switches][type switch]] would expose the same problem.)
+
+If this line were the only problem, then you could imagine
+adding a type assertion for `*utils.JSONError`,
+then doing a gradual code repair to remove other uses of `utils.JSONError`,
+and finally removing the additional type guard just before removing the old type.
+But this line is not the only problem.
+The type is also used elsewhere in the API and has all the 
+problems of the Kubernetes example.
+
+In practice, again the only option here is an atomic code repair
+or else breaking all code using `JSONError`.
+
+* Solutions?
+
+We’ve now seen examples of how we can and cannot move
+constants, functions, variables, and types from one package to another.
+The patterns for establishing interchangeable old and new API are:
+
+	const OldAPI = NewPackage.API
+
+	func OldAPI() { NewPackage.API() }
+
+	var OldAPI = NewPackage.API
+	
+	type OldAPI ... ??? modify compiler or ... ???
+
+For constants and functions, the setup for a gradual code repair is trivial.
+For variables, the trivial setup is incomplete but only in ways that are not likely to arise often in practice.
+
+For types, there is no way to set up a gradual code repair in essentially any real example.
+The most common option is to force an atomic code repair,
+or else to break all code using the moved type and leave clients
+to fix their code at the next update.
+In the case of moving os.Error, we resorted to modifying the compiler.
+None of these options is reasonable.
+Developers should be able to do refactorings
+that involve moving a type from one package to another
+without needing an atomic code repair,
+without resorting to intermediate code and multiple rounds of repair,
+without forcing all client packages to update their own code immediately,
+and without even thinking about modifying the compiler.
+
+But how? What should these refactorings look like tomorrow?
+
+We don’t know.
+The goal of this article is to define the problem well enough
+to discuss the possible answers.
+
+** Aliases
+
+As explained above, the fundamental problem with moving types is that
+while Go provides ways to create an alternate name
+for a constant or a function or (most of the time) a variable,
+there is no way to create an alternate name for a type.
+
+For Go 1.8 we experimented with introducing first-class support
+for these alternate names, called [[https://golang.org/design/16339-alias-decls][_aliases_]].
+A new declaration syntax, the alias form, would have provided a uniform way
+to create an alternate name for any kind of identifier:
+
+	const OldAPI => NewPackage.API
+	func  OldAPI => NewPackage.API
+	var   OldAPI => NewPackage.API
+	type  OldAPI => NewPackage.API
+
+Instead of four different mechanisms, the refactoring of package os we considered above
+would have used a single mechanism:
+
+	package os
+	const SEEK_SET => io.SeekStart
+	func  NewError => errors.New
+	var   EOF      => io.EOF
+	type  Error    => error
+
+During the Go 1.8 release freeze, we found two small but important unresolved technical details
+in the alias support (issues [[https://golang.org/issue/17746][17746]] and [[https://golang.org/issue/17784][17784]]),
+and we decided that it was not possible to resolve them confidently
+in the time remaining before the Go 1.8 release,
+so we held aliases back from Go 1.8.
+
+** Versioning
+
+An obvious question is whether to rely on versioning and
+dependency management for code repair,
+instead of focusing on strategies that enable gradual code repair.
+
+Versioning and gradual code repair strategies are complementary.
+A versioning system’s job is to identify a compatible set of
+versions of all the packages needed in a program, or else to
+explain why no such set can be constructed.
+Gradual code repair creates additional compatible combinations,
+making it more likely that a versioning system can find a way
+to build a particular program.
+
+Consider again the various updates to Go’s standard library
+that we discussed above.
+Suppose that the old API
+corresponded in a versioning system
+to standard library version 5.1.3.
+In the usual atomic code repair approach,
+the new API would be introduced and the old API removed at the same time,
+resulting in version 6.0.0;
+following [[http://semver.org/][semantic versioning]],
+the major version number is incremented to indicate the incompatibility
+caused by removing the old API.
+
+Now suppose that your larger program depends on two packages, Foo and Bar.
+Foo still uses the old standard library API.
+Bar has been updated to use the new standard library API,
+and there have been important changes since then that your
+program needs: you can’t use an older version of Bar from
+before the standard library changes.
+
+.html refactor/version1.html
+
+There is no compatible set of libraries to build your program:
+you want the latest version of Bar, which requires 
+standard library 6.0.0,
+but you also need Foo, which is incompatible with standard library 6.0.0.
+The best a versioning system can do in this case is report the failure clearly.
+(If you are sufficiently motivated, you might then resort to updating your own copy of Foo.)
+
+In contrast, with better support for gradual code repair,
+we can add the new, interchangeable API in version 5.2.0,
+and then remove the old API in version 6.0.0.
+
+.html refactor/version2.html
+
+The intermediate version 5.2.0 is backwards compatible with 5.1.3,
+indicated by the shared major version number 5.
+However, because the change from 5.2.0 to 6.0.0 only removed API,
+5.2.0 is also, perhaps surprisingly, backwards compatible with 6.0.0.
+Assuming that Bar declares its requirements precisely—it is
+compatible with both 5.2.0 and 6.0.0—a version system can see that
+both Foo and Bar are compatible with 5.2.0 and use that version
+of the standard library to build the program.
+
+Good support for and adoption of gradual code repair reduces incompatibility,
+giving versioning systems a better chance to find a way to build your program.
+
+** Type aliases
+
+To enable gradual code repair during codebase refactorings,
+it must be possible to create alternate names for a 
+constant, function, variable, or type.
+Go already allows introducing alternate names for 
+all constants, all functions, and nearly all variables, but no types.
+Put another way,
+the general alias form is never necessary for constants,
+never necessary for functions,
+only rarely necessary for variables,
+but always necessary for types.
+
+The relative importance to the specific declarations
+suggests that perhaps the Go 1.8 aliases were an overgeneralization,
+and that we should instead focus on a solution limited to types.
+The obvious solution is type-only aliases,
+for which no new operator is required.
+Following 
+[[http://www.freepascal.org/docs-html/ref/refse19.html][Pascal]]
+(or, if you prefer, [[https://doc.rust-lang.org/book/type-aliases.html][Rust]]),
+a Go program could introduce a type alias using the assignment operator:
+
+	type OldAPI = NewPackage.API
+
+The idea of limiting aliases to types was
+[[https://golang.org/issue/16339#issuecomment-233644777][raised during the Go 1.8 alias discussion]],
+but it seemed worth trying the more general approach, which we did, unsuccessfully.
+In retrospect, the fact that `=` and `=>` have identical meanings for constants
+while they have nearly identical but subtly different meanings for variables
+suggests that the general approach is not worth its complications.
+
+In fact, the idea of adding Pascal-style type aliases
+was [[https://golang.org/issue/16339#issuecomment-233759255][considered in the early design of Go]],
+but until now we didn’t have a strong use case for them.
+
+Type aliases seem like a promising approach to explore,
+but, at least to me, generalized aliases seemed equally promising
+before the discussion and experimentation during the Go 1.8 cycle.
+Rather than prejudge the outcome, the goal of this article is to
+explain the problem in detail and examine a few possible solutions,
+to enable a productive discussion and evaluation of ideas for next time.
+
+* Challenge
+
+Go aims to be ideal for large codebases.
+
+In large codebases, it’s important to be able to refactor codebase structure,
+which means moving APIs between packages and updating client code.
+
+In such large refactorings, it’s important to be able to use a gradual transition from the old API to the new API.
+
+Go does not support the specific case of gradual code repair when moving types between packages at all. It should.
+
+I hope we the Go community can fix this together in Go 1.9. Maybe type aliases are a good starting point. Maybe not. Time will tell.
+
+* Acknowledgements
+
+Thanks to the many people who helped us [[https://golang.org/issue/16339][think through the design questions]]
+that got us this far and led to the alias trial during Go 1.8 development.
+I look forward to the Go community helping us again when we revisit this problem for Go 1.9.

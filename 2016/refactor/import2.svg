@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xl="http://www.w3.org/1999/xlink" version="1.1" viewBox="-1 -1 250 247" width="250pt" height="247pt" xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <metadata> Produced by OmniGraffle 7.2.1 
+    <dc:date>2016-12-01 04:34:01 +0000</dc:date>
+  </metadata>
+  <defs>
+    <font-face font-family="Arial" font-size="12" panose-1="2 11 6 4 2 2 2 2 2 4" units-per-em="1000" underline-position="-105.95703" underline-thickness="73.24219" slope="0" x-height="518.5547" cap-height="716.3086" ascent="905.2734" descent="-211.91406" font-weight="500">
+      <font-face-src>
+        <font-face-name name="ArialMT"/>
+      </font-face-src>
+    </font-face>
+    <marker orient="auto" overflow="visible" markerUnits="strokeWidth" id="FilledArrow_Marker" viewBox="-1 -3 6 6" markerWidth="6" markerHeight="6" color="black">
+      <g>
+        <path d="M 4 0 L 0 -1.5 L 0 1.5 Z" fill="currentColor" stroke="currentColor" stroke-width="1"/>
+      </g>
+    </marker>
+  </defs>
+  <g stroke="none" stroke-opacity="1" stroke-dasharray="none" fill="none" fill-opacity="1">
+    <title>Canvas 1</title>
+    <g>
+      <title>Layer 1</title>
+      <rect x="122.97266" y="148" width="76" height="23.5" fill="#0432ff" fill-opacity=".295307"/>
+      <rect x="122.97266" y="148" width="76" height="23.5" stroke="#666" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <text transform="translate(127.97266 152.55371)" fill="black">
+        <tspan font-family="Arial" font-size="12" font-weight="500" fill="black" x="21.66504" y="11" textLength="22.669922">time</tspan>
+      </text>
+      <rect x="122.21255" y="0" width="76" height="23.5" stroke="#666" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <text transform="translate(127.21255 4.553711)" fill="black">
+        <tspan font-family="Arial" font-size="12" font-weight="500" x="14.323242" y="11" textLength="37.353516">io/ioutil</tspan>
+      </text>
+      <rect x="122.21255" y="74" width="76" height="23.5" stroke="#666" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <text transform="translate(127.21255 78.55371)" fill="black">
+        <tspan font-family="Arial" font-size="12" font-weight="500" x="13.661133" y="11" textLength="38.677734">strconv</tspan>
+      </text>
+      <rect x="122.21255" y="37" width="76" height="23.5" stroke="#666" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <text transform="translate(127.21255 41.55371)" fill="black">
+        <tspan font-family="Arial" font-size="12" font-weight="500" x="18.65918" y="11" textLength="28.68164">bytes</tspan>
+      </text>
+      <rect x="0" y="185" width="76" height="23.5" fill="#ffc0c0"/>
+      <rect x="0" y="185" width="76" height="23.5" stroke="#666" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <text transform="translate(5 189.5537)" fill="black">
+        <tspan font-family="Arial" font-size="12" font-weight="500" x="28.330078" y="11" textLength="9.339844">io</tspan>
+      </text>
+      <rect x="122.97266" y="111" width="76" height="23.5" fill="#ffffc0"/>
+      <rect x="122.97266" y="111" width="76" height="23.5" stroke="#666" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <text transform="translate(127.97266 115.55371)" fill="black">
+        <tspan font-family="Arial" font-size="12" font-weight="500" x="26.663086" y="11" textLength="12.673828">os</tspan>
+      </text>
+      <rect x="122.97266" y="185" width="76" height="23.5" stroke="#666" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <text transform="translate(127.97266 189.5537)" fill="black">
+        <tspan font-family="Arial" font-size="12" font-weight="500" x="14.99707" y="11" textLength="36.00586">syscall</tspan>
+      </text>
+      <rect x="122.97266" y="222" width="76" height="23.5" stroke="#666" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <text transform="translate(127.97266 226.5537)" fill="black">
+        <tspan font-family="Arial" font-size="12" font-weight="500" x="19.655273" y="11" textLength="26.689453">utf16</tspan>
+      </text>
+      <rect x="0" y="222" width="76" height="23.5" stroke="#666" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <text transform="translate(5 226.5537)" fill="black">
+        <tspan font-family="Arial" font-size="12" font-weight="500" x="17.332031" y="11" textLength="31.335938">errors</tspan>
+      </text>
+      <line x1="160.21255" y1="23.5" x2="160.21255" y2="31.1" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <path d="M 188.37477 23.500003 C 200.08476 29.83677 211 38.35015 211 48.06921 C 211 56.7416 202.30916 64.687 192.11774 71.02284" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <path d="M 197.74767 23.500009 C 218.19313 31.76049 239.38865 44.239423 239.5 60.5 C 239.6234 78.51898 213.82277 96.32661 191.76642 108.24899" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <path d="M 198.21255 17.560787 C 216.79686 22.535277 236.5144 31.720686 242.85742 48.63171 C 255.90117 83.4074 229.45227 103.01963 206.2539 134.5 C 203.58735 138.11854 200.93553 141.23882 198.3303 143.92759" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <line x1="160.21255" y1="60.5" x2="160.21255" y2="68.1" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <path d="M 122.21254 50.13559 C 113.00153 54.213294 102.8189 61.503755 92.5 74 C 67.89765 103.79357 50.741114 153.22393 42.870807 179.34142" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <path d="M 122.21254 91.98431 C 118.5502 95.44879 114.92645 100.0403 111.5 106.06921 C 90.75852 142.56434 107.82292 178.3966 87 214.5692 C 84.77209 218.43943 82.45999 221.70105 80.10723 224.44" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <line x1="38" y1="208.5" x2="38" y2="216.1" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <line x1="160.97266" y1="134.5" x2="160.97266" y2="142.1" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <line x1="160.97266" y1="171.5" x2="160.97266" y2="179.1" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <line x1="160.97266" y1="208.5" x2="160.97266" y2="216.1" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <path d="M 191.02245 134.5 C 204.52862 141.17393 217.48633 150.19272 217.48633 160.23132 C 217.48633 168.6864 208.29419 176.26144 197.32434 182.29105" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <path d="M 195.85316 134.50001 C 214.84078 142.7605 234.5 155.23942 234.5 171.5 C 234.5 189.44295 210.56231 207.17633 190.00368 219.09776" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <path d="M 122.97265 158.83137 C 119.283 160.33365 115.72009 162.50762 112.5 165.56921 C 93.95127 183.20495 116.60622 202.68404 95.5 222 C 91.32614 225.81983 86.55442 228.58839 81.58454 230.57208" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <line x1="141.4466" y1="134.5" x2="62.58134" y2="181.95794" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <path d="M 124.9436 60.5 C 118.85351 66.18221 112.66408 74.35976 107 86.06921 C 84.52826 132.52539 100.44062 170.89066 80.89258 212.72937 C 80.21104 214.18806 79.52489 215.5706 78.83527 216.8805" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+    </g>
+  </g>
+</svg>

@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xl="http://www.w3.org/1999/xlink" version="1.1" viewBox="0 -1 150 284" width="150pt" height="284pt" xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <metadata> Produced by OmniGraffle 7.2.1 
+    <dc:date>2016-12-01 04:39:54 +0000</dc:date>
+  </metadata>
+  <defs>
+    <font-face font-family="Arial" font-size="12" panose-1="2 11 6 4 2 2 2 2 2 4" units-per-em="1000" underline-position="-105.95703" underline-thickness="73.24219" slope="0" x-height="518.5547" cap-height="716.3086" ascent="905.2734" descent="-211.91406" font-weight="500">
+      <font-face-src>
+        <font-face-name name="ArialMT"/>
+      </font-face-src>
+    </font-face>
+    <marker orient="auto" overflow="visible" markerUnits="strokeWidth" id="FilledArrow_Marker" viewBox="-1 -3 6 6" markerWidth="6" markerHeight="6" color="black">
+      <g>
+        <path d="M 4 0 L 0 -1.5 L 0 1.5 Z" fill="currentColor" stroke="currentColor" stroke-width="1"/>
+      </g>
+    </marker>
+  </defs>
+  <g stroke="none" stroke-opacity="1" stroke-dasharray="none" fill="none" fill-opacity="1">
+    <title>Canvas 1</title>
+    <g>
+      <title>Layer 1</title>
+      <rect x="30.776487" y="0" width="76" height="23.5" fill="#0432ff" fill-opacity=".29794784"/>
+      <rect x="30.776487" y="0" width="76" height="23.5" stroke="#666" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <text transform="translate(35.776487 4.553711)" fill="black">
+        <tspan font-family="Arial" font-size="12" font-weight="500" x="21.66504" y="11" textLength="22.669922">time</tspan>
+      </text>
+      <rect x="30.776487" y="37" width="76" height="23.5" stroke="#666" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <text transform="translate(35.776487 41.55371)" fill="black">
+        <tspan font-family="Arial" font-size="12" font-weight="500" x="14.323242" y="11" textLength="37.353516">io/ioutil</tspan>
+      </text>
+      <rect x="30.776487" y="74" width="76" height="23.5" stroke="#666" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <text transform="translate(35.776487 78.55371)" fill="black">
+        <tspan font-family="Arial" font-size="12" font-weight="500" x="13.661133" y="11" textLength="38.677734">strconv</tspan>
+      </text>
+      <rect x="30.776487" y="111" width="76" height="23.5" stroke="#666" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <text transform="translate(35.776487 115.55371)" fill="black">
+        <tspan font-family="Arial" font-size="12" font-weight="500" x="18.65918" y="11" textLength="28.68164">bytes</tspan>
+      </text>
+      <rect x="30.776487" y="148" width="76" height="23.5" fill="#ff2600" fill-opacity=".30133143"/>
+      <rect x="30.776487" y="148" width="76" height="23.5" stroke="#666" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <text transform="translate(35.776487 152.55371)" fill="black">
+        <tspan font-family="Arial" font-size="12" font-weight="500" x="28.330078" y="11" textLength="9.339844">io</tspan>
+      </text>
+      <rect x="30.776487" y="185" width="76" height="23.5" fill="#fffc00" fill-opacity=".30303697"/>
+      <rect x="30.776487" y="185" width="76" height="23.5" stroke="#666" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <text transform="translate(35.776487 189.5537)" fill="black">
+        <tspan font-family="Arial" font-size="12" font-weight="500" x="26.663086" y="11" textLength="12.673828">os</tspan>
+      </text>
+      <rect x="30.776487" y="222" width="76" height="23.5" stroke="#666" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <text transform="translate(35.776487 226.5537)" fill="black">
+        <tspan font-family="Arial" font-size="12" font-weight="500" x="14.99707" y="11" textLength="36.00586">syscall</tspan>
+      </text>
+      <rect x="30.776487" y="259" width="76" height="23.5" stroke="#666" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <text transform="translate(35.776487 263.5537)" fill="black">
+        <tspan font-family="Arial" font-size="12" font-weight="500" x="19.655273" y="11" textLength="26.689453">utf16</tspan>
+      </text>
+      <line x1="68.77649" y1="23.5" x2="68.77649" y2="31.1" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <line x1="68.77649" y1="60.5" x2="68.77649" y2="68.1" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <line x1="68.77649" y1="97.5" x2="68.77649" y2="105.1" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <line x1="68.77649" y1="134.5" x2="68.77649" y2="142.1" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <line x1="68.77649" y1="171.5" x2="68.77649" y2="179.1" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <line x1="68.77649" y1="208.5" x2="68.77649" y2="216.1" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <line x1="68.77649" y1="245.5" x2="68.77649" y2="253.1" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <path d="M 93.17678 23.500002 C 105.04188 30.545757 116.77649 40.134275 116.77649 50.5 C 116.77649 58.39145 109.97533 65.336525 101.49318 70.92955" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <path d="M 103.57523 23.5 C 111.59158 28.577334 118.62773 35.76719 121.54406 45.89844 C 128.6898 70.72245 118.68265 88.35867 106.49728 106.14751" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <path d="M 106.77649 20.676139 C 117.07421 26.626272 127.1848 36.423313 133.77649 52.5 C 152.33296 97.75797 152.69131 130.63325 134.27649 171.5 C 128.80609 183.64007 120.80561 190.79561 112.26099 194.85676" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <path d="M 46.69024 60.5 C 32.14596 69.32664 15.776487 81.84894 15.776487 93.5 C 15.776487 99.29801 19.83028 104.12623 25.695615 108.07761" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <path d="M 44.78756 60.5 C 27.89426 70.32656 8.276487 85.59294 8.276487 103.5 C 8.276487 119.9993 24.931005 134.66971 40.763704 144.88843" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <path d="M 40.13828 60.499996 C 24.193 69.34241 6.925629 83.65174 3.7764867 105 C -1.1995027 138.73258 18.695969 159.73378 36.18698 180.46417" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <path d="M 106.77649 94.66501 C 113.31042 98.37008 119.27522 103.60549 123.27649 111 C 137.72504 137.7015 135.21661 155.7066 119.77649 180 C 117.47504 183.62108 114.72658 186.53483 111.71549 188.87164" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <path d="M 95.43459 134.5 C 107.53044 141.217 119.17688 150.30111 119.17688 160.3789 C 119.17688 168.6678 111.29816 176.08786 101.77084 182.03036" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <path d="M 96.65663 208.5 C 109.00063 215.10652 120.77649 224.02344 120.77649 234 C 120.77649 242.434 112.36065 250.02977 102.3003 256.09678" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+    </g>
+  </g>
+</svg>

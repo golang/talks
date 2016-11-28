@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xl="http://www.w3.org/1999/xlink" version="1.1" viewBox="-2 -1 305 178" width="305pt" height="178pt" xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <metadata> Produced by OmniGraffle 7.2.1 
+    <dc:date>2016-12-01 03:27:43 +0000</dc:date>
+  </metadata>
+  <defs>
+    <font-face font-family="Arial" font-size="12" panose-1="2 11 6 4 2 2 2 2 2 4" units-per-em="1000" underline-position="-105.95703" underline-thickness="73.24219" slope="0" x-height="518.5547" cap-height="716.3086" ascent="905.2734" descent="-211.91406" font-weight="500">
+      <font-face-src>
+        <font-face-name name="ArialMT"/>
+      </font-face-src>
+    </font-face>
+    <font-face font-family="Arial" font-size="10" panose-1="2 11 6 4 2 2 2 2 2 4" units-per-em="1000" underline-position="-105.95703" underline-thickness="73.24219" slope="0" x-height="518.5547" cap-height="716.3086" ascent="905.2734" descent="-211.91406" font-weight="500">
+      <font-face-src>
+        <font-face-name name="ArialMT"/>
+      </font-face-src>
+    </font-face>
+  </defs>
+  <g stroke="none" stroke-opacity="1" stroke-dasharray="none" fill="none" fill-opacity="1">
+    <title>Canvas 1</title>
+    <g>
+      <title>Layer 1</title>
+      <path d="M 107.86806 0 L 192.9375 0 C 203 0 211.16667 5.0524444 211.16667 11.277778 C 211.16667 17.503111 203 22.555556 192.9375 22.555556 L 107.86806 22.555556 C 97.80556 22.555556 89.63889 17.503111 89.63889 11.277778 C 89.63889 5.0524444 97.80556 0 107.86806 0" stroke="#0432ff" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+      <text transform="translate(106.79167 4.0814887)" fill="black">
+        <tspan font-family="Arial" font-size="12" font-weight="500" fill="black" x="9.254666" y="11" textLength="50.033203">Add new </tspan>
+        <tspan font-family="Arial" font-size="12" font-weight="500" fill="black" x="58.62576" y="11" textLength="19.341797">API</tspan>
+      </text>
+      <path d="M 107.86806 38.11111 L 192.9375 38.11111 C 203 38.11111 211.16667 43.163556 211.16667 49.38889 C 211.16667 55.61422 203 60.66667 192.9375 60.66667 L 107.86806 60.66667 C 97.80556 60.66667 89.63889 55.61422 89.63889 49.38889 C 89.63889 43.163556 97.80556 38.11111 107.86806 38.11111" stroke="#0432ff" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+      <text transform="translate(106.79167 42.1926)" fill="black">
+        <tspan font-family="Arial" font-size="12" font-weight="500" fill="black" x="9.260525" y="11" textLength="68.70117">Code repairs</tspan>
+      </text>
+      <path d="M 184.09028 76.22222 L 269.15972 76.22222 C 279.22222 76.22222 287.3889 81.27467 287.3889 87.5 C 287.3889 93.72533 279.22222 98.77778 269.15972 98.77778 L 184.09028 98.77778 C 174.02778 98.77778 165.86111 93.72533 165.86111 87.5 C 165.86111 81.27467 174.02778 76.22222 184.09028 76.22222" stroke="#0432ff" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+      <text transform="translate(183.01389 80.30371)" fill="black">
+        <tspan font-family="Arial" font-size="12" font-weight="500" x="9.260525" y="11" textLength="68.70117">Code repairs</tspan>
+      </text>
+      <path d="M 30.868056 76.22222 L 115.9375 76.22222 C 126 76.22222 134.16667 81.27467 134.16667 87.5 C 134.16667 93.72533 126 98.77778 115.9375 98.77778 L 30.868056 98.77778 C 20.805556 98.77778 12.638889 93.72533 12.638889 87.5 C 12.638889 81.27467 20.805556 76.22222 30.868056 76.22222" stroke="#0432ff" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+      <text transform="translate(29.791667 80.30371)" fill="black">
+        <tspan font-family="Arial" font-size="12" font-weight="500" x="9.260525" y="11" textLength="68.70117">Code repairs</tspan>
+      </text>
+      <path d="M 107.86806 114.33333 L 192.9375 114.33333 C 203 114.33333 211.16667 119.38578 211.16667 125.61111 C 211.16667 131.83644 203 136.88889 192.9375 136.88889 L 107.86806 136.88889 C 97.80556 136.88889 89.63889 131.83644 89.63889 125.61111 C 89.63889 119.38578 97.80556 114.33333 107.86806 114.33333" stroke="#0432ff" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+      <text transform="translate(106.79167 118.41482)" fill="black">
+        <tspan font-family="Arial" font-size="12" font-weight="500" x="9.260525" y="11" textLength="68.70117">Code repairs</tspan>
+      </text>
+      <path d="M 102.67639 152.66667 L 198.12917 152.66667 C 209.41987 152.66667 218.58333 157.71911 218.58333 163.94444 C 218.58333 170.16978 209.41987 175.22222 198.12917 175.22222 L 102.67639 175.22222 C 91.38569 175.22222 82.22222 170.16978 82.22222 163.94444 C 82.22222 157.71911 91.38569 152.66667 102.67639 152.66667" stroke="#ff2600" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+      <text transform="translate(100.85833 156.74816)" fill="black">
+        <tspan font-family="Arial" font-size="12" font-weight="500" fill="black" x="6.5219835" y="11" textLength="67.365234">Remove old </tspan>
+        <tspan font-family="Arial" font-size="12" font-weight="500" fill="black" x="73.22511" y="11" textLength="19.341797">API</tspan>
+      </text>
+      <line x1="36948222e-20" y1="29.555556" x2="300.41667" y2="29.555556" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <line x1="36948222e-20" y1="144.27778" x2="300.41667" y2="144.27778" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <text transform="translate(5 2.8919813)" fill="black">
+        <tspan font-family="Arial" font-size="10" font-weight="500" x="11.985894" y="9" textLength="34.472656">Stage 1</tspan>
+      </text>
+      <text transform="translate(5 40.225315)" fill="black">
+        <tspan font-family="Arial" font-size="10" font-weight="500" x="11.985894" y="9" textLength="34.472656">Stage 2</tspan>
+      </text>
+      <text transform="translate(5 155.33643)" fill="black">
+        <tspan font-family="Arial" font-size="10" font-weight="500" x="11.985894" y="9" textLength="34.472656">Stage 3</tspan>
+      </text>
+    </g>
+  </g>
+</svg>
