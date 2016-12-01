@@ -696,3 +696,4 @@ I hope we the Go community can fix this together in Go 1.9. Maybe type aliases a
 Thanks to the many people who helped us [[https://golang.org/issue/16339][think through the design questions]]
 that got us this far and led to the alias trial during Go 1.8 development.
 I look forward to the Go community helping us again when we revisit this problem for Go 1.9.
+If you’d like to contribute, please see [[https://golang.org/issue/18130][issue 18130]].
