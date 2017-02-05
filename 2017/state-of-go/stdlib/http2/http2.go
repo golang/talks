@@ -11,7 +11,7 @@ import (
 var cert, key string
 
 func init() {
-	pkg, err := build.Import("golang.org/x/talks/2017/state-of-go/http2", ".", build.FindOnly)
+	pkg, err := build.Import("golang.org/x/talks/2017/state-of-go/stdlib/http2", ".", build.FindOnly)
 	if err != nil {
 		log.Fatal(err)
 	}

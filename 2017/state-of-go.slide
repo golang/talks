@@ -8,7 +8,7 @@ campoy@golang.org
 
 * Time flies
 
-Go 1.6 is one year old (happy birthday!)
+Go 1.6 is one year old (Happy Birthday!)
 
 Go 1.7 is already 6 months old!
 
@@ -189,7 +189,7 @@ Outputs:
 	fatal error: concurrent map read and map write
 	fatal error: concurrent map writes
 
-* Mutext Contention Profiling
+* Mutex Contention Profiling
 
 Profile your benchmarks and the contention on your mutexes.
 
@@ -416,6 +416,8 @@ Define a plugin:
 Then build it:
 
     go build -buildmode=plugin
+
+_Note_: This currently works only on Linux.
 
 * Plugins
 
