@@ -1,7 +1,6 @@
-package main
+// +build OMIT
 
-// No C code needed.
-import "C"
+package main
 
 import "fmt"
 
