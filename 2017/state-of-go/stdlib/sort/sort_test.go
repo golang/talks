@@ -12,7 +12,7 @@ import (
 type Person struct {
 	Name     string
 	AgeYears int
-	SSN      int
+	SSN      int64
 }
 
 type byName []Person
@@ -59,7 +59,7 @@ func manyPeople() []Person {
 	p := make([]Person, n)
 	for i := range p {
 		p[i].AgeYears = rand.Intn(100)
-		p[i].SSN = rand.Intn(10000000000)
+		p[i].SSN = rand.Int63n(1000000000)
 		p[i].Name = fmt.Sprintf("Mr or Ms %d", p[i].AgeYears)
 	}
 	return p
