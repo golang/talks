@@ -191,7 +191,7 @@ Outputs:
 
 Profile your benchmarks and the contention on your mutexes.
 
-    go test bench=. -mutexprofile=mutex.out
+    go test -bench=. -mutexprofile=mutex.out
 
 
 Alternatively, activate contention profiling with this new method.
