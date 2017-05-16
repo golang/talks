@@ -1,0 +1,299 @@
+The State of Go
+Where we are in May 2017
+
+Francesc Campoy
+Google Developer Advocate
+@francesc
+campoy@golang.org
+
+* Time flies
+
+Go 1.7 is already 9 months old!
+
+Go 1.8 was released on February 16th.
+
+On May 1st we entered the release freeze for Go 1.9
+
+Go 1.9 will be released early August.
+
+.image state-of-go-may/img/flying.png
+
+* Notes
+
+The slides are available on [[https://talks.golang.org/2017/state-of-go-may.slide]]
+
+Most of the code examples won't run except locally and using tip.
+
+The playground runs Go 1.8.
+
+* Agenda
+
+Changes since Go 1.8:
+
+- The Language
+- The Standard Library
+- The Runtime
+- The Tooling
+- The Community
+
+* Changes to the language
+
+* Codebase Refactoring (with help from Go)
+
+Article written by Russ Cox [[https://talks.golang.org/2016/refactor.article][link]]
+
+.image state-of-go-may/img/atomic.svg _ 300
+
+* Gradual Code Repair
+
+In reality, atomically changing all usages of an API is often impossible.
+
+.image state-of-go-may/img/gradual.svg _ 600
+
+* An example
+
+Imagine we created a new package `net/http/status`.
+
+First: create the new API
+
+    package status
+
+    const OK = http.StatusOK
+
+Second: change each usage of `http.StatusOK` by `status.OK`.
+
+    if res.StatusCode != http.StatusOK {
+    
+    if res.StatusCode != status.OK {
+
+Third: remove the old API
+
+* Another example
+
+Let's rename `http.Get` to `http.DoGetPleaseAndThanks`.
+
+First: create the new API
+
+    func DoGetPleaseAndThanks(url string) (*http.Response, error) {
+        return Get(url)
+    }
+
+Second: change each usage of `http.Get` to `http.DoGetPleaseAndThanks`.
+
+    res, err := http.Get("https://golang.org")
+    
+    res, err := http.DoGetPleaseAndThanks("https://golang.org")
+
+Third: remove the old API
+
+* One last example
+
+Let's move `http.Client` to `http.Applicant`.
+
+First: create the new API
+
+    type Applicant Client
+
+- `Applicant` has no methods.
+- Both types are convertible.
+
+    type Applicant struct { Client }
+
+- `Applicant` has all the methods of `Client`
+- The types are not convertible.
+
+* Alias declarations
+
+An alias declaration is a new kind of type declaration.
+
+    type Applicant = http.Client
+
+Both types are equivalent and completely interchangeable.
+
+- type conversion is not needed
+- can't declare methods on the alias declaration
+
+.play state-of-go-may/alias/main.go /type/,
+
+
+* Quaternions
+
+.image state-of-go-may/img/quaternions.png _ 750
+.caption [[https://golang.org/issue/19813][issue #19813]]
+
+* The Standard library
+
+* A Twitter Poll
+
+.image state-of-go-may/img/twitter-poll.png _ 800
+.caption [[https://twitter.com/francesc/status/863514399486623744][twitter poll]]
+
+* math/bits
+
+[[https://tip.golang.org/pkg/math/bits/#Len16][Package bits]] implements bit counting and manipulation functions for the predeclared unsigned integer types.
+
+Added to the standard library with proposal [[https://golang.org/issue/18616][#18616]].
+
+- LenXX, OnesCountXX
+- ReverseXX, ReverseBytesXX
+- RotateLeftXX
+- LeadingZerosXX, TrailingZerosXX
+
+.play state-of-go-may/bits/main.go /START/,/END/
+
+* sync.Map
+
+A new type has been added to the `sync` package with proposal [[https://golang.org/issue/18177][#18177]].
+
+[[https://tip.golang.org/pkg/sync/#Map][sync.Map]] is a concurrent map with amortized-constant-time loads, stores,and deletes.
+
+- the zero map is valid
+- it must not be copied (use pointers)
+
+* sync.Map code sample
+
+.play state-of-go-may/syncmap/main.go /func main/,
+
+* html/template panic on predefined escaper
+
+What do you expect [[https://play.golang.org/p/-z5rZilH1F][this code]] to print?
+
+.play state-of-go-may/html/main.go /Foo/,
+
+Predefined escapers in `html` template create a security concern.
+
+Since 1.9 `Execute` will panic.
+
+* os.Exec
+
+Let's imagine that we have a command `getenv` that prints an environment variable
+using `os.Getenv`.
+
+.code state-of-go-may/exec/getenv/main.go /func main/,
+
+We can run it as follows:
+
+    $ foo=bar getenv foo
+    bar
+
+* os.Exec
+
+What do you expect this code to print?
+
+.code state-of-go-may/exec/main.go /func main/,
+
+bar, or newbar?
+
+* another Twitter poll
+
+.image state-of-go-may/img/exec-poll.png _ 600
+.caption [[https://twitter.com/francesc/status/863791506934472705][Twitter poll]]
+
+* os.Exec
+
+`Cmd.Start` now removes duplicates of environment variables, keeping the last one.
+
+This code does what one expects:
+
+    cmd := exec.Command("prog")
+    cmd.Env = append(os.Environ(), "FOO=bar")
+
+* The Runtime
+
+* Benchmarks
+
+.image state-of-go-may/img/benchmark.png _ 800
+.caption _note_: values over 1.0 mean tip is faster
+.caption _note_: unofficial benchmark ran on my laptop while playing YouTube videos
+
+* More runtime
+
+Garbage Collector
+
+- New algorithm for large object allocation
+- Better performance and increased determinism for large (+50GB) heaps
+
+[[https://en.wikipedia.org/wiki/DWARF][DWARF]]
+
+- Ongoing effort to improve the generated DWARF information.
+- This will help debuggers, among other tools.
+
+* The Tooling
+
+* go compiler: better errors!
+
+Better error messaging for Allman style braces.
+
+    package main
+
+    func main()
+    {
+        fmt.Println("that ain't gonna compile")
+    }
+
+With go 1.8:
+
+    fail/main.go:4: syntax error: unexpected semicolon or newline before {
+
+With go 1.9:
+
+    fail/main.go:3:6: missing function body for "main"
+    fail/main.go:4:1: syntax error: unexpected semicolon or newline before {
+
+* go compiler: more modular and faster
+
+The compiler has been refactored into multiple packages.
+
+    cmd/go/internal/...
+
+Issue [[https://golang.org/issue/17639][#17639]] made parsing concurrent.
+
+The compiler is faster as a result.
+
+* go test
+
+`vendor` directories are ignored by the `go` tool [[https://golang.org/issue/19090][#19090]]:
+
+    go test ./...
+
+You can now list all the tests to be executed, without running them [[https://golang.org/issue/17209][#17209]].
+
+	$ go test -test.list .
+    TestIntegration
+    TestEmbedStreams
+    TestEmbedFiles
+
+* godoc
+
+You can now link to fields in a struct in the documentation [[https://golang.org/issue/16753][#16753]].
+
+.link https://tip.golang.org/pkg/net/http/#Client.Transport
+
+_Note_: This was actually introduced with Go 1.8!
+
+* ... and much more!
+
+* The community
+
+* Go meetups
+
+.image state-of-go-may/img/meetups.png _ 900
+.caption Gophers all around the world! [[http://go-meetups.appspot.com]]
+
+* Women Who Go
+
+.image state-of-go-may/img/wwg.png _ 800
+.caption 19 chapters already! [[http://www.womenwhogo.org]]
+
+* Women Who Go Gophercon Scholarship
+
+WWG is sponsoring minority gophers from all over the world to attend Gophercon
+
+.image state-of-go-may/img/wwg-logo.png _ 700
+
+* Conferences:
+
+- [[http://gophercon.sg][Gophercon Singapore]], May 25-26th
+- [[https://gophercon.com/][Gophercon Denver]], Jul 12-15th
+- [[http://golanguk.com/][Golang UK]], August 16th-18th
+- [[http://2017.dotgo.eu/][dotGo]], Nov 6th

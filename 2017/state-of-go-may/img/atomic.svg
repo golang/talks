@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xl="http://www.w3.org/1999/xlink" version="1.1" viewBox="-1 -1 124 82" width="124pt" height="82pt" xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <metadata> Produced by OmniGraffle 7.2.1 
+    <dc:date>2016-12-01 03:28:54 +0000</dc:date>
+  </metadata>
+  <defs>
+    <font-face font-family="Arial" font-size="12" panose-1="2 11 6 4 2 2 2 2 2 4" units-per-em="1000" underline-position="-105.95703" underline-thickness="73.24219" slope="0" x-height="518.5547" cap-height="716.3086" ascent="905.2734" descent="-211.91406" font-weight="500">
+      <font-face-src>
+        <font-face-name name="ArialMT"/>
+      </font-face-src>
+    </font-face>
+  </defs>
+  <g stroke="none" stroke-opacity="1" stroke-dasharray="none" fill="none" fill-opacity="1">
+    <title>Canvas 1</title>
+    <g>
+      <title>Layer 1</title>
+      <text transform="translate(17.125 4.411133)" fill="black">
+        <tspan font-family="Arial" font-size="12" font-weight="500" x="9.143555" y="11" textLength="50.033203">Add new </tspan>
+        <tspan font-family="Arial" font-size="12" font-weight="500" x="58.51465" y="11" textLength="19.341797">API</tspan>
+        <tspan font-family="Arial" font-size="12" font-weight="500" x="9.149414" y="39.39258" textLength="68.70117">Code repairs</tspan>
+        <tspan font-family="Arial" font-size="12" font-weight="500" x=".47753906" y="67.78516" textLength="67.365234">Remove old </tspan>
+        <tspan font-family="Arial" font-size="12" font-weight="500" x="67.180664" y="67.78516" textLength="19.341797">API</tspan>
+      </text>
+      <path d="M 18.1875 7105427e-21 L 103.0625 7105427e-21 C 113.102 7105427e-21 121.25 17.92 121.25 40 C 121.25 62.08 113.102 80 103.0625 80 L 18.1875 80 C 8.148 80 0 62.08 0 40 C 0 17.92 8.148 7105427e-21 18.1875 7105427e-21" stroke="#ff2600" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+    </g>
+  </g>
+</svg>
