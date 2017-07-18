@@ -1061,7 +1061,7 @@ command:
 
 A key point about this transformation is that, because the input and
 output are both in the canonical format, the only changes made to
-the source code are syntactic ones.
+the source code are semantic ones.
 
 A similar but more intricate process allowed `gofmt` to be used to
 update the tree when the language no longer required semicolons
