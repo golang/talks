@@ -1,16 +1,13 @@
-application: golang-org
-version: talks-test
-runtime: go
-api_version: go1
+service: talks
+runtime: go111
 
 handlers:
 - url: /favicon.ico
-  static_files: present/static/favicon.ico
-  upload: present/static/favicon.ico
+  static_files: static/favicon.ico
+  upload: static/favicon.ico
 - url: /static
-  static_dir: present/static
-  application_readable: true
+  static_dir: static
 - url: /.*
-  script: _go_app
+  script: auto
 
-nobuild_files: ^201[0-9]/
+nobuild_files: content/
