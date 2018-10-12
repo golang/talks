@@ -14,7 +14,7 @@ import (
 	"sync"
 
 	"golang.org/x/net/context"
-	pb "golang.org/x/talks/2015/gotham-grpc/search"
+	pb "golang.org/x/talks/content/2015/gotham-grpc/search"
 	"google.golang.org/grpc"
 )
 

@@ -113,7 +113,7 @@ Transport: *HTTP2*
 
 * Client code (main)
 
-  import pb "golang.org/x/talks/2015/gotham-grpc/search"
+  import pb "golang.org/x/talks/content/2015/gotham-grpc/search"
 
 .code gotham-grpc/client/client.go /func main/,/^}/
 

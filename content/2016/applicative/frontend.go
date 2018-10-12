@@ -17,7 +17,7 @@ import (
 	"net/http"
 	"time"
 
-	"golang.org/x/talks/2016/applicative/google"
+	"golang.org/x/talks/content/2016/applicative/google"
 )
 
 func main() {

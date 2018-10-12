@@ -202,8 +202,8 @@ the type of the expression on the right hand side, `string`.
 
 * Fetch the search results
 
-  import "golang.org/x/talks/2016/applicative/google"
-  
+  import "golang.org/x/talks/content/2016/applicative/google"
+
 .code applicative/frontend.go /Run the Google search/,/ENDSEARCH/
 
 `Search` returns two values, a slice of results and an error.
@@ -224,7 +224,7 @@ The `response` type is defined locally within `handleSearch`.
 The `google.Result` type is exported from package `google`:
 
   package google
-  
+
   type Result struct { Title, URL string }
 
 The `resp` variable is initialized to a `response` value using a composite struct literal.
@@ -431,7 +431,7 @@ while helping your organization discover the benefits.
 - Integrate with build & test & deploy
 - Learn how to debug & profile your program
 
-3. Compare Go to what you use today 
+3. Compare Go to what you use today
 
 - Isolate the language change; try not to change anything else.
 

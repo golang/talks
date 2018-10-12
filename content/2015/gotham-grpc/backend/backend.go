@@ -15,7 +15,7 @@ import (
 
 	"golang.org/x/net/context"
 	"golang.org/x/net/trace"
-	pb "golang.org/x/talks/2015/gotham-grpc/search"
+	pb "golang.org/x/talks/content/2015/gotham-grpc/search"
 	"google.golang.org/grpc"
 )
 

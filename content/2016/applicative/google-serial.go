@@ -7,7 +7,7 @@ import (
 	"math/rand"
 	"time"
 
-	"golang.org/x/talks/2016/applicative/google"
+	"golang.org/x/talks/content/2016/applicative/google"
 )
 
 func init() {
