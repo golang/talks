@@ -1,6 +1,9 @@
 service: talks
 runtime: go111
 
+env_variables:
+  GOLANGORG_CHECK_COUNTRY: true
+
 handlers:
 - url: /favicon.ico
   static_files: static/favicon.ico
