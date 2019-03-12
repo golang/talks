@@ -1,4 +1,4 @@
-// +build OMIT
+// +build ignore,OMIT
 
 // realmain runs the Subscribe example with a real RSS fetcher.
 package main

@@ -1,5 +1,5 @@
 // Package reddit implements a basic client for the Reddit API.
-// +build OMIT
+// +build ignore,OMIT
 
 package reddit
 

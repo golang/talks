@@ -2,7 +2,7 @@
 // source: search.proto
 // DO NOT EDIT!
 
-// +build OMIT
+// +build ignore,OMIT
 
 /*
 Package search is a generated protocol buffer package.

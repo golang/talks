@@ -2,7 +2,7 @@
 // source: search-only.proto
 // DO NOT EDIT!
 
-// +build OMIT
+// +build ignore,OMIT
 
 /*
 Package search_only is a generated protocol buffer package.

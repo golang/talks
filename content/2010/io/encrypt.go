@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// +build OMIT
+// +build ignore,OMIT
 
 // This code differs from the slides in that it handles errors.
 

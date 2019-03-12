@@ -1,4 +1,4 @@
-// +build OMIT
+// +build ignore,OMIT
 
 package string_test
 

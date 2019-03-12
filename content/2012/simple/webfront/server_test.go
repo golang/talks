@@ -1,4 +1,4 @@
-// +build OMIT
+// +build ignore,OMIT
 
 /*
 Copyright 2011 Google Inc.

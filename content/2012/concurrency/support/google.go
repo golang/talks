@@ -1,5 +1,5 @@
 
-// +build OMIT
+// +build ignore,OMIT
 
 package main
 

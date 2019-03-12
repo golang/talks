@@ -1,4 +1,4 @@
-// +build OMIT
+// +build ignore,OMIT
 
 // The server program issues Google search requests. It serves on port 8080.
 //

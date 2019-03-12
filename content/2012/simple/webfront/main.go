@@ -1,4 +1,4 @@
-// +build OMIT
+// +build ignore,OMIT
 
 // This is a somewhat cut back version of webfront, available at
 // http://github.com/nf/webfront
