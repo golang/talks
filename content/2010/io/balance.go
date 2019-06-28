@@ -22,7 +22,7 @@ var roundRobin = flag.Bool("r", false, "use round-robin scheduling")
 // Simulation of some work: just sleep for a while and report how long.
 func op() int {
 	n := rand.Int63n(1e9)
-	time.Sleep(nWorker * n)
+	time.Sleep(time.Duration(nWorker * n))
 	return int(n)
 }
 
@@ -34,7 +34,7 @@ type Request struct {
 func requester(work chan Request) {
 	c := make(chan int)
 	for {
-		time.Sleep(rand.Int63n(nWorker * 2e9))
+		time.Sleep(time.Duration(rand.Int63n(nWorker * 2e9)))
 		work <- Request{op, c}
 		<-c
 	}
