@@ -1,0 +1,231 @@
+Playground v3
+2019-10-08
+
+Brad Fitzpatrick
+@bradfitz
+bradfitz@golang.org
+
+* Overview
+
+- This is talk about play.golang.org
+- What it does
+- History of implementations
+- Latest incarnation
+
+* What does it does
+
+- Lets users run untrusted code in browser
+- Used by play.golang.org, tour.golang.org, godoc example snippets, etc.
+
+.image hello.png
+
+* Time
+
+- time is faked, cacheable
+- starts in Nov 2009, when Go was announced publicly
+
+.image time.png
+
+* Sleep replays
+
+- sleeps are emulated server-side (special runtime support)
+- stdout/stderr writes prefixed with binary header containing virtual time
+- sandbox parses output, simulates passage of time in browser
+- doesn't tie up server resources
+
+* Fun: clear screen with \f
+
+.link https://play.golang.org/p/lrSX-aXEOMe animation example
+
+  func main() {
+     const x = `.oOo`
+     for i := 0; i < 100; i++ {
+         fmt.Printf("\f%c", x[i%len(x)])
+         time.Sleep(200 * time.Millisecond)
+     }
+  }
+
+* Fun: images
+
+.link https://play.golang.org/p/t9ECgoq0XSD image example
+
+.image pic.png _ 600
+
+* History
+
+Caveat: fake, retroactive version numbers follow for ease of discussion.
+
+In reality, v0.0.0-20141209125517-dba9ba1953c6
+
+* Native Client (NaCl)
+
+- July 2009, four months before Go
+- GOOS=nacl, GOARCH={386,amd64p32,arm}
+- restricted, verifiable subset of {386,amd64,arm}
+- some had ambitions to add it to Chrome, web
+- most people opposed
+- "Portable NativeClient" (PNaCl) later proposed, opposed
+- GOARCH=amd64p32: amd64, but 32-bit pointers
+
+* Playground ~v1
+
+- App Engine frontend, in Python, made RPC calls to pass source to:
+- C++ Borg backend, compiled Go to NaCl, ran under ptrace syscall filter
+- standard two layers of paranoia; either sufficient in theory alone, ptrace layer logs/alerts hard on any violation
+
+* Playground ~v1.1
+
+- GAE frontend rewritten from Python to Go
+- backend still C++ running NaCl on Borg
+
+* Playground ~v2
+
+- move to App Engine Flex, where we can do more stuff
+- unify frontend + backend
+- run Native Client sel_ldr (NaCl runner binary) ourselves
+- no more C++
+- no more Borg
+
+* 2017
+
+- May 30, 2017: Portable Native Client (PNaCl) deprecated
+- Go never even implemented PNaCl (fortunately, in retrospect)
+- Go still implements the doubly deprecated arch-specific NaCl variants
+
+* 2018, 2019...
+
+- WebAssembly rise continues
+- NaCl looking increasingly odd, high maintenance cost relative to its worth
+- maintenance: builder resources
+- maintenance: hoping runtime faketime patches still apply at every release
+- maintenance: amd64p32
+- but play.golang.org still depends on it
+
+* How to sandbox play.golang.org without NaCl?
+
+* Plan: Playground v3
+
+- delete nacl/*
+- move Nacl's funky faketime support to linux/amd64 at least...
+- +build faketime (in master for Go 1.14; thanks, Austin!)
+- run otherwise regular linux/amd64 binaries in some sandbox
+
+* gVisor
+
+- gVisor is a mostly complete re-implementation of the Linux system call interface, in Go
+- runs under various modes ("platforms"): KVM, ptrace
+- everything is hookable: ~FUSE on steroids
+- performance pretty good, especially with KVM, not that we really need performance
+- was Google-internal, open source May 2018
+
+* Who uses gVisor?
+
+- App Engine 2nd gen runtimes (all new ones)
+- Cloud Run
+- Cloud Functions
+- GKE Sandbox (opt-in hardened containers)
+- ...
+
+* How to use gVisor?
+
+- tricky, ~unsupported to use directly
+- comes with a "runsc" wrapper command that team recommends
+
+* runsc woes
+
+- runsc ("run secure container") is an OCI "runc"-compatible frontend to gVisor
+- runc interface itself is tricky
+- kinda gross to use directly
+- syzkaller fuzzer does, though, so Go driver code exists
+- but ...
+
+* root
+
+- runsc requires root
+- without networking and ptrace instead of kvm, it _almost_ doesn't require root, but gvisor team isn't quite done with rootless
+- App Engine, etc doesn't give us real root (uid=0, but fake, not enough caps, under gVisor itself)
+- gvisor can't run nested under gvisor (can't run on Cloud Run, for example)
+
+* Docker
+
+- But Docker supports runsc easily:
+
+    docker run --runtime=runsc ...
+
+- So we can just run a dynamically scaled pool of VMs running Docker + a backend HTTP server driving Docker, with a load balancer in front of the pool of VMs.
+
+* v3 architecture
+
+- existing HTTP frontend takes source, compiles binary (for now)
+- HTTP PUTs compiled binary to backend HTTP server
+
+* v3 architecture
+
+.image arch.png _ 700
+
+* On each VM
+
+- one privileged container that speaks HTTP
+- has bind-mounted /var/run/docker.dock, to control its parent docker
+- creates sibling-but-gvisor'ed containers for each play
+- HTTP server reads PUT'ed binary, pipes into secure container, reads stdout/stderr response & exit status
+- replies over HTTP to frontend
+
+* VM view
+
+.image cos.png _ 900
+
+* Transition plan
+
+* Today
+
+- Frontend compiles to nacl/amd64p32, runs binary
+
+* Today+1
+
+- Frontend compiles to nacl/amd64p32, runs binary
+- opt-in support for using new backend (in either linux/amd64 or nacl/amd64p32 mode)
+- temporary support in new backend to understand how to wrap nacl with sel_ldr binary
+
+* Today+2:
+
+- Frontend compiles to nacl/amd64p2, PUTs all requests to new backend
+- gets us operational experience with backend before Go 1.14 release day chaos
+
+* Go 1.14 release day
+
+- flip a bit in frontend that forces linux/amd64
+- NaCl no longer allowed
+- can delete all its playground code (minimal)
+
+* Future possibilities
+
+- stop shipping compiled binaries around the network?
+- ... minimal win, might not be worth it
+- unify compilation & running in the backend?
+- 0, 1, or 2 sandbox services to update per Go release?
+- 2 is too many
+- 1 is today, acceptable
+- 0 might be too risky
+
+* Alternatives
+
+* Cloud Run?
+
+- Almost perfect
+- but doesn't let you disable network (yet? Cloud Functions has VPC connectors, can route traffic to Linux VM that drops packets)
+- if root-less runsc happens, can run in ptrace mode under Cloud Run
+
+* GKE Sandbox?
+
+- not obviously any simpler, faster than this setup
+- but might be alternative later
+- worry about node pool elasticity latency? COS boots quickly.
+
+* WebAssembly?
+
+- large binaries for users
+- still experimental support, but improving
+- use WebAssembly for x/tools/cmd/present?
+- ... because this Docker runsc contraption is too complicated for casual users giving talks on laptops
+- or just run unsandboxes in cmd/present
