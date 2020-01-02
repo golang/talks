@@ -5,9 +5,12 @@ To install the present tool, use go get:
 	go get golang.org/x/tools/cmd/present
 
 To deploy these talks to App Engine, copy the contents of tools/cmd/present to
-the root of this repository and run:
+the root of this repository:
 
-	rsync -a ../tools/cmd/present/ ./
+	rsync -a ../tools/cmd/present/ .
+
+Then run:
+
 	gcloud --project=golang-org app deploy
 
-To submit changes to this repository, see http://golang.org/doc/contribute.html.
+To submit changes to this repository, see https://golang.org/doc/contribute.html.
