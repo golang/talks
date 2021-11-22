@@ -1,7 +1,0 @@
-Bexpression*
-Gcc_backend::integer_constant_expression(Btype* btype, mpz_t val)
-{
-  tree t = btype->get_tree();
-  tree ret = double_int_to_tree(t, mpz_get_double_int(t, val, true));
-  return this->make_expression(ret);
-}

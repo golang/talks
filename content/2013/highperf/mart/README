@@ -1,5 +1,0 @@
-This is a little demonstration app called Gopher Mart.
-
-1/ is the simple, trivial, stupid, slow version.
-2/ defers work (mail).
-3/ uses batching.

@@ -1,5 +1,0 @@
-These slide files are intended to be viewed with the 'present' tool.
-To install 'present':
-
-	go get code.google.com/p/go.talks/present
-
